@@ -6,7 +6,15 @@ import {
   createWishlist,
   listWishlistItems,
   addWishlistItem,
-  deleteWishlistItem
+  deleteWishlistItem,
+  findActiveCartByCustomer,
+  createCustomerCart,
+  findCartById,
+  findCartItems,
+  findCartItemByRef,
+  insertCartItem,
+  updateCartItem,
+  markCartExpired
 } from './repository.js';
 import { env } from '../../config/env.js';
 
@@ -56,10 +64,80 @@ export async function removeFromWishlist(customerAuthId, productId) {
 }
 
 export async function getPersistentCart(customerAuthId) {
-  // Safest MVP-compatible option: use cart service linkage in implementation step.
-  return { customer_auth_id: customerAuthId, cart: null };
+  let cartRes = await findActiveCartByCustomer(customerAuthId);
+  if (cartRes.error) throw { status: 500, code: 'customer_cart_lookup_failed', message: cartRes.error.message };
+
+  if (!cartRes.data) {
+    cartRes = await createCustomerCart(customerAuthId);
+    if (cartRes.error) throw { status: 500, code: 'customer_cart_create_failed', message: cartRes.error.message };
+  }
+
+  const itemsRes = await findCartItems(cartRes.data.id);
+  if (itemsRes.error) throw { status: 500, code: 'customer_cart_items_failed', message: itemsRes.error.message };
+
+  const items = itemsRes.data || [];
+  const estimated_total_tzs = items.reduce((acc, i) => acc + Number(i.unit_estimated_price_tzs) * Number(i.quantity), 0);
+
+  return {
+    customer_auth_id: customerAuthId,
+    cart: cartRes.data,
+    items,
+    estimated_total_tzs
+  };
 }
 
 export async function syncPersistentCart(customerAuthId, payload) {
-  return { customer_auth_id: customerAuthId, synced: true, payload };
+  const customerCart = await getPersistentCart(customerAuthId);
+
+  let sourceItems = [];
+  if (payload.source_cart_id) {
+    const srcCartRes = await findCartById(payload.source_cart_id);
+    if (srcCartRes.error) throw { status: 500, code: 'source_cart_lookup_failed', message: srcCartRes.error.message };
+    if (srcCartRes.data) {
+      const srcItemsRes = await findCartItems(payload.source_cart_id);
+      if (srcItemsRes.error) throw { status: 500, code: 'source_cart_items_failed', message: srcItemsRes.error.message };
+      sourceItems = srcItemsRes.data || [];
+    }
+  } else if (Array.isArray(payload.items)) {
+    sourceItems = payload.items.map((i) => ({
+      item_type: i.item_type,
+      product_id: i.product_id || null,
+      custom_build_id: i.custom_build_id || null,
+      quantity: i.quantity,
+      unit_estimated_price_tzs: 0,
+      title_snapshot: i.item_type === 'product' ? 'Product' : 'Custom Build',
+      specs_snapshot: null
+    }));
+  }
+
+  for (const item of sourceItems) {
+    const existing = await findCartItemByRef(customerCart.cart.id, item);
+    if (existing.error) throw { status: 500, code: 'sync_item_lookup_failed', message: existing.error.message };
+
+    if (existing.data) {
+      const updated = await updateCartItem(existing.data.id, {
+        quantity: Number(existing.data.quantity) + Number(item.quantity)
+      });
+      if (updated.error) throw { status: 500, code: 'sync_item_update_failed', message: updated.error.message };
+    } else {
+      const inserted = await insertCartItem({
+        cart_id: customerCart.cart.id,
+        item_type: item.item_type,
+        product_id: item.product_id || null,
+        custom_build_id: item.custom_build_id || null,
+        quantity: Number(item.quantity),
+        unit_estimated_price_tzs: Number(item.unit_estimated_price_tzs || 0),
+        title_snapshot: item.title_snapshot || (item.item_type === 'product' ? 'Product' : 'Custom Build'),
+        specs_snapshot: item.specs_snapshot || null
+      });
+      if (inserted.error) throw { status: 500, code: 'sync_item_insert_failed', message: inserted.error.message };
+    }
+  }
+
+  if (payload.source_cart_id) {
+    const expired = await markCartExpired(payload.source_cart_id);
+    if (expired.error) throw { status: 500, code: 'source_cart_expire_failed', message: expired.error.message };
+  }
+
+  return getPersistentCart(customerAuthId);
 }

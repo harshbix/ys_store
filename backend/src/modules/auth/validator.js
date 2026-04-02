@@ -17,3 +17,13 @@ export const wishlistItemSchema = z.object({
 export const wishlistItemParamsSchema = z.object({
   productId: z.string().uuid()
 });
+
+export const syncPersistentCartSchema = z.object({
+  source_cart_id: z.string().uuid().optional(),
+  items: z.array(z.object({
+    item_type: z.enum(['product', 'custom_build']),
+    product_id: z.string().uuid().optional(),
+    custom_build_id: z.string().uuid().optional(),
+    quantity: z.coerce.number().int().positive()
+  })).optional()
+});
