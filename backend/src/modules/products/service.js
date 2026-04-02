@@ -4,11 +4,48 @@ import {
   findProductSpecs,
   findProductMedia,
   findFilterOptions,
-  findCompareProducts
+  findCompareProducts,
+  findSpecsForProducts,
+  findProductIdsBySpecText,
+  findProductIdsBySpecNumberMin
 } from './repository.js';
 
+function intersectSets(sets) {
+  if (!sets.length) return null;
+  let result = new Set(sets[0]);
+  for (let i = 1; i < sets.length; i += 1) {
+    result = new Set([...result].filter((id) => sets[i].has(id)));
+  }
+  return result;
+}
+
+async function getSpecFilteredProductIds(filters) {
+  const checks = [];
+
+  if (filters.cpu) checks.push(findProductIdsBySpecText('cpu_model', filters.cpu));
+  if (filters.gpu) checks.push(findProductIdsBySpecText('gpu_model', filters.gpu));
+  if (filters.ram_gb !== undefined) checks.push(findProductIdsBySpecNumberMin('ram_gb', filters.ram_gb));
+  if (filters.storage_gb !== undefined) checks.push(findProductIdsBySpecNumberMin('storage_gb', filters.storage_gb));
+  if (filters.screen_size !== undefined) checks.push(findProductIdsBySpecNumberMin('screen_size_in', filters.screen_size));
+  if (filters.refresh_rate !== undefined) checks.push(findProductIdsBySpecNumberMin('refresh_rate_hz', filters.refresh_rate));
+
+  if (!checks.length) return null;
+
+  const results = await Promise.all(checks);
+  for (const r of results) {
+    if (r.error) {
+      throw { status: 500, code: 'spec_filter_query_failed', message: r.error.message };
+    }
+  }
+
+  const sets = results.map((r) => new Set((r.data || []).map((row) => row.product_id)));
+  const intersected = intersectSets(sets);
+  return intersected ? [...intersected] : null;
+}
+
 export async function searchProducts(filters) {
-  const { data, error, count } = await findProducts(filters);
+  const specFilteredIds = await getSpecFilteredProductIds(filters);
+  const { data, error, count } = await findProducts(filters, specFilteredIds);
   if (error) throw { status: 500, code: 'products_query_failed', message: error.message };
   return { items: data || [], total: count || 0 };
 }
@@ -42,5 +79,21 @@ export async function getFilterOptions(productType) {
 export async function compareProducts(productIds) {
   const { data, error } = await findCompareProducts(productIds);
   if (error) throw { status: 500, code: 'compare_failed', message: error.message };
-  return data || [];
+
+  const products = data || [];
+  if (!products.length) return [];
+
+  const specRes = await findSpecsForProducts(products.map((p) => p.id));
+  if (specRes.error) throw { status: 500, code: 'compare_specs_failed', message: specRes.error.message };
+
+  const specsByProduct = (specRes.data || []).reduce((acc, row) => {
+    if (!acc[row.product_id]) acc[row.product_id] = [];
+    acc[row.product_id].push(row);
+    return acc;
+  }, {});
+
+  return products.map((p) => ({
+    ...p,
+    specs: specsByProduct[p.id] || []
+  }));
 }

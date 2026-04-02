@@ -6,7 +6,8 @@ const required = [
   'SUPABASE_URL',
   'SUPABASE_SERVICE_ROLE_KEY',
   'ADMIN_JWT_SECRET',
-  'WHATSAPP_PHONE_E164'
+  'WHATSAPP_PHONE_E164',
+  'SUPABASE_STORAGE_BUCKET'
 ];
 
 for (const key of required) {
@@ -22,6 +23,7 @@ export const env = {
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
   supabaseUrl: process.env.SUPABASE_URL,
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  supabaseStorageBucket: process.env.SUPABASE_STORAGE_BUCKET,
   adminJwtSecret: process.env.ADMIN_JWT_SECRET,
   adminJwtExpiresIn: process.env.ADMIN_JWT_EXPIRES_IN || '7d',
   adminEmail: process.env.ADMIN_EMAIL || '',

@@ -7,8 +7,12 @@ import {
   deleteBuildItem,
   updateBuild,
   findCompatibilityRules,
-  findProductSpecs
+  findProductSpecs,
+  findProductPrice,
+  findComponentBySpecText,
+  findComponentBySpecNumberMin
 } from './repository.js';
+import { addItemToCart } from '../cart/service.js';
 
 function generateBuildCode() {
   return `BLD-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
@@ -43,12 +47,17 @@ export async function getBuild(buildId) {
 }
 
 export async function setBuildComponent(buildId, payload) {
+  const productRes = await findProductPrice(payload.product_id);
+  if (productRes.error || !productRes.data) {
+    throw { status: 400, code: 'invalid_build_product', message: 'Selected component product not found' };
+  }
+
   const upserted = await upsertBuildComponent({
     custom_build_id: buildId,
     component_type: payload.component_type,
     product_id: payload.product_id,
     quantity: 1,
-    unit_estimated_price_tzs: 0,
+    unit_estimated_price_tzs: productRes.data.estimated_price_tzs,
     is_auto_replaced: false,
     compatibility_notes: null
   });
@@ -75,45 +84,125 @@ export async function validateBuild(buildId, autoReplace) {
   const ruleRes = await findCompatibilityRules();
   if (ruleRes.error) throw { status: 500, code: 'rules_fetch_failed', message: ruleRes.error.message };
 
-  // Safest MVP-compatible option when DB rules are incomplete:
-  // run explicit hard checks for CPU socket, GPU fit, PSU headroom, RAM compatibility.
   const byType = Object.fromEntries(items.map((i) => [i.component_type, i]));
 
+  const specsCache = {};
+  async function getSpecs(productId) {
+    if (!productId) return [];
+    if (!specsCache[productId]) {
+      const res = await findProductSpecs(productId);
+      if (res.error) throw { status: 500, code: 'build_specs_failed', message: res.error.message };
+      specsCache[productId] = res.data || [];
+    }
+    return specsCache[productId];
+  }
+
+  async function replaceComponent(componentType, candidateProduct, reason) {
+    const current = byType[componentType];
+    if (!current || !candidateProduct?.id || current.product_id === candidateProduct.id) return false;
+
+    const rep = await upsertBuildComponent({
+      custom_build_id: buildId,
+      component_type: componentType,
+      product_id: candidateProduct.id,
+      quantity: 1,
+      unit_estimated_price_tzs: candidateProduct.estimated_price_tzs,
+      is_auto_replaced: true,
+      compatibility_notes: { reason }
+    });
+
+    if (rep.error) throw { status: 500, code: 'build_autoreplace_failed', message: rep.error.message };
+
+    replacements.push({
+      component_type: componentType,
+      from_product_id: current.product_id,
+      to_product_id: candidateProduct.id,
+      reason,
+      message: `We replaced ${componentType} due to compatibility.`
+    });
+    warnings.push(`We replaced ${componentType} due to compatibility.`);
+    byType[componentType] = { ...current, product_id: candidateProduct.id, unit_estimated_price_tzs: candidateProduct.estimated_price_tzs };
+    return true;
+  }
+
   if (byType.cpu && byType.motherboard) {
-    const [cpuSpecsRes, mbSpecsRes] = await Promise.all([
-      findProductSpecs(byType.cpu.product_id),
-      findProductSpecs(byType.motherboard.product_id)
-    ]);
-    if (!cpuSpecsRes.error && !mbSpecsRes.error) {
-      const cpuSocket = findSpec(cpuSpecsRes.data || [], 'cpu_socket')?.value_text;
-      const mbSocket = findSpec(mbSpecsRes.data || [], 'motherboard_socket')?.value_text;
-      if (cpuSocket && mbSocket && cpuSocket !== mbSocket) {
+    const cpuSpecs = await getSpecs(byType.cpu.product_id);
+    const mbSpecs = await getSpecs(byType.motherboard.product_id);
+    const cpuSocket = findSpec(cpuSpecs, 'cpu_socket')?.value_text;
+    const mbSocket = findSpec(mbSpecs, 'motherboard_socket')?.value_text;
+
+    if (cpuSocket && mbSocket && cpuSocket !== mbSocket) {
+      if (autoReplace) {
+        const candidate = await findComponentBySpecText('motherboard', 'motherboard_socket', cpuSocket);
+        if (candidate.error) throw { status: 500, code: 'autofix_motherboard_failed', message: candidate.error.message };
+        const changed = await replaceComponent('motherboard', candidate.data, 'CPU and motherboard socket mismatch');
+        if (!changed) errors.push('CPU socket does not match motherboard socket.');
+      } else {
         errors.push('CPU socket does not match motherboard socket.');
       }
     }
   }
 
   if (byType.gpu && byType.case) {
-    const [gpuSpecsRes, caseSpecsRes] = await Promise.all([
-      findProductSpecs(byType.gpu.product_id),
-      findProductSpecs(byType.case.product_id)
-    ]);
-    if (!gpuSpecsRes.error && !caseSpecsRes.error) {
-      const gpuLen = Number(findSpec(gpuSpecsRes.data || [], 'gpu_length_mm')?.value_number || 0);
-      const caseMax = Number(findSpec(caseSpecsRes.data || [], 'case_max_gpu_length_mm')?.value_number || 0);
-      if (gpuLen > 0 && caseMax > 0 && gpuLen > caseMax) {
-        if (autoReplace) {
-          warnings.push('GPU does not fit selected case. Replacement required.');
-          replacements.push({ from: byType.case.product_id, to: null, reason: 'GPU length exceeds case limit' });
-        } else {
-          errors.push('GPU does not fit selected case.');
-        }
+    const gpuSpecs = await getSpecs(byType.gpu.product_id);
+    const caseSpecs = await getSpecs(byType.case.product_id);
+    const gpuLen = Number(findSpec(gpuSpecs, 'gpu_length_mm')?.value_number || 0);
+    const caseMax = Number(findSpec(caseSpecs, 'case_max_gpu_length_mm')?.value_number || 0);
+    if (gpuLen > 0 && caseMax > 0 && gpuLen > caseMax) {
+      if (autoReplace) {
+        const candidate = await findComponentBySpecNumberMin('case', 'case_max_gpu_length_mm', gpuLen);
+        if (candidate.error) throw { status: 500, code: 'autofix_case_failed', message: candidate.error.message };
+        const changed = await replaceComponent('case', candidate.data, 'GPU length exceeds case limit');
+        if (!changed) errors.push('GPU does not fit selected case.');
+      } else {
+        errors.push('GPU does not fit selected case.');
       }
     }
   }
 
+  if (byType.ram && byType.motherboard) {
+    const ramSpecs = await getSpecs(byType.ram.product_id);
+    const mbSpecs = await getSpecs(byType.motherboard.product_id);
+    const ramType = findSpec(ramSpecs, 'ram_type')?.value_text;
+    const mbRamType = findSpec(mbSpecs, 'motherboard_ram_type')?.value_text;
+    if (ramType && mbRamType && ramType !== mbRamType) {
+      if (autoReplace) {
+        const candidate = await findComponentBySpecText('ram', 'ram_type', mbRamType);
+        if (candidate.error) throw { status: 500, code: 'autofix_ram_failed', message: candidate.error.message };
+        const changed = await replaceComponent('ram', candidate.data, 'RAM type does not match motherboard support');
+        if (!changed) errors.push('RAM type is not compatible with motherboard.');
+      } else {
+        errors.push('RAM type is not compatible with motherboard.');
+      }
+    }
+  }
+
+  if (byType.psu) {
+    const psuSpecs = await getSpecs(byType.psu.product_id);
+    const psuWatt = Number(findSpec(psuSpecs, 'psu_wattage')?.value_number || 0);
+    let estimatedSystemWatt = 0;
+    for (const item of Object.values(byType)) {
+      const itemSpecs = await getSpecs(item.product_id);
+      estimatedSystemWatt += Number(findSpec(itemSpecs, 'estimated_system_wattage')?.value_number || 0);
+    }
+    const required = estimatedSystemWatt > 0 ? Math.ceil(estimatedSystemWatt * 1.2) : 0;
+
+    if (required > 0 && psuWatt > 0 && psuWatt < required) {
+      if (autoReplace) {
+        const candidate = await findComponentBySpecNumberMin('psu', 'psu_wattage', required);
+        if (candidate.error) throw { status: 500, code: 'autofix_psu_failed', message: candidate.error.message };
+        const changed = await replaceComponent('psu', candidate.data, `PSU wattage below required headroom (${required}W)`);
+        if (!changed) errors.push(`PSU wattage is insufficient. Required at least ${required}W.`);
+      } else {
+        errors.push(`PSU wattage is insufficient. Required at least ${required}W.`);
+      }
+    }
+  }
+
+  const refreshed = await getBuild(buildId);
+  const refreshedItems = refreshed.items || [];
   const nextStatus = errors.length > 0 ? 'invalid' : warnings.length > 0 ? 'warning' : 'valid';
-  const total = items.reduce((acc, i) => acc + Number(i.unit_estimated_price_tzs || 0) * Number(i.quantity || 1), 0);
+  const total = refreshedItems.reduce((acc, i) => acc + Number(i.unit_estimated_price_tzs || 0) * Number(i.quantity || 1), 0);
 
   const updated = await updateBuild(buildId, {
     compatibility_status: nextStatus,
@@ -129,18 +218,24 @@ export async function validateBuild(buildId, autoReplace) {
     errors,
     warnings,
     replacements,
-    normalized_items: items,
+    normalized_items: refreshedItems,
     total_estimated_tzs: total,
     rules_count: (ruleRes.data || []).length
   };
 }
 
 export async function addBuildToCart(buildId, identity) {
-  // Safest MVP-compatible option: delegate this to cart service in implementation pass.
-  // Signature locked here so controller/route contracts are stable now.
+  const build = await getBuild(buildId);
+  if (!build) throw { status: 404, code: 'build_not_found', message: 'Build not found' };
+
+  const cart = await addItemToCart(identity, {
+    item_type: 'custom_build',
+    custom_build_id: buildId,
+    quantity: 1
+  });
+
   return {
     build_id: buildId,
-    session_token: identity.sessionToken,
-    queued_for_cart_insert: true
+    cart
   };
 }

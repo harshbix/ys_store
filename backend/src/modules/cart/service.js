@@ -3,6 +3,7 @@ import {
   createCart,
   findCartItems,
   insertCartItem,
+  findCartItemByRef,
   updateCartItem,
   deleteCartItem,
   findProductPriceAndTitle,
@@ -50,18 +51,30 @@ export async function addItemToCart(identity, payload) {
     title = build.data.name || 'Custom Build';
   }
 
-  const inserted = await insertCartItem({
-    cart_id: cart.id,
-    item_type: payload.item_type,
-    product_id: payload.product_id || null,
-    custom_build_id: payload.custom_build_id || null,
-    quantity: payload.quantity,
-    unit_estimated_price_tzs: unit,
-    title_snapshot: title,
-    specs_snapshot: null
-  });
+  const existing = await findCartItemByRef(cart.id, payload);
+  if (existing.error) throw { status: 500, code: 'cart_item_lookup_failed', message: existing.error.message };
 
-  if (inserted.error) throw { status: 500, code: 'cart_item_create_failed', message: inserted.error.message };
+  if (existing.data) {
+    const updated = await updateCartItem(existing.data.id, {
+      quantity: existing.data.quantity + payload.quantity,
+      unit_estimated_price_tzs: unit,
+      title_snapshot: title
+    });
+    if (updated.error) throw { status: 500, code: 'cart_item_update_failed', message: updated.error.message };
+  } else {
+    const inserted = await insertCartItem({
+      cart_id: cart.id,
+      item_type: payload.item_type,
+      product_id: payload.product_id || null,
+      custom_build_id: payload.custom_build_id || null,
+      quantity: payload.quantity,
+      unit_estimated_price_tzs: unit,
+      title_snapshot: title,
+      specs_snapshot: null
+    });
+    if (inserted.error) throw { status: 500, code: 'cart_item_create_failed', message: inserted.error.message };
+  }
+
   return getCartWithItems(identity);
 }
 

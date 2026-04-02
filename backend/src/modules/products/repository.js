@@ -1,7 +1,6 @@
 import { supabase } from '../../lib/supabase.js';
 
-export async function findProducts(filters) {
-  // Safest MVP option: start with Supabase query builder, optimize with RPC later if needed.
+export async function findProducts(filters, productIds = null) {
   let query = supabase.from('products').select('*', { count: 'exact' }).eq('is_visible', true);
 
   if (filters.type) query = query.eq('product_type', filters.type);
@@ -10,6 +9,12 @@ export async function findProducts(filters) {
   if (filters.stock_status) query = query.eq('stock_status', filters.stock_status);
   if (filters.min_price !== undefined) query = query.gte('estimated_price_tzs', filters.min_price);
   if (filters.max_price !== undefined) query = query.lte('estimated_price_tzs', filters.max_price);
+  if (Array.isArray(productIds)) {
+    if (productIds.length === 0) {
+      return { data: [], error: null, count: 0 };
+    }
+    query = query.in('id', productIds);
+  }
 
   const from = (filters.page - 1) * filters.limit;
   const to = from + filters.limit - 1;
@@ -22,7 +27,7 @@ export async function findProducts(filters) {
 }
 
 export async function findProductBySlug(slug) {
-  return supabase.from('products').select('*').eq('slug', slug).maybeSingle();
+  return supabase.from('products').select('*').eq('slug', slug).eq('is_visible', true).maybeSingle();
 }
 
 export async function findProductSpecs(productId) {
@@ -43,4 +48,28 @@ export async function findFilterOptions(productType) {
 
 export async function findCompareProducts(productIds) {
   return supabase.from('products').select('*').in('id', productIds).eq('is_visible', true);
+}
+
+export async function findSpecsForProducts(productIds) {
+  return supabase
+    .from('product_specs')
+    .select('*')
+    .in('product_id', productIds)
+    .order('sort_order', { ascending: true });
+}
+
+export async function findProductIdsBySpecText(specKey, value) {
+  return supabase
+    .from('product_specs')
+    .select('product_id')
+    .eq('spec_key', specKey)
+    .ilike('value_text', `%${value}%`);
+}
+
+export async function findProductIdsBySpecNumberMin(specKey, minValue) {
+  return supabase
+    .from('product_specs')
+    .select('product_id')
+    .eq('spec_key', specKey)
+    .gte('value_number', minValue);
 }

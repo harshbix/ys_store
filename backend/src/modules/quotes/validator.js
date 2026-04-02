@@ -6,7 +6,7 @@ export const createQuoteSchema = z.object({
   source_type: z.enum(['cart', 'build']),
   source_id: z.string().uuid(),
   quote_type: z.enum(['laptop', 'desktop', 'build', 'upgrade', 'warranty', 'general']).optional(),
-  idempotency_key: z.string().min(12)
+  idempotency_key: z.string().min(12).optional()
 });
 
 export const quoteCodeParamsSchema = z.object({

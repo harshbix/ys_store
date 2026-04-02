@@ -53,3 +53,52 @@ export async function findProductSpecs(productId) {
 export async function findCompatibilityRules() {
   return supabase.from('compatibility_rules').select('*');
 }
+
+export async function findProductPrice(productId) {
+  return supabase.from('products').select('id,title,estimated_price_tzs').eq('id', productId).single();
+}
+
+export async function findComponentBySpecText(componentType, specKey, value) {
+  const matchIds = await supabase
+    .from('product_specs')
+    .select('product_id')
+    .eq('spec_key', specKey)
+    .eq('value_text', value);
+
+  if (matchIds.error) return matchIds;
+  const ids = (matchIds.data || []).map((r) => r.product_id);
+  if (!ids.length) return { data: null, error: null };
+
+  return supabase
+    .from('products')
+    .select('id,title,estimated_price_tzs')
+    .eq('product_type', 'component')
+    .in('id', ids)
+    .eq('is_visible', true)
+    .neq('stock_status', 'sold_out')
+    .limit(1)
+    .maybeSingle();
+}
+
+export async function findComponentBySpecNumberMin(componentType, specKey, minValue) {
+  const matchIds = await supabase
+    .from('product_specs')
+    .select('product_id')
+    .eq('spec_key', specKey)
+    .gte('value_number', minValue);
+
+  if (matchIds.error) return matchIds;
+  const ids = (matchIds.data || []).map((r) => r.product_id);
+  if (!ids.length) return { data: null, error: null };
+
+  return supabase
+    .from('products')
+    .select('id,title,estimated_price_tzs')
+    .eq('product_type', 'component')
+    .in('id', ids)
+    .eq('is_visible', true)
+    .neq('stock_status', 'sold_out')
+    .order('estimated_price_tzs', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+}

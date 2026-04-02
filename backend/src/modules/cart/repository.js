@@ -24,6 +24,13 @@ export async function insertCartItem(payload) {
   return supabase.from('cart_items').insert(payload).select().single();
 }
 
+export async function findCartItemByRef(cartId, payload) {
+  let query = supabase.from('cart_items').select('*').eq('cart_id', cartId).eq('item_type', payload.item_type);
+  if (payload.item_type === 'product') query = query.eq('product_id', payload.product_id);
+  if (payload.item_type === 'custom_build') query = query.eq('custom_build_id', payload.custom_build_id);
+  return query.maybeSingle();
+}
+
 export async function updateCartItem(itemId, payload) {
   return supabase.from('cart_items').update(payload).eq('id', itemId).select().single();
 }

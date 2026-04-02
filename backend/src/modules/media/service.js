@@ -1,18 +1,45 @@
 import {
+  createSignedUploadUrl,
+  getPublicUrl,
   insertProductMedia,
   listShopMedia,
   insertShopMedia,
   updateShopMedia,
   deleteShopMedia
 } from './repository.js';
+import { env } from '../../config/env.js';
 
-export async function uploadMedia(payload) {
+function sanitizeName(fileName) {
+  return fileName.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
+}
+
+export async function createUploadUrl(payload) {
+  const base = payload.owner_type === 'product'
+    ? `products/${payload.owner_id || 'unassigned'}`
+    : 'shop';
+  const path = `${base}/${payload.variant}/${Date.now()}-${sanitizeName(payload.file_name)}`;
+
+  const signed = await createSignedUploadUrl(env.supabaseStorageBucket, path);
+  if (signed.error) throw { status: 500, code: 'media_signed_url_failed', message: signed.error.message };
+
+  return {
+    path,
+    token: signed.data.token,
+    signed_url: signed.data.signedUrl
+  };
+}
+
+export async function finalizeUpload(payload) {
+  const originalUrl = getPublicUrl(env.supabaseStorageBucket, payload.original_path).data.publicUrl;
+  const thumbUrl = getPublicUrl(env.supabaseStorageBucket, payload.thumb_path).data.publicUrl;
+  const fullUrl = getPublicUrl(env.supabaseStorageBucket, payload.full_path).data.publicUrl;
+
   if (payload.owner_type === 'product') {
     const res = await insertProductMedia({
       product_id: payload.owner_id,
-      original_url: payload.original_url,
-      thumb_url: payload.thumb_url,
-      full_url: payload.full_url,
+      original_url: originalUrl,
+      thumb_url: thumbUrl,
+      full_url: fullUrl,
       width: payload.width,
       height: payload.height,
       size_bytes: payload.size_bytes,
@@ -25,9 +52,9 @@ export async function uploadMedia(payload) {
   }
 
   const res = await insertShopMedia({
-    original_url: payload.original_url,
-    thumb_url: payload.thumb_url,
-    full_url: payload.full_url,
+    original_url: originalUrl,
+    thumb_url: thumbUrl,
+    full_url: fullUrl,
     width: payload.width,
     height: payload.height,
     size_bytes: payload.size_bytes,

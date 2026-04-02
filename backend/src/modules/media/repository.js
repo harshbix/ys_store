@@ -1,5 +1,13 @@
 import { supabase } from '../../lib/supabase.js';
 
+export async function createSignedUploadUrl(bucket, path) {
+  return supabase.storage.from(bucket).createSignedUploadUrl(path);
+}
+
+export function getPublicUrl(bucket, path) {
+  return supabase.storage.from(bucket).getPublicUrl(path);
+}
+
 export async function insertProductMedia(payload) {
   return supabase.from('product_media').insert(payload).select().single();
 }

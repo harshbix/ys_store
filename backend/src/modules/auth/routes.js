@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { validateRequest } from '../../middleware/validateRequest.js';
 import { requireCustomerAuth } from '../../middleware/customerAuth.js';
+import { otpRequestLimiter } from '../../middleware/rateLimiters.js';
 import { requestOtpSchema, verifyOtpSchema, wishlistItemSchema, wishlistItemParamsSchema } from './validator.js';
 import {
   requestOtpController,
@@ -14,7 +15,7 @@ import {
 
 const router = Router();
 
-router.post('/request-otp', validateRequest(requestOtpSchema), requestOtpController);
+router.post('/request-otp', otpRequestLimiter, validateRequest(requestOtpSchema), requestOtpController);
 router.post('/verify-otp', validateRequest(verifyOtpSchema), verifyOtpController);
 
 router.get('/wishlist', requireCustomerAuth, getWishlistController);

@@ -1,9 +1,24 @@
 import { ok, created } from '../../utils/apiResponse.js';
-import { uploadMedia, getShopMedia, updateShopMediaItem, removeShopMediaItem } from './service.js';
+import {
+  createUploadUrl,
+  finalizeUpload,
+  getShopMedia,
+  updateShopMediaItem,
+  removeShopMediaItem
+} from './service.js';
 
-export async function uploadMediaController(req, res, next) {
+export async function createUploadUrlController(req, res, next) {
   try {
-    const data = await uploadMedia(req.body);
+    const data = await createUploadUrl(req.body);
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function finalizeUploadController(req, res, next) {
+  try {
+    const data = await finalizeUpload(req.body);
     return created(res, data);
   } catch (err) {
     return next(err);

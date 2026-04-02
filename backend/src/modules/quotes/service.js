@@ -102,7 +102,13 @@ export async function createQuote(payload, identity) {
   const tx = await createQuoteAndItemsTransactional(txPayload);
   if (tx.error) throw { status: 500, code: 'quote_create_failed', message: tx.error.message, details: 'create_quote_transactional missing or failed' };
 
-  const quote = tx.data;
+  const quote = Array.isArray(tx.data)
+    ? tx.data[0]
+    : (tx.data && tx.data.id ? tx.data : tx.data);
+
+  if (!quote || !quote.id) {
+    throw { status: 500, code: 'quote_create_failed', message: 'Transactional quote RPC returned invalid payload' };
+  }
 
   await createAnalyticsEvent({
     event_name: 'quote_created',
@@ -135,12 +141,20 @@ export async function trackWhatsappClick(quoteCode, identity) {
   const updated = await markWhatsappClick(quoteCode);
   if (updated.error) throw { status: 500, code: 'whatsapp_click_failed', message: updated.error.message };
 
-  await createAnalyticsEvent({
-    event_name: 'whatsapp_click_initiated',
-    session_token: identity.sessionToken,
-    quote_id: updated.data.id,
-    metadata: { quote_code: quoteCode }
-  });
+  await Promise.all([
+    createAnalyticsEvent({
+      event_name: 'whatsapp_click_initiated',
+      session_token: identity.sessionToken,
+      quote_id: updated.data.id,
+      metadata: { quote_code: quoteCode }
+    }),
+    createAnalyticsEvent({
+      event_name: 'whatsapp_click',
+      session_token: identity.sessionToken,
+      quote_id: updated.data.id,
+      metadata: { quote_code: quoteCode }
+    })
+  ]);
 
   return updated.data;
 }

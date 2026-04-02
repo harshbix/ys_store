@@ -1,11 +1,19 @@
 import { z } from 'zod';
 
-export const uploadMediaSchema = z.object({
+export const createUploadUrlSchema = z.object({
   owner_type: z.enum(['product', 'shop']),
   owner_id: z.string().uuid().optional(),
-  original_url: z.string().url(),
-  thumb_url: z.string().url(),
-  full_url: z.string().url(),
+  file_name: z.string().min(3),
+  content_type: z.string().min(3),
+  variant: z.enum(['original', 'thumb', 'full'])
+});
+
+export const finalizeUploadSchema = z.object({
+  owner_type: z.enum(['product', 'shop']),
+  owner_id: z.string().uuid().optional(),
+  original_path: z.string().min(3),
+  thumb_path: z.string().min(3),
+  full_path: z.string().min(3),
   width: z.number().int().positive().optional(),
   height: z.number().int().positive().optional(),
   size_bytes: z.number().int().positive().optional(),

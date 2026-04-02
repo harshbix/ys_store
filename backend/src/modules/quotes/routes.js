@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { ensureGuestSession } from '../../middleware/guestSession.js';
 import { quoteIdempotencyKey } from '../../middleware/idempotency.js';
 import { validateRequest } from '../../middleware/validateRequest.js';
+import { quoteCreateLimiter } from '../../middleware/rateLimiters.js';
 import { createQuoteSchema, quoteCodeParamsSchema } from './validator.js';
 import {
   createQuoteController,
@@ -13,7 +14,7 @@ import {
 const router = Router();
 
 router.use(ensureGuestSession);
-router.post('/', quoteIdempotencyKey, validateRequest(createQuoteSchema), createQuoteController);
+router.post('/', quoteCreateLimiter, quoteIdempotencyKey, validateRequest(createQuoteSchema), createQuoteController);
 router.get('/:quoteCode', validateRequest(quoteCodeParamsSchema, 'params'), getQuoteByCodeController);
 router.post('/:quoteCode/whatsapp-click', validateRequest(quoteCodeParamsSchema, 'params'), whatsappClickController);
 router.get('/:quoteCode/whatsapp-url', validateRequest(quoteCodeParamsSchema, 'params'), getWhatsappUrlController);
