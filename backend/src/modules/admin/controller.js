@@ -2,11 +2,13 @@ import { ok, created } from '../../utils/apiResponse.js';
 import {
   adminLogin,
   getAdminProducts,
+  getAdminProduct,
   createAdminProduct,
   updateAdminProduct,
   duplicateAdminProduct,
   quickEditAdminProduct,
   listAdminQuotes,
+  getAdminQuote,
   setAdminQuoteStatus
 } from './service.js';
 
@@ -30,6 +32,15 @@ export async function meController(req, res) {
 export async function listProductsController(req, res, next) {
   try {
     const data = await getAdminProducts();
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function getProductController(req, res, next) {
+  try {
+    const data = await getAdminProduct(req.params.id);
     return ok(res, data);
   } catch (err) {
     return next(err);
@@ -93,6 +104,15 @@ export async function quickEditController(req, res, next) {
 export async function listQuotesController(req, res, next) {
   try {
     const data = await listAdminQuotes();
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function getQuoteController(req, res, next) {
+  try {
+    const data = await getAdminQuote(req.params.id);
     return ok(res, data);
   } catch (err) {
     return next(err);

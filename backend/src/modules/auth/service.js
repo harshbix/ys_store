@@ -28,7 +28,7 @@ export async function confirmOtp(challengeId, code, phone) {
   const result = await verifyOtp(phone, code);
   if (result.error) throw { status: 401, code: 'otp_verify_failed', message: result.error.message };
 
-  const token = jwt.sign({ sub: result.data.user.id, type: 'customer' }, env.adminJwtSecret, { expiresIn: '30d' });
+  const token = jwt.sign({ sub: result.data.user.id, type: 'customer' }, env.customerJwtSecret, { expiresIn: '30d' });
   return { access_token: token, customer_id: result.data.user.id, challenge_id: challengeId };
 }
 

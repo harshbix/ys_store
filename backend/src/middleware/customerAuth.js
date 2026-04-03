@@ -9,7 +9,7 @@ export function requireCustomerAuth(req, res, next) {
   if (!token) return fail(res, 401, 'unauthorized', 'Customer login required');
 
   try {
-    const payload = jwt.verify(token, env.adminJwtSecret);
+    const payload = jwt.verify(token, env.customerJwtSecret);
     if (payload.type !== 'customer') return fail(res, 401, 'unauthorized', 'Invalid customer token');
     req.customerAuthId = payload.sub;
     return next();

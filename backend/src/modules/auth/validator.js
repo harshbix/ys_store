@@ -1,11 +1,13 @@
 import { z } from 'zod';
 
+const phoneSchema = z.string().regex(/^\+[1-9]\d{6,14}$/, 'Phone must be in E.164 format (e.g. +255712345678)');
+
 export const requestOtpSchema = z.object({
-  phone: z.string().min(10).max(20)
+  phone: phoneSchema
 });
 
 export const verifyOtpSchema = z.object({
-  phone: z.string().min(10).max(20),
+  phone: phoneSchema,
   challenge_id: z.string().min(6),
   code: z.string().min(4).max(8)
 });

@@ -6,6 +6,8 @@ const required = [
   'SUPABASE_URL',
   'SUPABASE_SERVICE_ROLE_KEY',
   'ADMIN_JWT_SECRET',
+  'ADMIN_EMAIL',
+  'ADMIN_PASSWORD',
   'WHATSAPP_PHONE_E164',
   'SUPABASE_STORAGE_BUCKET'
 ];
@@ -28,6 +30,7 @@ export const env = {
   adminJwtExpiresIn: process.env.ADMIN_JWT_EXPIRES_IN || '7d',
   adminEmail: process.env.ADMIN_EMAIL || '',
   adminPassword: process.env.ADMIN_PASSWORD || '',
+  customerJwtSecret: process.env.CUSTOMER_JWT_SECRET || process.env.ADMIN_JWT_SECRET,
   whatsappPhoneE164: process.env.WHATSAPP_PHONE_E164,
   otpProvider: process.env.OTP_PROVIDER || 'supabase',
   otpTtlSeconds: Number(process.env.OTP_TTL_SECONDS || 300),

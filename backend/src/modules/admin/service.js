@@ -9,6 +9,7 @@ import {
   findProductById,
   listProductSpecs,
   replaceProductSpecs,
+  findQuoteById,
   listQuotesAdmin,
   updateQuoteStatus
 } from './repository.js';
@@ -43,6 +44,17 @@ export async function getAdminProducts() {
   const result = await listProductsAdmin();
   if (result.error) throw { status: 500, code: 'admin_products_failed', message: result.error.message };
   return result.data || [];
+}
+
+export async function getAdminProduct(productId) {
+  const result = await findProductById(productId);
+  if (result.error) throw { status: 500, code: 'admin_product_lookup_failed', message: result.error.message };
+  if (!result.data) throw { status: 404, code: 'product_not_found', message: 'Product not found' };
+
+  const specsRes = await listProductSpecs(productId);
+  if (specsRes.error) throw { status: 500, code: 'product_specs_lookup_failed', message: specsRes.error.message };
+
+  return { ...result.data, specs: specsRes.data || [] };
 }
 
 export async function createAdminProduct(payload, adminId) {
@@ -163,7 +175,37 @@ export async function listAdminQuotes() {
   return res.data || [];
 }
 
+export async function getAdminQuote(quoteId) {
+  const res = await findQuoteById(quoteId);
+  if (res.error) throw { status: 500, code: 'quote_lookup_failed', message: res.error.message };
+  if (!res.data) throw { status: 404, code: 'quote_not_found', message: 'Quote not found' };
+  return res.data;
+}
+
+const QUOTE_STATUS_TRANSITIONS = {
+  new: ['whatsapp_sent', 'negotiating', 'closed_lost'],
+  whatsapp_sent: ['negotiating', 'confirmed', 'closed_won', 'closed_lost'],
+  negotiating: ['confirmed', 'closed_won', 'closed_lost'],
+  confirmed: ['closed_won', 'closed_lost'],
+  closed_won: [],
+  closed_lost: []
+};
+
 export async function setAdminQuoteStatus(quoteId, payload) {
+  const current = await findQuoteById(quoteId);
+  if (current.error) throw { status: 500, code: 'quote_lookup_failed', message: current.error.message };
+  if (!current.data) throw { status: 404, code: 'quote_not_found', message: 'Quote not found' };
+
+  const currentStatus = current.data.status;
+  const allowedNext = QUOTE_STATUS_TRANSITIONS[currentStatus] || [];
+  if (!allowedNext.includes(payload.status)) {
+    throw {
+      status: 422,
+      code: 'invalid_status_transition',
+      message: `Cannot transition quote from '${currentStatus}' to '${payload.status}'`
+    };
+  }
+
   const updated = await updateQuoteStatus(quoteId, payload);
   if (updated.error) throw { status: 500, code: 'quote_status_update_failed', message: updated.error.message };
   return updated.data;

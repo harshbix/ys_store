@@ -36,6 +36,10 @@ export async function replaceProductSpecs(productId, specs) {
   return supabase.from('product_specs').insert(specs.map((s) => ({ ...s, product_id: productId })));
 }
 
+export async function findQuoteById(quoteId) {
+  return supabase.from('quotes').select('*').eq('id', quoteId).maybeSingle();
+}
+
 export async function listQuotesAdmin() {
   return supabase.from('quotes').select('*').order('created_at', { ascending: false });
 }
