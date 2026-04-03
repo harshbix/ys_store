@@ -4,25 +4,31 @@ import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import routes from './routes/index.js';
-import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestContext, morganRequestIdToken } from './middleware/requestContext.js';
 
 const app = express();
-const defaultAllowedOrigins = ['http://localhost:5173'];
-const configuredOrigins = env.frontendUrl.split(',').map((s) => s.trim()).filter(Boolean);
-const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...configuredOrigins]));
-const useCredentialedCors = true;
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://ysstore.vercel.app'
+];
 
-app.use(helmet());
-app.use(cors({
+const corsOptions = {
   origin(origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
-  credentials: useCredentialedCors
-}));
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(helmet());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(requestContext);
 morgan.token('request-id', morganRequestIdToken);
 app.use(morgan(':method :url :status :response-time ms req_id=:request-id'));
