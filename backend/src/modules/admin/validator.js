@@ -41,6 +41,8 @@ export const adminProductSchema = z.object({
 
 export const productIdParamsSchema = z.object({ id: z.string().uuid() });
 
+export const quoteIdParamsSchema = z.object({ id: z.string().uuid() });
+
 export const quickEditSchema = z.object({
   estimated_price_tzs: z.number().int().nonnegative().optional(),
   stock_status: z.enum(['in_stock', 'low_stock', 'build_on_request', 'incoming_stock', 'sold_out']).optional()

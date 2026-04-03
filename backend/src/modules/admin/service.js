@@ -10,6 +10,7 @@ import {
   listProductSpecs,
   replaceProductSpecs,
   listQuotesAdmin,
+  findQuoteById,
   updateQuoteStatus
 } from './repository.js';
 
@@ -43,6 +44,17 @@ export async function getAdminProducts() {
   const result = await listProductsAdmin();
   if (result.error) throw { status: 500, code: 'admin_products_failed', message: result.error.message };
   return result.data || [];
+}
+
+export async function getAdminProductById(productId) {
+  const productRes = await findProductById(productId);
+  if (productRes.error) throw { status: 500, code: 'admin_product_failed', message: productRes.error.message };
+  if (!productRes.data) throw { status: 404, code: 'product_not_found', message: 'Product not found' };
+
+  const specsRes = await listProductSpecs(productId);
+  if (specsRes.error) throw { status: 500, code: 'product_specs_lookup_failed', message: specsRes.error.message };
+
+  return { ...productRes.data, specs: specsRes.data || [] };
 }
 
 export async function createAdminProduct(payload, adminId) {
@@ -161,6 +173,13 @@ export async function listAdminQuotes() {
   const res = await listQuotesAdmin();
   if (res.error) throw { status: 500, code: 'quotes_list_failed', message: res.error.message };
   return res.data || [];
+}
+
+export async function getAdminQuoteById(quoteId) {
+  const res = await findQuoteById(quoteId);
+  if (res.error) throw { status: 500, code: 'quote_lookup_failed', message: res.error.message };
+  if (!res.data) throw { status: 404, code: 'quote_not_found', message: 'Quote not found' };
+  return res.data;
 }
 
 export async function setAdminQuoteStatus(quoteId, payload) {
