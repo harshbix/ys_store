@@ -32,20 +32,20 @@ import {
 const router = Router();
 
 router.post('/login', adminLoginLimiter, validateRequest(adminLoginSchema), loginController);
-router.post('/logout', requireAdmin, adminApiLimiter, logoutController);
-router.get('/me', requireAdmin, adminApiLimiter, meController);
+router.post('/logout', adminApiLimiter, requireAdmin, logoutController);
+router.get('/me', adminApiLimiter, requireAdmin, meController);
 
-router.get('/products', requireAdmin, adminApiLimiter, listProductsController);
-router.post('/products', requireAdmin, adminApiLimiter, validateRequest(adminProductSchema), createProductController);
-router.get('/products/:id', requireAdmin, adminApiLimiter, validateRequest(productIdParamsSchema, 'params'), getProductController);
-router.patch('/products/:id', requireAdmin, adminApiLimiter, validateRequest(productIdParamsSchema, 'params'), validateRequest(adminProductSchema), updateProductController);
-router.post('/products/:id/duplicate', requireAdmin, adminApiLimiter, validateRequest(productIdParamsSchema, 'params'), duplicateProductController);
-router.patch('/products/:id/stock', requireAdmin, adminApiLimiter, validateRequest(productIdParamsSchema, 'params'), validateRequest(stockSchema), updateStockController);
-router.patch('/products/:id/visibility', requireAdmin, adminApiLimiter, validateRequest(productIdParamsSchema, 'params'), validateRequest(visibilitySchema), updateVisibilityController);
-router.patch('/products/:id/quick-edit', requireAdmin, adminApiLimiter, validateRequest(productIdParamsSchema, 'params'), validateRequest(quickEditSchema), quickEditController);
+router.get('/products', adminApiLimiter, requireAdmin, listProductsController);
+router.post('/products', adminApiLimiter, requireAdmin, validateRequest(adminProductSchema), createProductController);
+router.get('/products/:id', adminApiLimiter, requireAdmin, validateRequest(productIdParamsSchema, 'params'), getProductController);
+router.patch('/products/:id', adminApiLimiter, requireAdmin, validateRequest(productIdParamsSchema, 'params'), validateRequest(adminProductSchema), updateProductController);
+router.post('/products/:id/duplicate', adminApiLimiter, requireAdmin, validateRequest(productIdParamsSchema, 'params'), duplicateProductController);
+router.patch('/products/:id/stock', adminApiLimiter, requireAdmin, validateRequest(productIdParamsSchema, 'params'), validateRequest(stockSchema), updateStockController);
+router.patch('/products/:id/visibility', adminApiLimiter, requireAdmin, validateRequest(productIdParamsSchema, 'params'), validateRequest(visibilitySchema), updateVisibilityController);
+router.patch('/products/:id/quick-edit', adminApiLimiter, requireAdmin, validateRequest(productIdParamsSchema, 'params'), validateRequest(quickEditSchema), quickEditController);
 
-router.get('/quotes', requireAdmin, adminApiLimiter, listQuotesController);
-router.get('/quotes/:id', requireAdmin, adminApiLimiter, validateRequest(quoteIdParamsSchema, 'params'), getQuoteController);
-router.patch('/quotes/:id/status', requireAdmin, adminApiLimiter, validateRequest(quoteIdParamsSchema, 'params'), validateRequest(quoteStatusSchema), updateQuoteStatusController);
+router.get('/quotes', adminApiLimiter, requireAdmin, listQuotesController);
+router.get('/quotes/:id', adminApiLimiter, requireAdmin, validateRequest(quoteIdParamsSchema, 'params'), getQuoteController);
+router.patch('/quotes/:id/status', adminApiLimiter, requireAdmin, validateRequest(quoteIdParamsSchema, 'params'), validateRequest(quoteStatusSchema), updateQuoteStatusController);
 
 export default router;

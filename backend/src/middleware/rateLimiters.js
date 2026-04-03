@@ -47,3 +47,15 @@ export const adminApiLimiter = rateLimit({
     message: 'Too many requests, please retry in a moment.'
   }
 });
+
+export const customerApiLimiter = rateLimit({
+  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 60000),
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error_code: 'rate_limited',
+    message: 'Too many requests, please retry in a moment.'
+  }
+});

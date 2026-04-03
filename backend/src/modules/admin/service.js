@@ -197,7 +197,14 @@ export async function setAdminQuoteStatus(quoteId, payload) {
   if (!current.data) throw { status: 404, code: 'quote_not_found', message: 'Quote not found' };
 
   const currentStatus = current.data.status;
-  const allowedNext = QUOTE_STATUS_TRANSITIONS[currentStatus] || [];
+  if (!(currentStatus in QUOTE_STATUS_TRANSITIONS)) {
+    throw {
+      status: 422,
+      code: 'invalid_current_status',
+      message: `Quote has unrecognized status: '${currentStatus}'`
+    };
+  }
+  const allowedNext = QUOTE_STATUS_TRANSITIONS[currentStatus];
   if (!allowedNext.includes(payload.status)) {
     throw {
       status: 422,
