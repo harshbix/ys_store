@@ -3,6 +3,7 @@ import { Heart, LogIn, ShoppingCart, Wrench, X } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAdminAuthStore, useAuthStore } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 const links = [
   { to: '/shop', label: 'Shop' },
@@ -28,7 +29,7 @@ export function MobileNav() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={close}
-            className="fixed inset-0 z-40 bg-black/70"
+            className="fixed inset-0 z-40 bg-overlay/70"
           />
           <motion.aside
             initial={{ x: '-100%' }}
@@ -65,6 +66,10 @@ export function MobileNav() {
             </nav>
 
             <div className="mt-6 space-y-1 border-t border-border pt-4">
+              <div className="px-1 py-2">
+                <ThemeToggle />
+              </div>
+
               <Link to="/wishlist" onClick={close} className="flex min-h-10 items-center gap-2 px-1 text-[13px] text-secondary">
                 <Heart className="h-4 w-4" />
                 Wishlist

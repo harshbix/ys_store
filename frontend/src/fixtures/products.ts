@@ -86,6 +86,90 @@ const fixtureProducts: Product[] = [
     created_by_admin_id: null,
     created_at: now,
     updated_at: now
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000005',
+    sku: 'YS-LAP-3050-002',
+    slug: 'lenovo-legion-5-rtx3050',
+    title: 'Lenovo Legion 5 RTX 3050',
+    product_type: 'laptop',
+    brand: 'Lenovo',
+    model_name: 'Legion 5 15ACH6',
+    condition: 'imported_used',
+    stock_status: 'incoming_stock',
+    estimated_price_tzs: 2150000,
+    short_description: 'Reliable mid-range gaming laptop with strong cooling.',
+    long_description: 'Great option for 1080p esports and creator workloads on a budget.',
+    warranty_text: '3 months service warranty',
+    is_visible: true,
+    is_featured: false,
+    featured_tag: null,
+    created_by_admin_id: null,
+    created_at: now,
+    updated_at: now
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000006',
+    sku: 'YS-COMP-RAM-001',
+    slug: 'corsair-vengeance-32gb-ddr5',
+    title: 'Corsair Vengeance 32GB DDR5 Kit',
+    product_type: 'component',
+    brand: 'Corsair',
+    model_name: 'Vengeance DDR5 2x16',
+    condition: 'new',
+    stock_status: 'in_stock',
+    estimated_price_tzs: 385000,
+    short_description: 'Low-latency DDR5 memory kit for modern systems.',
+    long_description: 'Stable profile memory tuned for creators and gamers.',
+    warranty_text: '12 months warranty',
+    is_visible: true,
+    is_featured: false,
+    featured_tag: null,
+    created_by_admin_id: null,
+    created_at: now,
+    updated_at: now
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000007',
+    sku: 'YS-DESK-I5-001',
+    slug: 'office-desktop-core-i5-13th-gen',
+    title: 'Office Desktop Core i5 13th Gen',
+    product_type: 'desktop',
+    brand: 'YS Business',
+    model_name: 'OfficePro 13',
+    condition: 'new',
+    stock_status: 'build_on_request',
+    estimated_price_tzs: 1450000,
+    short_description: 'Business desktop optimized for daily office operations.',
+    long_description: 'Quiet, power-efficient desktop designed for productivity and uptime.',
+    warranty_text: '12 months warranty',
+    is_visible: true,
+    is_featured: false,
+    featured_tag: null,
+    created_by_admin_id: null,
+    created_at: now,
+    updated_at: now
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000008',
+    sku: 'YS-ACC-KM-001',
+    slug: 'mechanical-keyboard-mouse-bundle',
+    title: 'Mechanical Keyboard + Mouse Bundle',
+    product_type: 'accessory',
+    brand: 'YS Select',
+    model_name: 'Pro Input Combo',
+    condition: 'new',
+    stock_status: 'sold_out',
+    estimated_price_tzs: 180000,
+    short_description: 'Compact mechanical keyboard and precision gaming mouse combo.',
+    long_description: 'Affordable starter bundle with tactile switches and adjustable DPI.',
+    warranty_text: '1 month replacement warranty',
+    is_visible: true,
+    is_featured: false,
+    featured_tag: null,
+    created_by_admin_id: null,
+    created_at: now,
+    updated_at: now
   }
 ];
 
@@ -148,9 +232,26 @@ function specsFor(product: Product): ProductSpec[] {
     ];
   }
 
+  if (product.product_type === 'accessory') {
+    return [
+      {
+        id: 5,
+        product_id: product.id,
+        spec_key: 'refresh_rate_hz',
+        value_text: null,
+        value_number: 165,
+        value_bool: null,
+        value_json: null,
+        unit: 'Hz',
+        sort_order: 10,
+        created_at: now
+      }
+    ];
+  }
+
   return [
     {
-      id: 5,
+      id: 6,
       product_id: product.id,
       spec_key: 'ram_gb',
       value_text: null,

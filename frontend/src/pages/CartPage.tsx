@@ -14,8 +14,8 @@ export default function CartPage() {
   return (
     <div className="space-y-6 pb-8">
       <header>
-        <h1 className="section-title text-foreground">Cart</h1>
-        <p className="mt-2 text-[13px] text-secondary">Backend cart is the source of truth for your current session.</p>
+        <h1 className="section-title text-foreground">Your Cart</h1>
+        <p className="mt-2 text-[13px] text-secondary">Review quantities, adjust items, then continue to quote checkout.</p>
       </header>
 
       {cartQuery.isLoading ? <SkeletonGrid count={4} /> : null}
@@ -32,11 +32,12 @@ export default function CartPage() {
 
       {!cartQuery.isLoading && !cartQuery.isError && items.length > 0 ? (
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          <section className="space-y-px bg-border">
-            {items.map((item) => (
+          <section className="space-y-3">
+            {items.map((item, index) => (
               <CartItemRow
                 key={item.id}
                 item={item}
+                index={index}
                 busy={updateItem.isPending || removeItem.isPending}
                 onQuantityChange={(quantity) => updateItem.mutate({ itemId: item.id, quantity })}
                 onRemove={() => removeItem.mutate(item.id)}

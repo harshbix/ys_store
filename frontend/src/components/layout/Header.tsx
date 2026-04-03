@@ -5,6 +5,7 @@ import { useCart } from '../../hooks/useCart';
 import { useAdminAuthStore, useAuthStore } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
 import { SearchResultsOverlay } from '../ui/SearchResultsOverlay.tsx';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 const navLinks = [
   { label: 'Shop', to: '/shop' },
@@ -37,7 +38,7 @@ export function Header() {
   const accountHref = adminAuthenticated ? '/admin' : '/login';
 
   return (
-    <header className={`sticky top-0 z-30 border-b transition ${isScrolled ? 'border-border bg-[rgba(17,17,17,0.95)] backdrop-blur' : 'border-transparent bg-background'}`}>
+    <header className={`sticky top-0 z-30 border-b transition ${isScrolled ? 'border-border bg-background/95 backdrop-blur' : 'border-transparent bg-background'}`}>
       <div className="mx-auto h-[52px] w-full max-w-[1440px] px-4 sm:px-6 lg:px-8">
         <div className="relative flex h-full items-center justify-between lg:hidden">
           <button
@@ -54,6 +55,8 @@ export function Header() {
           </Link>
 
           <div className="ml-auto flex items-center gap-1">
+            <ThemeToggle compact />
+
             <button
               type="button"
               onClick={openSearchOverlay}
@@ -94,6 +97,8 @@ export function Header() {
           </Link>
 
           <div className="flex flex-1 items-center justify-end gap-1">
+            <ThemeToggle compact />
+
             <button
               type="button"
               onClick={openSearchOverlay}

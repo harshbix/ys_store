@@ -11,7 +11,7 @@ import {
 
 export async function requestOtpController(req, res, next) {
   try {
-    const data = await startOtp(req.body.phone);
+    const data = await startOtp(req.body.email);
     return created(res, data);
   } catch (err) {
     return next(err);
@@ -20,9 +20,8 @@ export async function requestOtpController(req, res, next) {
 
 export async function verifyOtpController(req, res, next) {
   try {
-    // Phone replay must come from client state for MVP; bind challenge to phone in phase 2.
-    const phone = req.body.phone || '';
-    const data = await confirmOtp(req.body.challenge_id, req.body.code, phone);
+    const email = req.body.email || '';
+    const data = await confirmOtp(req.body.challenge_id, req.body.code, email);
     return ok(res, data);
   } catch (err) {
     return next(err);

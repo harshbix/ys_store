@@ -18,15 +18,15 @@ import {
 } from './repository.js';
 import { env } from '../../config/env.js';
 
-export async function startOtp(phone) {
-  const result = await requestOtp(phone);
-  if (result.error) throw { status: 500, code: 'otp_request_failed', message: result.error.message };
+export async function startOtp(email) {
+  const result = await requestOtp(email);
+  if (result.error) throw { status: 500, code: 'otp_request_failed', message: 'Could not send email verification code' };
   return { challenge_id: `OTP-${Date.now()}` };
 }
 
-export async function confirmOtp(challengeId, code, phone) {
-  const result = await verifyOtp(phone, code);
-  if (result.error) throw { status: 401, code: 'otp_verify_failed', message: result.error.message };
+export async function confirmOtp(challengeId, code, email) {
+  const result = await verifyOtp(email, code);
+  if (result.error) throw { status: 401, code: 'otp_verify_failed', message: 'Invalid or expired verification code' };
 
   const token = jwt.sign({ sub: result.data.user.id, type: 'customer' }, env.adminJwtSecret, { expiresIn: '30d' });
   return { access_token: token, customer_id: result.data.user.id, challenge_id: challengeId };

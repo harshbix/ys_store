@@ -28,6 +28,10 @@ export async function listProductSpecs(productId) {
   return supabase.from('product_specs').select('*').eq('product_id', productId);
 }
 
+export async function listProductMedia(productId) {
+  return supabase.from('product_media').select('*').eq('product_id', productId).order('sort_order', { ascending: true });
+}
+
 export async function replaceProductSpecs(productId, specs) {
   const del = await supabase.from('product_specs').delete().eq('product_id', productId);
   if (del.error) return del;

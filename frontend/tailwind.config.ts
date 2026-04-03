@@ -5,24 +5,34 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: '#0A0A0A',
-        surface: '#111111',
-        surfaceElevated: '#1C1C1C',
-        border: '#2A2A2A',
-        foreground: '#F0EDE8',
-        secondary: '#A8A49E',
-        muted: '#666660',
-        primary: '#C8A96E',
-        primaryForeground: '#0A0A0A',
-        accent: '#C8A96E',
-        accentSoft: '#C8A96E',
-        danger: '#D75858',
-        success: '#25D366'
+        background: 'rgb(var(--color-bg) / <alpha-value>)',
+        backgroundElevated: 'rgb(var(--color-bg-elevated) / <alpha-value>)',
+        surface: 'rgb(var(--color-surface) / <alpha-value>)',
+        surfaceElevated: 'rgb(var(--color-surface-elevated) / <alpha-value>)',
+        surfaceHover: 'rgb(var(--color-surface-hover) / <alpha-value>)',
+        border: 'rgb(var(--color-border-subtle) / <alpha-value>)',
+        borderStrong: 'rgb(var(--color-border-strong) / <alpha-value>)',
+        foreground: 'rgb(var(--color-text-primary) / <alpha-value>)',
+        secondary: 'rgb(var(--color-text-secondary) / <alpha-value>)',
+        muted: 'rgb(var(--color-text-muted) / <alpha-value>)',
+        primary: 'rgb(var(--color-accent) / <alpha-value>)',
+        primaryForeground: 'rgb(var(--color-primary-foreground) / <alpha-value>)',
+        accent: 'rgb(var(--color-accent) / <alpha-value>)',
+        accentHover: 'rgb(var(--color-accent-hover) / <alpha-value>)',
+        accentSoft: 'rgb(var(--color-accent) / <alpha-value>)',
+        danger: 'rgb(var(--color-danger) / <alpha-value>)',
+        success: 'rgb(var(--color-success) / <alpha-value>)',
+        warning: 'rgb(var(--color-warning) / <alpha-value>)',
+        inputBg: 'rgb(var(--color-input-bg) / <alpha-value>)',
+        overlay: 'rgb(var(--color-overlay) / <alpha-value>)'
       },
       fontFamily: {
         sans: ['Inter', 'Segoe UI', 'system-ui', 'sans-serif'],
         display: ['Inter', 'Segoe UI', 'system-ui', 'sans-serif'],
         mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'monospace']
+      },
+      boxShadow: {
+        soft: 'var(--shadow-soft)'
       },
       animation: {
         'pulse-soft': 'pulseSoft 1.6s ease-in-out infinite'

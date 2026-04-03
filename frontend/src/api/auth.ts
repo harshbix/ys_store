@@ -18,14 +18,14 @@ interface PersistentCartPayload {
   estimated_total_tzs: number;
 }
 
-export async function requestOtp(phone: string): Promise<ApiEnvelope<OtpRequestPayload>> {
-  const { data } = await apiClient.post<ApiEnvelope<OtpRequestPayload>>('/auth/request-otp', { phone });
+export async function requestOtp(email: string): Promise<ApiEnvelope<OtpRequestPayload>> {
+  const { data } = await apiClient.post<ApiEnvelope<OtpRequestPayload>>('/auth/request-otp', { email });
   return data;
 }
 
-export async function verifyOtp(phone: string, challenge_id: string, code: string): Promise<ApiEnvelope<OtpVerifyPayload>> {
+export async function verifyOtp(email: string, challenge_id: string, code: string): Promise<ApiEnvelope<OtpVerifyPayload>> {
   const { data } = await apiClient.post<ApiEnvelope<OtpVerifyPayload>>('/auth/verify-otp', {
-    phone,
+    email,
     challenge_id,
     code
   });

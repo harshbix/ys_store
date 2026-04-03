@@ -16,6 +16,7 @@ import {
   logoutController,
   meController,
   listProductsController,
+  getProductController,
   createProductController,
   updateProductController,
   duplicateProductController,
@@ -33,6 +34,7 @@ router.post('/logout', requireAdmin, logoutController);
 router.get('/me', requireAdmin, meController);
 
 router.get('/products', requireAdmin, listProductsController);
+router.get('/products/:id', requireAdmin, validateRequest(productIdParamsSchema, 'params'), getProductController);
 router.post('/products', requireAdmin, validateRequest(adminProductSchema), createProductController);
 router.patch('/products/:id', requireAdmin, validateRequest(productIdParamsSchema, 'params'), validateRequest(adminProductSchema), updateProductController);
 router.post('/products/:id/duplicate', requireAdmin, validateRequest(productIdParamsSchema, 'params'), duplicateProductController);

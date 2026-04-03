@@ -8,6 +8,7 @@ import {
   updateProduct,
   findProductById,
   listProductSpecs,
+  listProductMedia,
   replaceProductSpecs,
   listQuotesAdmin,
   updateQuoteStatus
@@ -43,6 +44,26 @@ export async function getAdminProducts() {
   const result = await listProductsAdmin();
   if (result.error) throw { status: 500, code: 'admin_products_failed', message: result.error.message };
   return result.data || [];
+}
+
+export async function getAdminProductDetail(productId) {
+  const productRes = await findProductById(productId);
+  if (productRes.error) throw { status: 500, code: 'product_lookup_failed', message: productRes.error.message };
+  if (!productRes.data) throw { status: 404, code: 'product_not_found', message: 'Product not found' };
+
+  const [specsRes, mediaRes] = await Promise.all([
+    listProductSpecs(productId),
+    listProductMedia(productId)
+  ]);
+
+  if (specsRes.error) throw { status: 500, code: 'product_specs_lookup_failed', message: specsRes.error.message };
+  if (mediaRes.error) throw { status: 500, code: 'product_media_lookup_failed', message: mediaRes.error.message };
+
+  return {
+    ...productRes.data,
+    specs: specsRes.data || [],
+    media: mediaRes.data || []
+  };
 }
 
 export async function createAdminProduct(payload, adminId) {

@@ -12,37 +12,37 @@ export function useAuth() {
 
   const accessToken = useAuthStore((state) => state.accessToken);
   const customerId = useAuthStore((state) => state.customerId);
-  const phone = useAuthStore((state) => state.phone);
+  const email = useAuthStore((state) => state.email);
   const challengeId = useAuthStore((state) => state.challengeId);
   const setOtpRequest = useAuthStore((state) => state.setOtpRequest);
   const completeLogin = useAuthStore((state) => state.completeLogin);
   const logoutStore = useAuthStore((state) => state.logout);
 
   const requestOtpMutation = useMutation({
-    mutationFn: (inputPhone: string) => requestOtp(inputPhone),
-    onSuccess: (response, inputPhone) => {
-      setOtpRequest(inputPhone, response.data.challenge_id);
-      showToast({ title: 'OTP sent', description: 'Check your phone for the verification code.', variant: 'success' });
+    mutationFn: (inputEmail: string) => requestOtp(inputEmail),
+    onSuccess: (response, inputEmail) => {
+      setOtpRequest(inputEmail, response.data.challenge_id);
+      showToast({ title: 'Verification code sent', description: 'Check your email inbox for the OTP code.', variant: 'success' });
     },
     onError: (error) => {
-      showToast({ title: 'OTP request failed', description: toUserMessage(error, 'Please verify your phone and retry.'), variant: 'error' });
+      showToast({ title: 'Could not send code', description: toUserMessage(error, 'Please verify your email and try again.'), variant: 'error' });
     }
   });
 
   const verifyOtpMutation = useMutation({
-    mutationFn: ({ inputPhone, code }: { inputPhone: string; code: string }) => {
+    mutationFn: ({ inputEmail, code }: { inputEmail: string; code: string }) => {
       const currentChallengeId = useAuthStore.getState().challengeId;
       if (!currentChallengeId) {
-        throw new Error('OTP challenge is missing. Request a new OTP first.');
+        throw new Error('Verification session expired. Request a new code.');
       }
 
-      return verifyOtp(inputPhone, currentChallengeId, code);
+      return verifyOtp(inputEmail, currentChallengeId, code);
     },
     onSuccess: async (response, variables) => {
       const { access_token, customer_id, challenge_id } = response.data;
       completeLogin(access_token, customer_id);
-      setOtpRequest(variables.inputPhone, challenge_id);
-      showToast({ title: 'Signed in', description: 'Your account is now linked to this session.', variant: 'success' });
+      setOtpRequest(variables.inputEmail, challenge_id);
+      showToast({ title: 'Welcome back', description: 'Your saved cart and wishlist are now linked.', variant: 'success' });
 
       try {
         const guestCart = await getCart();
@@ -59,7 +59,7 @@ export function useAuth() {
       await queryClient.invalidateQueries({ queryKey: queryKeys.cart.current });
     },
     onError: (error) => {
-      showToast({ title: 'OTP verification failed', description: toUserMessage(error, 'Please confirm the code and try again.'), variant: 'error' });
+      showToast({ title: 'Code verification failed', description: toUserMessage(error, 'Please check the code and try again.'), variant: 'error' });
     }
   });
 
@@ -73,7 +73,7 @@ export function useAuth() {
   return {
     accessToken,
     customerId,
-    phone,
+    email,
     challengeId,
     isAuthenticated: Boolean(accessToken && customerId),
     requestOtpMutation,

@@ -1,16 +1,16 @@
 export interface CustomerAuthState {
   accessToken: string | null;
   customerId: string | null;
-  phone: string | null;
+  email: string | null;
   challengeId: string | null;
 }
 
 export interface OtpRequestInput {
-  phone: string;
+  email: string;
 }
 
 export interface OtpVerifyInput {
-  phone: string;
+  email: string;
   challenge_id: string;
   code: string;
 }

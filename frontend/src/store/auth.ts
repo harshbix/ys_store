@@ -5,9 +5,9 @@ import type { AdminUser } from '../types/admin';
 interface CustomerAuthStore {
   accessToken: string | null;
   customerId: string | null;
-  phone: string | null;
+  email: string | null;
   challengeId: string | null;
-  setOtpRequest: (phone: string, challengeId: string) => void;
+  setOtpRequest: (email: string, challengeId: string) => void;
   completeLogin: (accessToken: string, customerId: string) => void;
   logout: () => void;
 }
@@ -24,11 +24,11 @@ export const useAuthStore = create<CustomerAuthStore>()(
     (set) => ({
       accessToken: null,
       customerId: null,
-      phone: null,
+      email: null,
       challengeId: null,
-      setOtpRequest: (phone, challengeId) => set({ phone, challengeId }),
+      setOtpRequest: (email, challengeId) => set({ email, challengeId }),
       completeLogin: (accessToken, customerId) => set({ accessToken, customerId }),
-      logout: () => set({ accessToken: null, customerId: null, phone: null, challengeId: null })
+      logout: () => set({ accessToken: null, customerId: null, email: null, challengeId: null })
     }),
     {
       name: 'ys-customer-auth'

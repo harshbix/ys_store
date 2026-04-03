@@ -1,8 +1,26 @@
 import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { adminLogin, adminLogout, getAdminMe, getAdminProducts, getAdminQuotes } from '../api/admin';
+import {
+  adminLogin,
+  adminLogout,
+  archiveAdminProduct,
+  createAdminProduct,
+  createAdminUploadUrl,
+  duplicateAdminProduct,
+  finalizeAdminUpload,
+  getAdminMe,
+  getAdminProducts,
+  getAdminQuotes,
+  publishAdminProduct,
+  updateAdminProduct
+} from '../api/admin';
 import { queryKeys } from '../lib/queryKeys';
 import { useAdminAuthStore } from '../store/auth';
+import type {
+  AdminFinalizeUploadPayload,
+  AdminProductPayload,
+  AdminSignedUploadPayload
+} from '../types/admin';
 import { toUserMessage } from '../utils/errors';
 import { useShowToast } from './useToast';
 
@@ -53,6 +71,97 @@ export function useAdmin() {
     retry: 1
   });
 
+  const createProductMutation = useMutation({
+    mutationFn: (payload: AdminProductPayload) => createAdminProduct(payload, token || ''),
+    onSuccess: async () => {
+      showToast({ title: 'Product saved', description: 'Your new product is now available in the admin catalog.', variant: 'success' });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Could not save product',
+        description: toUserMessage(error, 'Please check the product details and try again.'),
+        variant: 'error'
+      });
+    }
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: ({ productId, payload }: { productId: string; payload: AdminProductPayload }) =>
+      updateAdminProduct(productId, payload, token || ''),
+    onSuccess: async (response, variables) => {
+      showToast({ title: 'Product updated', description: `${response.data.title} has been updated.`, variant: 'success' });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.productDetail(variables.productId) });
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Could not update product',
+        description: toUserMessage(error, 'Your changes were not saved. Please try again.'),
+        variant: 'error'
+      });
+    }
+  });
+
+  const duplicateProductMutation = useMutation({
+    mutationFn: (productId: string) => duplicateAdminProduct(productId, token || ''),
+    onSuccess: async (response) => {
+      showToast({
+        title: 'Product duplicated',
+        description: `${response.data.title} copy has been created.`,
+        variant: 'success'
+      });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Could not duplicate product',
+        description: toUserMessage(error, 'Try again in a moment.'),
+        variant: 'error'
+      });
+    }
+  });
+
+  const archiveProductMutation = useMutation({
+    mutationFn: (productId: string) => archiveAdminProduct(productId, token || ''),
+    onSuccess: async (response, productId) => {
+      showToast({ title: 'Product archived', description: `${response.data.title} is now hidden from customers.`, variant: 'info' });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.productDetail(productId) });
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Could not archive product',
+        description: toUserMessage(error, 'Please try again.'),
+        variant: 'error'
+      });
+    }
+  });
+
+  const publishProductMutation = useMutation({
+    mutationFn: (productId: string) => publishAdminProduct(productId, token || ''),
+    onSuccess: async (response, productId) => {
+      showToast({ title: 'Product published', description: `${response.data.title} is now visible to customers.`, variant: 'success' });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.productDetail(productId) });
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Could not publish product',
+        description: toUserMessage(error, 'Please try again.'),
+        variant: 'error'
+      });
+    }
+  });
+
+  const createUploadUrlMutation = useMutation({
+    mutationFn: (payload: AdminSignedUploadPayload) => createAdminUploadUrl(payload, token || '')
+  });
+
+  const finalizeUploadMutation = useMutation({
+    mutationFn: (payload: AdminFinalizeUploadPayload) => finalizeAdminUpload(payload, token || '')
+  });
+
   useEffect(() => {
     if (meQuery.data?.data.admin && token) {
       setSession(token, meQuery.data.data.admin);
@@ -78,6 +187,7 @@ export function useAdmin() {
     clearSession();
     queryClient.removeQueries({ queryKey: queryKeys.admin.me });
     queryClient.removeQueries({ queryKey: queryKeys.admin.products });
+    queryClient.removeQueries({ queryKey: ['admin', 'product'] });
     queryClient.removeQueries({ queryKey: queryKeys.admin.quotes });
     showToast({ title: 'Admin signed out', variant: 'info' });
   };
@@ -90,6 +200,13 @@ export function useAdmin() {
     meQuery,
     productsQuery,
     quotesQuery,
+    createProductMutation,
+    updateProductMutation,
+    duplicateProductMutation,
+    archiveProductMutation,
+    publishProductMutation,
+    createUploadUrlMutation,
+    finalizeUploadMutation,
     logout
   };
 }

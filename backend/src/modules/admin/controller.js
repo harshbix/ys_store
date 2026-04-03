@@ -2,6 +2,7 @@ import { ok, created } from '../../utils/apiResponse.js';
 import {
   adminLogin,
   getAdminProducts,
+  getAdminProductDetail,
   createAdminProduct,
   updateAdminProduct,
   duplicateAdminProduct,
@@ -30,6 +31,15 @@ export async function meController(req, res) {
 export async function listProductsController(req, res, next) {
   try {
     const data = await getAdminProducts();
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function getProductController(req, res, next) {
+  try {
+    const data = await getAdminProductDetail(req.params.id);
     return ok(res, data);
   } catch (err) {
     return next(err);

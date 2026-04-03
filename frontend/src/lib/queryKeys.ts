@@ -18,6 +18,7 @@ export const queryKeys = {
   admin: {
     me: ['admin', 'me'] as const,
     products: ['admin', 'products'] as const,
+    productDetail: (productId: string) => ['admin', 'product', productId] as const,
     quotes: ['admin', 'quotes'] as const
   },
   quotes: {

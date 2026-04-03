@@ -5,6 +5,54 @@
 @tailwind utilities;
 
 :root {
+  --color-bg: 9 10 12;
+  --color-bg-elevated: 18 20 23;
+  --color-surface: 20 22 25;
+  --color-surface-elevated: 27 30 35;
+  --color-surface-hover: 35 39 45;
+  --color-border-subtle: 52 57 64;
+  --color-border-strong: 90 98 109;
+  --color-text-primary: 243 239 232;
+  --color-text-secondary: 194 188 178;
+  --color-text-muted: 143 139 132;
+  --color-accent: 200 169 110;
+  --color-accent-hover: 219 187 127;
+  --color-success: 58 183 126;
+  --color-warning: 224 169 90;
+  --color-danger: 217 94 94;
+  --color-input-bg: 17 19 24;
+  --color-ring: 200 169 110;
+  --color-overlay: 4 5 8;
+  --color-primary-foreground: 10 10 12;
+  --shadow-soft: 0 14px 30px rgba(0, 0, 0, 0.32);
+  color-scheme: dark;
+}
+
+html[data-theme='light'] {
+  --color-bg: 248 244 237;
+  --color-bg-elevated: 255 252 247;
+  --color-surface: 255 250 243;
+  --color-surface-elevated: 250 244 233;
+  --color-surface-hover: 243 235 221;
+  --color-border-subtle: 221 210 192;
+  --color-border-strong: 181 163 138;
+  --color-text-primary: 33 34 36;
+  --color-text-secondary: 82 81 78;
+  --color-text-muted: 114 111 105;
+  --color-accent: 171 133 70;
+  --color-accent-hover: 147 114 58;
+  --color-success: 38 148 103;
+  --color-warning: 180 126 42;
+  --color-danger: 184 71 71;
+  --color-input-bg: 255 255 255;
+  --color-ring: 171 133 70;
+  --color-overlay: 19 20 24;
+  --color-primary-foreground: 255 252 245;
+  --shadow-soft: 0 10px 22px rgba(26, 20, 12, 0.12);
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
   color-scheme: dark;
 }
 
@@ -21,10 +69,11 @@ body,
 body {
   margin: 0;
   font-family: 'Inter', system-ui, sans-serif;
-  background: #0A0A0A;
-  color: #F0EDE8;
+  background: rgb(var(--color-bg));
+  color: rgb(var(--color-text-primary));
   font-size: 13px;
   line-height: 1.45;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 a {
@@ -45,7 +94,7 @@ select {
 }
 
 :focus-visible {
-  outline: 2px solid #C8A96E;
+  outline: 2px solid rgb(var(--color-ring));
   outline-offset: 2px;
 }
 

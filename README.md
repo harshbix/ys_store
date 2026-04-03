@@ -30,3 +30,17 @@ In production, guest-session cookies are configured for cross-domain usage (`Sam
 Run frontend API client scenario tests:
 
 - `cd frontend && npm test`
+
+## Demo Product Seed
+
+To populate a testing catalog for cart and wishlist flows, run these seed files in order:
+
+- `backend/supabase/seed/001_spec_definitions.sql`
+- `backend/supabase/seed/002_admin_bootstrap.sql`
+- `backend/supabase/seed/003_demo_products.sql`
+
+The demo catalog includes desktops, laptops, components, and accessories with product specs and media rows.
+
+## Customer Authentication
+
+Customer login now uses email OTP (`/auth/request-otp` and `/auth/verify-otp`) instead of phone OTP.

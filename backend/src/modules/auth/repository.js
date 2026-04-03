@@ -1,11 +1,11 @@
 import { supabase } from '../../lib/supabase.js';
 
-export async function requestOtp(phone) {
-  return supabase.auth.signInWithOtp({ phone });
+export async function requestOtp(email) {
+  return supabase.auth.signInWithOtp({ email });
 }
 
-export async function verifyOtp(phone, token) {
-  return supabase.auth.verifyOtp({ phone, token, type: 'sms' });
+export async function verifyOtp(email, token) {
+  return supabase.auth.verifyOtp({ email, token, type: 'email' });
 }
 
 export async function getWishlistByCustomer(customerAuthId) {
