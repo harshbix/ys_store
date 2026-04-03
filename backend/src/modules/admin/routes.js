@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAdmin } from '../../middleware/adminAuth.js';
 import { validateRequest } from '../../middleware/validateRequest.js';
+import { adminLoginLimiter } from '../../middleware/rateLimiters.js';
 import {
   adminLoginSchema,
   adminProductSchema,
@@ -27,7 +28,7 @@ import {
 
 const router = Router();
 
-router.post('/login', validateRequest(adminLoginSchema), loginController);
+router.post('/login', adminLoginLimiter, validateRequest(adminLoginSchema), loginController);
 router.post('/logout', requireAdmin, logoutController);
 router.get('/me', requireAdmin, meController);
 

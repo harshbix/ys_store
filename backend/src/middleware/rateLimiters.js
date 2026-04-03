@@ -23,3 +23,15 @@ export const otpRequestLimiter = rateLimit({
     message: 'Too many OTP requests, please retry in a moment.'
   }
 });
+
+export const adminLoginLimiter = rateLimit({
+  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 60000),
+  max: Math.min(Number(process.env.RATE_LIMIT_MAX_OTP || 10), 8),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error_code: 'rate_limited',
+    message: 'Too many admin login attempts, please retry in a moment.'
+  }
+});
