@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { useAdmin } from '../hooks/useAdmin';
@@ -11,11 +10,11 @@ export default function AdminDashboardPage() {
   const quotes = quotesQuery.data?.data || [];
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 pb-8">
+    <div className="space-y-5 pb-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-foreground">Admin Dashboard</h1>
-          <p className="mt-1 text-sm text-muted">Signed in as {admin?.full_name || admin?.email || 'Administrator'}.</p>
+          <h1 className="section-title text-foreground">Admin Dashboard</h1>
+          <p className="mt-2 text-[13px] text-secondary">Signed in as {admin?.full_name || admin?.email || 'Administrator'}.</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -109,6 +108,6 @@ export default function AdminDashboardPage() {
           </div>
         ) : null}
       </section>
-    </motion.div>
+    </div>
   );
 }

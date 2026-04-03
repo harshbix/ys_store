@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { CartItemRow } from '../components/cart/CartItemRow';
 import { CartSummary } from '../components/cart/CartSummary';
 import { EmptyState } from '../components/feedback/EmptyState';
@@ -13,10 +12,10 @@ export default function CartPage() {
   const total = cartQuery.data?.data.estimated_total_tzs || 0;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 pb-8">
+    <div className="space-y-6 pb-8">
       <header>
-        <h1 className="font-display text-2xl font-semibold text-foreground">Cart</h1>
-        <p className="mt-1 text-sm text-muted">Backend cart is the source of truth for your current session.</p>
+        <h1 className="section-title text-foreground">Cart</h1>
+        <p className="mt-2 text-[13px] text-secondary">Backend cart is the source of truth for your current session.</p>
       </header>
 
       {cartQuery.isLoading ? <SkeletonGrid count={4} /> : null}
@@ -32,8 +31,8 @@ export default function CartPage() {
       ) : null}
 
       {!cartQuery.isLoading && !cartQuery.isError && items.length > 0 ? (
-        <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-          <section className="space-y-3">
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+          <section className="space-y-px bg-border">
             {items.map((item) => (
               <CartItemRow
                 key={item.id}
@@ -49,6 +48,6 @@ export default function CartPage() {
           </aside>
         </div>
       ) : null}
-    </motion.div>
+    </div>
   );
 }

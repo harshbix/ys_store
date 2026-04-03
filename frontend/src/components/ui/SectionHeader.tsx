@@ -8,13 +8,13 @@ type SectionHeaderProps = {
 
 export function SectionHeader({ title, subtitle, viewAllTo }: SectionHeaderProps) {
   return (
-    <div className="mb-3 flex items-end justify-between gap-2">
+    <div className="flex items-end justify-between gap-3">
       <div>
-        <h2 className="font-display text-xl font-semibold text-foreground">{title}</h2>
-        {subtitle ? <p className="mt-1 text-sm text-muted">{subtitle}</p> : null}
+        <h2 className="section-title text-foreground">{title}</h2>
+        {subtitle ? <p className="mt-2 text-[13px] text-secondary">{subtitle}</p> : null}
       </div>
       {viewAllTo ? (
-        <Link to={viewAllTo} className="min-h-11 rounded-full border border-border px-4 py-2 text-xs font-semibold uppercase tracking-wide text-foreground transition hover:border-accent hover:text-accent">
+        <Link to={viewAllTo} className="label-11 text-[11px] font-normal text-secondary transition hover:text-foreground">
           View All
         </Link>
       ) : null}

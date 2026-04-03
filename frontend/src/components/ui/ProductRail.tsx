@@ -24,13 +24,13 @@ export function ProductRail({ title, subtitle, type, viewAllTo }: ProductRailPro
   const products = useMemo(() => query.data?.data.items || [], [query.data?.data.items]);
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-5">
       <SectionHeader title={title} subtitle={subtitle} viewAllTo={viewAllTo} />
 
       {query.isLoading ? (
-        <div className="flex snap-x gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-4 md:overflow-visible">
+        <div className="grid grid-cols-2 gap-px bg-border md:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={`skeleton-rail-${title}-${index}`} className="min-w-[70%] snap-start md:min-w-0">
+            <div key={`skeleton-rail-${title}-${index}`}>
               <SkeletonCard />
             </div>
           ))}
@@ -44,9 +44,9 @@ export function ProductRail({ title, subtitle, type, viewAllTo }: ProductRailPro
       ) : null}
 
       {!query.isLoading && !query.isError && products.length > 0 ? (
-        <div className="flex snap-x gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-4 md:overflow-visible">
+        <div className="grid grid-cols-2 gap-px bg-border md:grid-cols-3 xl:grid-cols-4">
           {products.map((product) => (
-            <div key={product.id} className="min-w-[78%] snap-start sm:min-w-[58%] md:min-w-0">
+            <div key={product.id}>
               <ProductCard
                 product={product}
                 inWishlist={isInWishlist(product.id)}

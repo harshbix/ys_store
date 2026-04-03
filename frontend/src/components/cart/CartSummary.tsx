@@ -10,23 +10,23 @@ type CartSummaryProps = {
 
 export function CartSummary({ itemCount, estimatedTotal, ctaHref = '/checkout', ctaLabel = 'Proceed to Quote' }: CartSummaryProps) {
   return (
-    <aside className="rounded-2xl border border-border bg-surface p-5">
-      <h2 className="text-base font-semibold text-foreground">Order Summary</h2>
+    <aside className="bg-surface p-4">
+      <h2 className="label-11 text-secondary">Order Summary</h2>
 
-      <dl className="mt-4 space-y-3 text-sm">
-        <div className="flex items-center justify-between text-muted">
+      <dl className="mt-4 space-y-2 text-[13px]">
+        <div className="flex items-center justify-between text-secondary">
           <dt>Items</dt>
           <dd>{itemCount}</dd>
         </div>
         <div className="flex items-center justify-between text-foreground">
-          <dt className="font-semibold">Estimated Total</dt>
-          <dd className="font-semibold">{formatTzs(estimatedTotal)}</dd>
+          <dt className="font-medium">Estimated Total</dt>
+          <dd className="font-mono text-[14px] font-medium">{formatTzs(estimatedTotal)}</dd>
         </div>
       </dl>
 
       <Link
         to={ctaHref}
-        className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primaryForeground"
+        className="mt-5 inline-flex h-12 w-full items-center justify-center bg-primary px-5 text-[13px] font-medium text-primaryForeground"
       >
         {ctaLabel}
       </Link>

@@ -7,115 +7,225 @@ type FilterPanelProps = {
 };
 
 export function FilterPanel({ filters, onPatch, onReset }: FilterPanelProps) {
+  const typeOptions: Array<{ value: NonNullable<ProductFilters['type']>; label: string }> = [
+    { value: 'desktop', label: 'Desktops' },
+    { value: 'laptop', label: 'Laptops' },
+    { value: 'component', label: 'Parts' },
+    { value: 'accessory', label: 'Accessories' }
+  ];
+
+  const conditionOptions: Array<{ value: NonNullable<ProductFilters['condition']>; label: string }> = [
+    { value: 'new', label: 'New' },
+    { value: 'imported_used', label: 'Imported Used' },
+    { value: 'refurbished', label: 'Refurbished' },
+    { value: 'custom_build', label: 'Custom Build' }
+  ];
+
+  const stockOptions: Array<{ value: NonNullable<ProductFilters['stock_status']>; label: string }> = [
+    { value: 'in_stock', label: 'In Stock' },
+    { value: 'low_stock', label: 'Low Stock' },
+    { value: 'build_on_request', label: 'Build On Request' },
+    { value: 'incoming_stock', label: 'Incoming Stock' },
+    { value: 'sold_out', label: 'Sold Out' }
+  ];
+
+  const brandQuickOptions = ['ASUS', 'MSI', 'Dell', 'Lenovo', 'HP', 'Aorus'];
+  const ramOptions = [8, 16, 32, 64];
+  const storageOptions = [256, 512, 1000, 2000];
+
+  const minBound = 100000;
+  const maxBound = 10000000;
+  const minPrice = filters.min_price ?? 500000;
+  const maxPrice = filters.max_price ?? 5000000;
+
+  const checkClass = 'h-[14px] w-[14px] appearance-none border border-border bg-background checked:border-accent checked:bg-accent focus:outline-none';
+
+  const toggleSingle = <T extends string | number>(key: keyof ProductFilters, current: T | undefined, next: T) => {
+    onPatch({ [key]: current === next ? undefined : next, page: 1 });
+  };
+
   return (
-    <div className="space-y-4 rounded-2xl border border-border bg-surface p-4">
-      <div>
-        <p className="mb-2 text-xs uppercase tracking-wider text-muted">Type</p>
-        <select
-          value={filters.type || ''}
-          onChange={(event) => onPatch({ type: (event.target.value || undefined) as ProductFilters['type'], page: 1 })}
-          className="min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
-        >
-          <option value="">All Types</option>
-          <option value="desktop">Desktops</option>
-          <option value="laptop">Laptops</option>
-          <option value="component">Components</option>
-          <option value="accessory">Accessories</option>
-        </select>
-      </div>
+    <div className="space-y-4 text-[13px] text-secondary">
+      <section className="space-y-3 border-b border-border pb-4">
+        <p className="label-11 text-secondary">Type</p>
+        <div className="space-y-2">
+          {typeOptions.map((option) => (
+            <label key={option.value} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={filters.type === option.value}
+                onChange={() => toggleSingle('type', filters.type, option.value)}
+                className={checkClass}
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </section>
 
-      <div>
-        <p className="mb-2 text-xs uppercase tracking-wider text-muted">Condition</p>
-        <select
-          value={filters.condition || ''}
-          onChange={(event) => onPatch({ condition: (event.target.value || undefined) as ProductFilters['condition'], page: 1 })}
-          className="min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
-        >
-          <option value="">Any Condition</option>
-          <option value="new">New</option>
-          <option value="imported_used">Imported Used</option>
-          <option value="refurbished">Refurbished</option>
-          <option value="custom_build">Custom Build</option>
-        </select>
-      </div>
-
-      <div>
-        <p className="mb-2 text-xs uppercase tracking-wider text-muted">Stock</p>
-        <select
-          value={filters.stock_status || ''}
-          onChange={(event) => onPatch({ stock_status: (event.target.value || undefined) as ProductFilters['stock_status'], page: 1 })}
-          className="min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
-        >
-          <option value="">Any Stock</option>
-          <option value="in_stock">In Stock</option>
-          <option value="low_stock">Low Stock</option>
-          <option value="build_on_request">Build On Request</option>
-          <option value="incoming_stock">Incoming Stock</option>
-          <option value="sold_out">Sold Out</option>
-        </select>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <label className="text-xs text-muted">
-          Min Price
-          <input
-            type="number"
-            min={0}
-            value={filters.min_price ?? ''}
-            onChange={(event) => onPatch({ min_price: event.target.value ? Number(event.target.value) : undefined, page: 1 })}
-            className="mt-1 min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
-          />
-        </label>
-        <label className="text-xs text-muted">
-          Max Price
-          <input
-            type="number"
-            min={0}
-            value={filters.max_price ?? ''}
-            onChange={(event) => onPatch({ max_price: event.target.value ? Number(event.target.value) : undefined, page: 1 })}
-            className="mt-1 min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
-          />
-        </label>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <label className="text-xs text-muted">
-          RAM (GB)
-          <input
-            type="number"
-            min={0}
-            value={filters.ram_gb ?? ''}
-            onChange={(event) => onPatch({ ram_gb: event.target.value ? Number(event.target.value) : undefined, page: 1 })}
-            className="mt-1 min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
-          />
-        </label>
-        <label className="text-xs text-muted">
-          Storage (GB)
-          <input
-            type="number"
-            min={0}
-            value={filters.storage_gb ?? ''}
-            onChange={(event) => onPatch({ storage_gb: event.target.value ? Number(event.target.value) : undefined, page: 1 })}
-            className="mt-1 min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
-          />
-        </label>
-      </div>
-
-      <label className="text-xs text-muted">
-        Brand
+      <section className="space-y-3 border-b border-border pb-4">
+        <p className="label-11 text-secondary">Brand</p>
         <input
           type="text"
           value={filters.brand || ''}
           onChange={(event) => onPatch({ brand: event.target.value || undefined, page: 1 })}
-          className="mt-1 min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
+          placeholder="Search brand"
+          className="h-9 w-full border border-border bg-background px-2 text-[13px] text-foreground placeholder:text-muted"
         />
-      </label>
+        <div className="grid grid-cols-2 gap-y-2">
+          {brandQuickOptions.map((brand) => (
+            <label key={brand} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={filters.brand?.toLowerCase() === brand.toLowerCase()}
+                onChange={() => toggleSingle('brand', filters.brand, brand)}
+                className={checkClass}
+              />
+              <span>{brand}</span>
+            </label>
+          ))}
+        </div>
+      </section>
 
-      <button
-        type="button"
-        onClick={onReset}
-        className="min-h-11 w-full rounded-full border border-border text-sm text-muted transition hover:border-accent hover:text-accent"
-      >
+      <section className="space-y-3 border-b border-border pb-4">
+        <p className="label-11 text-secondary">Condition</p>
+        <div className="space-y-2">
+          {conditionOptions.map((option) => (
+            <label key={option.value} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={filters.condition === option.value}
+                onChange={() => toggleSingle('condition', filters.condition, option.value)}
+                className={checkClass}
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3 border-b border-border pb-4">
+        <p className="label-11 text-secondary">Price</p>
+        <div className="space-y-3">
+          <input
+            type="range"
+            min={minBound}
+            max={maxBound}
+            step={50000}
+            value={minPrice}
+            onChange={(event) => {
+              const next = Number(event.target.value);
+              onPatch({ min_price: Math.min(next, maxPrice), page: 1 });
+            }}
+            className="w-full accent-accent"
+          />
+          <input
+            type="range"
+            min={minBound}
+            max={maxBound}
+            step={50000}
+            value={maxPrice}
+            onChange={(event) => {
+              const next = Number(event.target.value);
+              onPatch({ max_price: Math.max(next, minPrice), page: 1 });
+            }}
+            className="w-full accent-accent"
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="number"
+              value={minPrice}
+              min={minBound}
+              max={maxPrice}
+              onChange={(event) => onPatch({ min_price: Number(event.target.value) || undefined, page: 1 })}
+              className="h-9 border border-border bg-background px-2 text-[13px] text-foreground"
+            />
+            <input
+              type="number"
+              value={maxPrice}
+              min={minPrice}
+              max={maxBound}
+              onChange={(event) => onPatch({ max_price: Number(event.target.value) || undefined, page: 1 })}
+              className="h-9 border border-border bg-background px-2 text-[13px] text-foreground"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-3 border-b border-border pb-4">
+        <p className="label-11 text-secondary">CPU</p>
+        <input
+          type="text"
+          value={filters.cpu || ''}
+          onChange={(event) => onPatch({ cpu: event.target.value || undefined, page: 1 })}
+          placeholder="e.g. i7, Ryzen"
+          className="h-9 w-full border border-border bg-background px-2 text-[13px] text-foreground placeholder:text-muted"
+        />
+      </section>
+
+      <section className="space-y-3 border-b border-border pb-4">
+        <p className="label-11 text-secondary">GPU</p>
+        <input
+          type="text"
+          value={filters.gpu || ''}
+          onChange={(event) => onPatch({ gpu: event.target.value || undefined, page: 1 })}
+          placeholder="e.g. RTX 4070"
+          className="h-9 w-full border border-border bg-background px-2 text-[13px] text-foreground placeholder:text-muted"
+        />
+      </section>
+
+      <section className="space-y-3 border-b border-border pb-4">
+        <p className="label-11 text-secondary">RAM</p>
+        <div className="grid grid-cols-2 gap-y-2">
+          {ramOptions.map((ram) => (
+            <label key={ram} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={filters.ram_gb === ram}
+                onChange={() => toggleSingle('ram_gb', filters.ram_gb, ram)}
+                className={checkClass}
+              />
+              <span>{ram} GB</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3 border-b border-border pb-4">
+        <p className="label-11 text-secondary">Storage</p>
+        <div className="grid grid-cols-2 gap-y-2">
+          {storageOptions.map((storage) => (
+            <label key={storage} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={filters.storage_gb === storage}
+                onChange={() => toggleSingle('storage_gb', filters.storage_gb, storage)}
+                className={checkClass}
+              />
+              <span>{storage >= 1000 ? `${storage / 1000} TB` : `${storage} GB`}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3 pb-2">
+        <p className="label-11 text-secondary">Stock</p>
+        <div className="space-y-2">
+          {stockOptions.map((option) => (
+            <label key={option.value} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={filters.stock_status === option.value}
+                onChange={() => toggleSingle('stock_status', filters.stock_status, option.value)}
+                className={checkClass}
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <button type="button" onClick={onReset} className="mt-1 h-10 border border-border px-3 text-[13px] text-secondary transition hover:text-foreground">
         Reset Filters
       </button>
     </div>

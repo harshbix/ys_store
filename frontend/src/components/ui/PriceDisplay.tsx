@@ -6,5 +6,5 @@ type PriceDisplayProps = {
 };
 
 export function PriceDisplay({ amount, className }: PriceDisplayProps) {
-  return <p className={className || 'text-base font-semibold text-foreground'}>{formatTzs(amount)}</p>;
+  return <p className={className || 'font-mono text-[14px] font-medium text-foreground'}>{formatTzs(amount)}</p>;
 }

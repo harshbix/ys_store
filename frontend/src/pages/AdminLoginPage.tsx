@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAdmin } from '../hooks/useAdmin';
@@ -29,10 +28,10 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto max-w-lg space-y-5 pb-8">
+    <div className="mx-auto max-w-lg space-y-5 pb-8">
       <header>
-        <h1 className="font-display text-2xl font-semibold text-foreground">Admin Login</h1>
-        <p className="mt-1 text-sm text-muted">Sign in with backend-configured administrator credentials.</p>
+        <h1 className="section-title text-foreground">Admin Login</h1>
+        <p className="mt-2 text-[13px] text-secondary">Sign in with backend-configured administrator credentials.</p>
       </header>
 
       <section className="rounded-2xl border border-border bg-surface p-5">
@@ -77,6 +76,6 @@ export default function AdminLoginPage() {
       <section className="rounded-2xl border border-border bg-background p-4 text-sm text-muted">
         Looking for customer login? <Link to="/login" className="font-semibold text-foreground hover:text-accent">Open customer login</Link>.
       </section>
-    </motion.div>
+    </div>
   );
 }

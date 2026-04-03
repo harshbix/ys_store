@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthPromptBanner } from '../components/ui/AuthPromptBanner';
@@ -30,10 +29,10 @@ export default function LoginPage() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto max-w-2xl space-y-5 pb-8">
+    <div className="mx-auto max-w-2xl space-y-5 pb-8">
       <header>
-        <h1 className="font-display text-2xl font-semibold text-foreground">Customer Login</h1>
-        <p className="mt-1 text-sm text-muted">Verify your phone via OTP to access account wishlist and persistent cart sync.</p>
+        <h1 className="section-title text-foreground">Customer Login</h1>
+        <p className="mt-2 text-[13px] text-secondary">Verify your phone via OTP to access account wishlist and persistent cart sync.</p>
       </header>
 
       <AuthPromptBanner />
@@ -108,6 +107,6 @@ export default function LoginPage() {
       <section className="rounded-2xl border border-border bg-background p-4 text-sm text-muted">
         Need administrator access? <Link to="/admin/login" className="font-semibold text-foreground hover:text-accent">Open admin login</Link>.
       </section>
-    </motion.div>
+    </div>
   );
 }

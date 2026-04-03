@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BuildPartPicker } from '../components/builder/BuildPartPicker';
 import { BuildSlot } from '../components/builder/BuildSlot';
@@ -79,10 +78,10 @@ export default function BuilderPage() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 pb-24 lg:pb-8">
+    <div className="space-y-5 pb-24 lg:pb-8">
       <header>
-        <h1 className="font-display text-2xl font-semibold text-foreground">PC Builder</h1>
-        <p className="mt-1 text-sm text-muted">Create or resume your build, validate compatibility, then add to cart.</p>
+        <h1 className="section-title text-foreground">PC Builder</h1>
+        <p className="mt-2 text-[13px] text-secondary">Create or resume your build, validate compatibility, then add to cart.</p>
       </header>
 
       {buildQuery.isError ? <ErrorState onRetry={() => buildQuery.refetch()} /> : null}
@@ -143,6 +142,6 @@ export default function BuilderPage() {
         validating={validateMutation.isPending}
         adding={addToCartMutation.isPending}
       />
-    </motion.div>
+    </div>
   );
 }

@@ -24,19 +24,22 @@ export function FilterDrawer({ open, onClose, children }: FilterDrawerProps) {
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', bounce: 0.1, duration: 0.3 }}
-            className="fixed inset-y-0 right-0 z-50 w-80 max-w-[88vw] overflow-y-auto border-l border-border bg-background p-4"
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-50 overflow-y-auto bg-background"
           >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="inline-flex items-center gap-2 text-base font-semibold">
+            <div className="sticky top-0 z-10 flex h-[52px] items-center justify-between border-b border-border bg-[rgba(17,17,17,0.95)] px-4 backdrop-blur">
+              <h2 className="inline-flex items-center gap-2 text-[13px] font-normal text-foreground">
                 <SlidersHorizontal className="h-4 w-4" />
                 Filters
               </h2>
-              <button type="button" onClick={onClose} className="rounded-md border border-border p-2" aria-label="Close filters">
+              <button type="button" onClick={onClose} className="inline-flex h-9 w-9 items-center justify-center text-secondary" aria-label="Close filters">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            {children}
+
+            <div className="p-4">
+              {children}
+            </div>
           </motion.aside>
         </>
       ) : null}

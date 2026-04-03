@@ -24,13 +24,13 @@ export function ActiveFilters({ filters, onClearOne, onClearAll }: ActiveFilters
           key={key}
           type="button"
           onClick={() => onClearOne(key as keyof ProductFilters)}
-          className="inline-flex min-h-9 items-center gap-1 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-foreground"
+          className="inline-flex min-h-7 items-center gap-1 rounded-[2px] border border-border bg-surface px-2 text-[11px] font-normal text-secondary"
         >
           {titleCase(key)}: {String(value)}
           <X className="h-3 w-3" />
         </button>
       ))}
-      <button type="button" onClick={onClearAll} className="min-h-9 rounded-full border border-border px-3 text-xs text-muted">
+      <button type="button" onClick={onClearAll} className="min-h-7 rounded-[2px] border border-border px-2 text-[11px] text-secondary">
         Clear all
       </button>
     </div>

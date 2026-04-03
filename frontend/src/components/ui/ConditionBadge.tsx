@@ -2,10 +2,10 @@ import type { ProductCondition } from '../../types/api';
 import { titleCase } from '../../lib/format';
 
 const toneMap: Record<ProductCondition, string> = {
-  new: 'border-success/40 bg-success/10 text-success',
-  imported_used: 'border-border bg-surface text-muted',
-  refurbished: 'border-accent/40 bg-accent/10 text-accentSoft',
-  custom_build: 'border-accent/40 bg-accent/10 text-accentSoft'
+  new: 'text-accent',
+  imported_used: 'text-secondary',
+  refurbished: 'text-secondary',
+  custom_build: 'text-secondary'
 };
 
 type ConditionBadgeProps = {
@@ -13,5 +13,9 @@ type ConditionBadgeProps = {
 };
 
 export function ConditionBadge({ condition }: ConditionBadgeProps) {
-  return <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${toneMap[condition]}`}>{titleCase(condition)}</span>;
+  return (
+    <span className={`label-11 inline-flex border border-border bg-background/90 px-2 py-1 text-[10px] font-normal ${toneMap[condition]}`}>
+      {titleCase(condition)}
+    </span>
+  );
 }

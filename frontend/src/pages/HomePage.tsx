@@ -1,77 +1,67 @@
-import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { MessageCircle, ShieldCheck, Sparkles, Wrench } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { ProductRail } from '../components/ui/ProductRail';
 
 const categories = [
-  { label: 'Desktops', href: '/shop?type=desktop', note: 'Ready for studio and gaming rigs' },
-  { label: 'Laptops', href: '/shop?type=laptop', note: 'Portable performance for work and creators' },
-  { label: 'Components', href: '/shop?type=component', note: 'Premium parts for custom upgrades' },
-  { label: 'Accessories', href: '/shop?type=accessory', note: 'Monitors, peripherals, and essentials' }
+  { label: 'Shop', href: '/shop' },
+  { label: 'Desktops', href: '/shop?type=desktop' },
+  { label: 'Laptops', href: '/shop?type=laptop' },
+  { label: 'Parts', href: '/shop?type=component' },
+  { label: 'Sale', href: '/shop?featured_tag=hot_deal' }
 ];
 
 export default function HomePage() {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10 pb-8">
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-10 pb-10 md:space-y-16">
+      <section className="grid grid-cols-2 gap-px bg-border md:grid-cols-5">
         {categories.map((category) => (
           <Link
             key={category.label}
             to={category.href}
-            className="group rounded-2xl border border-border bg-surface p-4 transition hover:-translate-y-0.5 hover:border-accent"
+            className="group flex min-h-[64px] items-center justify-center bg-surface px-4 py-3 text-center transition hover:text-foreground"
           >
-            <p className="text-xs uppercase tracking-widest text-muted">Category</p>
-            <h1 className="mt-2 font-display text-xl font-semibold text-foreground">{category.label}</h1>
-            <p className="mt-2 text-sm text-muted">{category.note}</p>
+            <span className="nav-13 text-secondary">{category.label}</span>
           </Link>
         ))}
       </section>
 
-      <ProductRail title="New Arrivals" subtitle="Fresh listings from the latest inventory updates" viewAllTo="/shop?sort=newest" />
-      <ProductRail title="Featured Desktops" subtitle="Balanced systems for performance and reliability" type="desktop" viewAllTo="/shop?type=desktop" />
-      <ProductRail title="Gaming Laptops" subtitle="Portable power without compromise" type="laptop" viewAllTo="/shop?type=laptop" />
-      <ProductRail title="Premium Parts" subtitle="High-trust components for precision builds" type="component" viewAllTo="/shop?type=component" />
-      <ProductRail title="Accessories" subtitle="Monitors, keyboards, and practical add-ons" type="accessory" viewAllTo="/shop?type=accessory" />
+      <ProductRail title="New Arrivals" subtitle="Latest inventory updates" viewAllTo="/shop?sort=newest" />
+      <ProductRail title="Gaming Desktops" subtitle="Performance-first towers" type="desktop" viewAllTo="/shop?type=desktop" />
+      <ProductRail title="Gaming Laptops" subtitle="Portable power systems" type="laptop" viewAllTo="/shop?type=laptop" />
 
-      <section className="grid gap-4 rounded-2xl border border-border bg-surface p-5 lg:grid-cols-2">
+      <section className="grid gap-6 border-y border-border py-8 lg:grid-cols-[1fr_260px] lg:py-10">
         <div>
-          <p className="inline-flex items-center gap-2 text-xs uppercase tracking-wide text-accentSoft">
-            <Wrench className="h-3.5 w-3.5" />
-            Build Your PC
-          </p>
-          <h2 className="mt-2 font-display text-2xl font-semibold">Guided custom build flow with compatibility checks</h2>
-          <p className="mt-2 text-sm text-muted">Select parts, validate fit, and send a quote-ready build to WhatsApp in minutes.</p>
-          <Link to="/builder" className="mt-4 inline-flex min-h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primaryForeground">
+          <p className="label-11 text-secondary">Builder</p>
+          <h2 className="section-title mt-3 text-foreground">Guided PC build with compatibility checks</h2>
+          <p className="mt-3 max-w-2xl text-[13px] text-secondary">Choose parts, validate fit, and move to quote in a single, minimal flow.</p>
+          <Link to="/builder" className="mt-5 inline-flex h-12 items-center bg-primary px-6 text-[13px] font-medium text-primaryForeground">
             Start Builder
           </Link>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-border bg-background p-4">
-            <ShieldCheck className="h-4 w-4 text-accent" />
-            <p className="mt-2 text-sm font-semibold">Verified compatibility logic</p>
-            <p className="mt-1 text-xs text-muted">Validation uses real backend rules, not static assumptions.</p>
-          </div>
-          <div className="rounded-xl border border-border bg-background p-4">
-            <Sparkles className="h-4 w-4 text-accent" />
-            <p className="mt-2 text-sm font-semibold">Premium support handoff</p>
-            <p className="mt-1 text-xs text-muted">Quote flow transitions directly into guided WhatsApp support.</p>
-          </div>
+        <div className="space-y-2 text-[11px] uppercase tracking-[0.1em] text-muted">
+          <p>Live Build Validation</p>
+          <p>Quote-First Checkout</p>
+          <p>Dar es Salaam Support</p>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-surface p-5">
-        <h2 className="text-lg font-semibold text-foreground">Need quick guidance before buying?</h2>
-        <p className="mt-2 text-sm text-muted">Our team helps with part matching, budget trade-offs, and upgrade planning for Dar es Salaam buyers.</p>
+      <ProductRail title="Premium Parts" subtitle="Components for high-end rigs" type="component" viewAllTo="/shop?type=component" />
+
+      <section className="grid gap-4 border-y border-border py-7 md:grid-cols-[1fr_auto] md:items-center">
+        <div>
+          <p className="label-11 text-secondary">Trust</p>
+          <p className="mt-2 text-[13px] text-secondary">WhatsApp-assisted purchasing, verified compatibility, and local follow-up in Dar es Salaam.</p>
+        </div>
         <a
           href="https://wa.me/255700000000"
           target="_blank"
           rel="noreferrer"
-          className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-5 text-sm font-semibold text-foreground hover:border-accent hover:text-accent"
+          className="inline-flex h-11 items-center gap-2 border border-border px-5 text-[13px] font-medium text-success"
         >
           <MessageCircle className="h-4 w-4" />
           WhatsApp Consultation
         </a>
       </section>
-    </motion.div>
+    </div>
   );
 }

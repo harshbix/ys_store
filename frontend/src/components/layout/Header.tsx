@@ -1,4 +1,4 @@
-import { Heart, LogIn, Menu, Search, ShoppingBag, UserCircle2, Wrench } from 'lucide-react';
+import { Heart, Menu, Search, ShoppingBag, UserCircle2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
@@ -11,111 +11,124 @@ const navLinks = [
   { label: 'Desktops', to: '/shop?type=desktop' },
   { label: 'Laptops', to: '/shop?type=laptop' },
   { label: 'Parts', to: '/shop?type=component' },
-  { label: 'Builder', to: '/builder' }
+  { label: 'Builder', to: '/builder' },
+  { label: 'Sale', to: '/shop?featured_tag=hot_deal' }
 ];
 
 export function Header() {
   const { cartQuery } = useCart();
   const openMobileNav = useUiStore((state) => state.openMobileNav);
+  const openCartDrawer = useUiStore((state) => state.openCartDrawer);
   const searchOverlayOpen = useUiStore((state) => state.searchOverlayOpen);
   const openSearchOverlay = useUiStore((state) => state.openSearchOverlay);
   const closeSearchOverlay = useUiStore((state) => state.closeSearchOverlay);
-  const customerAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
+  const customerAuthenticated = useAuthStore((state) => Boolean(state.accessToken));
   const adminAuthenticated = useAdminAuthStore((state) => Boolean(state.token));
 
-  const [isCompact, setIsCompact] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setIsCompact(window.scrollY > 18);
+    const handleScroll = () => setIsScrolled(window.scrollY > 4);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const cartCount = cartQuery.data?.data.items.length || 0;
+  const accountHref = adminAuthenticated ? '/admin' : '/login';
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-      <div className={`mx-auto flex max-w-7xl items-center gap-2 px-4 transition-all sm:px-6 lg:px-8 ${isCompact ? 'h-14' : 'h-16'}`}>
-        <button
-          type="button"
-          onClick={openMobileNav}
-          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border lg:hidden"
-          aria-label="Open menu"
-        >
-          <Menu className="h-4 w-4" />
-        </button>
-
-        <Link to="/" className="font-display text-lg font-semibold tracking-wide text-foreground">
-          YS STORE
-        </Link>
-
-        <nav className="ml-8 hidden items-center gap-1 lg:flex">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                `min-h-11 rounded-lg px-3 text-sm font-medium transition ${isActive ? 'text-foreground' : 'text-muted hover:text-foreground'}`
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="ml-auto flex items-center gap-1">
+    <header className={`sticky top-0 z-30 border-b transition ${isScrolled ? 'border-border bg-[rgba(17,17,17,0.95)] backdrop-blur' : 'border-transparent bg-background'}`}>
+      <div className="mx-auto h-[52px] w-full max-w-[1440px] px-4 sm:px-6 lg:px-8">
+        <div className="relative flex h-full items-center justify-between lg:hidden">
           <button
             type="button"
-            onClick={openSearchOverlay}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border"
-            aria-label="Open product search"
+            onClick={openMobileNav}
+            className="inline-flex h-9 w-9 items-center justify-center text-secondary"
+            aria-label="Open menu"
           >
-            <Search className="h-4 w-4" />
+            <Menu className="h-4 w-4" />
           </button>
 
-          <Link
-            to="/builder"
-            className="hidden min-h-11 items-center gap-2 rounded-md border border-border px-3 text-sm text-muted transition hover:text-foreground sm:inline-flex"
-          >
-            <Wrench className="h-4 w-4" />
-            Builder
+          <Link to="/" className="absolute left-1/2 -translate-x-1/2 text-[12px] font-light tracking-[0.24em] text-foreground">
+            YS STORE
           </Link>
 
-          <Link
-            to="/wishlist"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border"
-            aria-label="Wishlist"
-          >
-            <Heart className="h-4 w-4" />
-          </Link>
-
-          <Link
-            to="/cart"
-            className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border"
-            aria-label="Cart"
-          >
-            <ShoppingBag className="h-4 w-4" />
-            <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-primaryForeground" aria-live="polite">
-              {cartCount}
-            </span>
-          </Link>
-
-          {adminAuthenticated ? (
-            <Link
-              to="/admin"
-              className="hidden min-h-11 items-center rounded-md border border-border px-3 text-sm text-muted transition hover:text-foreground sm:inline-flex"
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              type="button"
+              onClick={openSearchOverlay}
+              className="inline-flex h-9 w-9 items-center justify-center text-secondary"
+              aria-label="Open product search"
             >
-              Admin
-            </Link>
-          ) : null}
+              <Search className="h-4 w-4" />
+            </button>
 
-          <Link
-            to="/login"
-            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border px-3 text-sm text-muted transition hover:text-foreground"
-          >
-            {customerAuthenticated ? <UserCircle2 className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
-            <span className="hidden sm:inline">{customerAuthenticated ? 'Account' : 'Login'}</span>
+            <Link to="/cart" className="relative inline-flex h-9 w-9 items-center justify-center text-secondary" aria-label="Cart">
+              <ShoppingBag className="h-4 w-4" />
+              {cartCount > 0 ? (
+                <span className="absolute right-0 top-0 inline-flex min-h-4 min-w-4 animate-pulse-soft items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] font-medium text-primaryForeground" aria-live="polite">
+                  {cartCount}
+                </span>
+              ) : null}
+            </Link>
+          </div>
+        </div>
+
+        <div className="hidden h-full items-center lg:flex">
+          <nav className="flex flex-1 items-center gap-5">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  `nav-13 text-[13px] transition ${isActive ? 'text-foreground' : 'text-secondary hover:text-foreground'}`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <Link to="/" className="text-[12px] font-light tracking-[0.24em] text-foreground">
+            YS STORE
           </Link>
+
+          <div className="flex flex-1 items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={openSearchOverlay}
+              className="inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground"
+              aria-label="Search"
+            >
+              <Search className="h-4 w-4" />
+            </button>
+
+            <Link to="/wishlist" className="inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground" aria-label="Wishlist">
+              <Heart className="h-4 w-4" />
+            </Link>
+
+            <button
+              type="button"
+              onClick={openCartDrawer}
+              className="relative inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground"
+              aria-label="Open cart"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              {cartCount > 0 ? (
+                <span className="absolute right-0 top-0 inline-flex min-h-4 min-w-4 animate-pulse-soft items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] font-medium text-primaryForeground" aria-live="polite">
+                  {cartCount}
+                </span>
+              ) : null}
+            </button>
+
+            <Link
+              to={accountHref}
+              className="inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground"
+              aria-label={customerAuthenticated ? 'Account' : 'Login'}
+            >
+              <UserCircle2 className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </div>
 

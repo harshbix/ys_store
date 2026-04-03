@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { ProductGrid } from '../components/ui/ProductGrid';
@@ -12,10 +11,10 @@ export default function WishlistPage() {
   const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken));
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 pb-8">
+    <div className="space-y-5 pb-8">
       <header>
-        <h1 className="font-display text-2xl font-semibold text-foreground">Wishlist</h1>
-        <p className="mt-1 text-sm text-muted">
+        <h1 className="section-title text-foreground">Wishlist</h1>
+        <p className="mt-2 text-[13px] text-secondary">
           {isAuthenticated ? 'Saved to your customer account.' : 'Saved locally for this device and guest session continuity.'}
         </p>
       </header>
@@ -48,6 +47,6 @@ export default function WishlistPage() {
           onQuickAdd={(productId) => addItem.mutate({ item_type: 'product', product_id: productId, quantity: 1 })}
         />
       ) : null}
-    </motion.div>
+    </div>
   );
 }

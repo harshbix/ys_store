@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { CustomerInfoForm } from '../components/checkout/CustomerInfoForm';
 import { QuoteConfirmation } from '../components/checkout/QuoteConfirmation';
@@ -61,10 +60,10 @@ export default function CheckoutPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 pb-8">
+    <div className="space-y-5 pb-8">
       <header>
-        <h1 className="font-display text-2xl font-semibold text-foreground">Quote Checkout</h1>
-        <p className="mt-1 text-sm text-muted">Submit customer details, generate quote code, then continue through WhatsApp.</p>
+        <h1 className="section-title text-foreground">Quote Checkout</h1>
+        <p className="mt-2 text-[13px] text-secondary">Submit customer details, generate quote code, then continue through WhatsApp.</p>
       </header>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
@@ -84,6 +83,6 @@ export default function CheckoutPage() {
           {quote ? <QuoteConfirmation quote={quote} onTrackAndOpen={handleTrackAndOpen} /> : null}
         </aside>
       </div>
-    </motion.div>
+    </div>
   );
 }

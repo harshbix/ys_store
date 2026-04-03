@@ -29,16 +29,17 @@ export function CartDrawer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ duration: 0.28 }}
-            className="fixed inset-y-0 right-0 z-50 w-[420px] max-w-[94vw] overflow-y-auto border-l border-border bg-background p-4"
+            className="fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-l border-border bg-background md:w-[400px]"
           >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-foreground">Cart</h2>
-              <button onClick={close} type="button" aria-label="Close cart drawer" className="rounded-md border border-border p-2">
+            <div className="flex h-[52px] items-center justify-between border-b border-border px-4">
+              <h2 className="text-[13px] font-normal text-foreground">Cart</h2>
+              <button onClick={close} type="button" aria-label="Close cart drawer" className="inline-flex h-9 w-9 items-center justify-center text-secondary">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-px bg-border">
               {items.map((item) => (
                 <CartItemRow
                   key={item.id}
@@ -48,9 +49,10 @@ export function CartDrawer() {
                   onRemove={() => removeItem.mutate(item.id)}
                 />
               ))}
+              </div>
             </div>
 
-            <div className="mt-4">
+            <div className="border-t border-border p-4">
               <CartSummary itemCount={items.length} estimatedTotal={estimatedTotal} />
             </div>
           </motion.aside>
