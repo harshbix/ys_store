@@ -3,6 +3,7 @@ import {
   createBuildRow,
   findBuildById,
   findBuildItems,
+  findBuildItemById,
   upsertBuildComponent,
   deleteBuildItem,
   updateBuild,
@@ -20,6 +21,20 @@ function generateBuildCode() {
 
 function findSpec(specs, key) {
   return specs.find((s) => s.spec_key === key) || null;
+}
+
+async function assertBuildExists(buildId) {
+  const buildRes = await findBuildById(buildId);
+
+  if (buildRes.error) {
+    throw { status: 500, code: 'build_lookup_failed', message: buildRes.error.message };
+  }
+
+  if (!buildRes.data) {
+    throw { status: 404, code: 'build_not_found', message: 'Build not found' };
+  }
+
+  return buildRes.data;
 }
 
 export async function createBuild(identity, payload) {
@@ -47,6 +62,8 @@ export async function getBuild(buildId) {
 }
 
 export async function setBuildComponent(buildId, payload) {
+  await assertBuildExists(buildId);
+
   const productRes = await findProductPrice(payload.product_id);
   if (productRes.error || !productRes.data) {
     throw { status: 400, code: 'invalid_build_product', message: 'Selected component product not found' };
@@ -68,7 +85,18 @@ export async function setBuildComponent(buildId, payload) {
 }
 
 export async function removeBuildItem(buildId, itemId) {
-  const removed = await deleteBuildItem(itemId);
+  await assertBuildExists(buildId);
+
+  const itemRes = await findBuildItemById(itemId);
+  if (itemRes.error) {
+    throw { status: 500, code: 'build_item_lookup_failed', message: itemRes.error.message };
+  }
+
+  if (!itemRes.data || itemRes.data.custom_build_id !== buildId) {
+    throw { status: 404, code: 'build_item_not_found', message: 'Build item not found' };
+  }
+
+  const removed = await deleteBuildItem(itemId, buildId);
   if (removed.error) throw { status: 500, code: 'build_item_delete_failed', message: removed.error.message };
   return getBuild(buildId);
 }

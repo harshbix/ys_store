@@ -56,15 +56,23 @@ export default function BuilderPage() {
   };
 
   const handleSelectProduct = async (product: Product) => {
-    if (!activeBuildId || !pickerComponent) return;
-    await upsertItemMutation.mutateAsync({
-      buildId: activeBuildId,
-      body: {
-        component_type: pickerComponent,
-        product_id: product.id
-      }
-    });
-    setPickerOpen(false);
+    if (!pickerComponent) return;
+
+    const buildId = await ensureBuild();
+    if (!buildId) return;
+
+    try {
+      await upsertItemMutation.mutateAsync({
+        buildId,
+        body: {
+          component_type: pickerComponent,
+          product_id: product.id
+        }
+      });
+      setPickerOpen(false);
+    } catch {
+      // Mutation hook already surfaces a friendly toast.
+    }
   };
 
   const handleValidate = () => {

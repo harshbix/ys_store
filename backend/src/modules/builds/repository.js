@@ -38,8 +38,21 @@ export async function upsertBuildComponent(payload) {
   return supabase.from('custom_build_items').insert(payload).select().single();
 }
 
-export async function deleteBuildItem(itemId) {
-  return supabase.from('custom_build_items').delete().eq('id', itemId);
+export async function findBuildItemById(itemId) {
+  return supabase
+    .from('custom_build_items')
+    .select('*')
+    .eq('id', itemId)
+    .maybeSingle();
+}
+
+export async function deleteBuildItem(itemId, buildId) {
+  const query = supabase
+    .from('custom_build_items')
+    .delete()
+    .eq('id', itemId);
+
+  return buildId ? query.eq('custom_build_id', buildId) : query;
 }
 
 export async function updateBuild(buildId, payload) {

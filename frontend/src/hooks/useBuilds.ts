@@ -9,6 +9,7 @@ import {
   validateBuild,
   type UpsertBuildItemBody
 } from '../api/builds';
+import { normalizeApiError } from '../lib/errors';
 import { queryKeys } from '../lib/queryKeys';
 import { useSessionStore } from '../store/session';
 import { useShowToast } from './useToast';
@@ -40,11 +41,29 @@ export function useBuilds() {
   });
 
   const ensureBuild = useCallback(async (): Promise<string> => {
-    if (activeBuildId) return activeBuildId;
+    if (activeBuildId) {
+      const cachedBuild = queryClient.getQueryData(queryKeys.builds.detail(activeBuildId));
+      if (cachedBuild) {
+        return activeBuildId;
+      }
+
+      try {
+        await getBuild(activeBuildId);
+        return activeBuildId;
+      } catch (error) {
+        const normalized = normalizeApiError(error);
+        if (normalized.status !== 404) {
+          throw error;
+        }
+
+        setActiveBuildId(null);
+      }
+    }
+
     if (createBuildMutation.isPending) return '';
     const response = await createBuildMutation.mutateAsync();
     return response.data.id;
-  }, [activeBuildId, createBuildMutation.isPending, createBuildMutation.mutateAsync]);
+  }, [activeBuildId, createBuildMutation.isPending, createBuildMutation.mutateAsync, queryClient, setActiveBuildId]);
 
   const invalidateBuild = async (buildId: string) => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.builds.detail(buildId) });
