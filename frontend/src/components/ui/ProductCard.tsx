@@ -1,44 +1,84 @@
+import { motion } from 'framer-motion';
+import { Heart, Plus, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Product } from '../../types/api';
-import { useStore } from '../../store/useStore';
-import { Heart } from 'lucide-react';
+import type { Product } from '../../types/api';
+import { clampText, compactText, titleCase } from '../../lib/format';
+import { ConditionBadge } from './ConditionBadge';
+import { PriceDisplay } from './PriceDisplay';
+import { StockBadge } from './StockBadge';
 
-export const ProductCard = ({ product }: { product: Product }) => {
-  const { toggleWishlist, wishlist } = useStore();
-  const formatCurrency = (val: string) => new Intl.NumberFormat('en-TZ', { style: 'currency', currency: 'TZS' }).format(Number(val));
-  const isWishlisted = wishlist.includes(product.id);
+type ProductCardProps = {
+  product: Product;
+  inWishlist?: boolean;
+  onToggleWishlist?: (product: Product) => void;
+  onQuickAdd?: (productId: string) => void;
+};
+
+export function ProductCard({ product, inWishlist, onToggleWishlist, onQuickAdd }: ProductCardProps) {
+  const soldOut = product.stock_status === 'sold_out';
 
   return (
-    <div className="group cursor-pointer flex flex-col relative w-full">
-      <Link to={`/products/${product.slug || product.id}`} className="absolute inset-0 z-0" aria-label={`View ${product.name}`} />
-      
-      <div className="relative aspect-[4/5] bg-surface mb-4 overflow-hidden rounded-md flex items-center justify-center p-8 group-hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] transition-all">
-        <button 
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(product.id); }}
-          className="absolute top-4 right-4 z-10 p-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 rounded-full hover:bg-white hover:text-black"
+    <motion.article
+      layout
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.18 }}
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface"
+    >
+      <Link to={`/products/${product.slug}`} className="relative block overflow-hidden bg-gradient-to-br from-surfaceElevated to-surface p-3">
+        <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border/70 bg-surfaceElevated text-center">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-muted">{titleCase(product.product_type)}</p>
+            <p className="mt-2 px-3 text-sm font-semibold text-foreground">{clampText(product.title, 52)}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+          onClick={(event) => {
+            event.preventDefault();
+            onToggleWishlist?.(product);
+          }}
+          className="absolute right-5 top-5 inline-flex min-h-9 min-w-9 items-center justify-center rounded-full border border-border bg-background/85 text-muted backdrop-blur transition hover:text-foreground"
         >
-          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current text-white group-hover:text-black' : ''}`} />
+          <Heart className={`h-4 w-4 ${inWishlist ? 'fill-current text-danger' : ''}`} />
         </button>
-        {product.is_featured && <span className="absolute top-4 left-4 z-10 text-[10px] font-bold tracking-widest uppercase bg-white text-black px-2 py-1 rounded-full">Featured</span>}
-        <img 
-          src={product.media_urls?.[0] || 'https://via.placeholder.com/400?text=Hardware'} 
-          alt={product.name} 
-          className="object-contain w-full h-full group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-        />
-      </div>
-      <div>
-        <div className="flex justify-between items-start gap-4">
-          <h3 className="text-sm font-medium leading-tight truncate max-w-[80%]">{product.name}</h3>
-          <p className="text-sm font-bold whitespace-nowrap">{formatCurrency(product.base_price)}</p>
+      </Link>
+
+      <div className="flex flex-1 flex-col p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <ConditionBadge condition={product.condition} />
+          {product.stock_status !== 'in_stock' ? <StockBadge stockStatus={product.stock_status} /> : null}
         </div>
-        <div className="flex items-center gap-3 mt-1 text-xs uppercase tracking-wider">
-          <p className="text-muted">{product.category}</p>
-          <p className={product.stock_status === 'sold_out' ? 'text-red-400' : 'text-green-400 opacity-80'}>
-            {product.stock_status.replace(/_/g, ' ')}
-          </p>
+
+        <Link to={`/products/${product.slug}`} className="mt-3 text-sm font-semibold leading-5 text-foreground transition group-hover:text-accent">
+          {product.title}
+        </Link>
+
+        <p className="mt-1 text-xs uppercase tracking-wide text-muted">{product.brand} • {titleCase(product.product_type)}</p>
+        <p className="mt-2 text-xs text-muted">{clampText(compactText(product.short_description, 'Premium hardware for serious workflows.'), 72)}</p>
+
+        <div className="mt-4 flex items-end justify-between gap-2">
+          <PriceDisplay amount={product.estimated_price_tzs} className="text-base font-semibold" />
+          <div className="flex items-center gap-1">
+            <Link
+              to={`/products/${product.slug}`}
+              className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border px-3 text-xs font-semibold uppercase tracking-wide text-foreground transition hover:border-accent hover:text-accent"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Details
+            </Link>
+            <button
+              type="button"
+              disabled={soldOut}
+              onClick={() => onQuickAdd?.(product.id)}
+              className="inline-flex min-h-11 items-center gap-1 rounded-full bg-primary px-3 text-xs font-semibold uppercase tracking-wide text-primaryForeground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ShoppingBag className="h-3.5 w-3.5" />
+              Add
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </motion.article>
   );
-};
+}
