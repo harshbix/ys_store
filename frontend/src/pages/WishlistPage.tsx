@@ -4,16 +4,20 @@ import { ErrorState } from '../components/feedback/ErrorState';
 import { ProductGrid } from '../components/ui/ProductGrid';
 import { useCart } from '../hooks/useCart';
 import { useWishlist } from '../hooks/useWishlist';
+import { useAuthStore } from '../store/auth';
 
 export default function WishlistPage() {
-  const { products, wishlist, isInWishlist, toggle, removeFromWishlist, isLoading } = useWishlist();
+  const { products, wishlist, isInWishlist, toggle, removeFromWishlist, isLoading, isError } = useWishlist();
   const { addItem } = useCart();
+  const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken));
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 pb-8">
       <header>
         <h1 className="font-display text-2xl font-semibold text-foreground">Wishlist</h1>
-        <p className="mt-1 text-sm text-muted">Saved locally for this device and guest session continuity.</p>
+        <p className="mt-1 text-sm text-muted">
+          {isAuthenticated ? 'Saved to your customer account.' : 'Saved locally for this device and guest session continuity.'}
+        </p>
       </header>
 
       {wishlist.length === 0 ? (
@@ -22,7 +26,11 @@ export default function WishlistPage() {
 
       {isLoading ? <p className="text-sm text-muted">Loading saved products...</p> : null}
 
-      {!isLoading && wishlist.length > 0 && products.length === 0 ? (
+      {isError ? (
+        <ErrorState title="Wishlist unavailable" description="Could not load your account wishlist right now." />
+      ) : null}
+
+      {!isLoading && !isError && wishlist.length > 0 && products.length === 0 ? (
         <ErrorState title="Saved products not available" description="Some items may no longer be listed in the current catalog." />
       ) : null}
 

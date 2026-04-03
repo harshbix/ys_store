@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useProducts } from '../../hooks/useProducts';
 import type { ComponentType, Product } from '../../types/api';
 import { formatTzs } from '../../lib/currency';
+import { getProductImage, placeholderForProduct } from '../../utils/imageFallback';
 
 type BuildPartPickerProps = {
   componentType: ComponentType | null;
@@ -56,9 +57,24 @@ export function BuildPartPicker({ componentType, open, onClose, onSelect }: Buil
                   onClick={() => onSelect(product)}
                   className="rounded-xl border border-border bg-surface p-3 text-left transition hover:border-accent"
                 >
-                  <p className="text-sm font-semibold text-foreground">{product.title}</p>
-                  <p className="mt-1 text-xs text-muted">{product.brand}</p>
-                  <p className="mt-3 text-sm font-semibold text-foreground">{formatTzs(product.estimated_price_tzs)}</p>
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={getProductImage(product)}
+                      alt={product.title}
+                      loading="lazy"
+                      className="h-16 w-16 shrink-0 rounded-lg border border-border object-cover"
+                      onError={(event) => {
+                        const fallback = placeholderForProduct(product);
+                        if (event.currentTarget.src.endsWith(fallback)) return;
+                        event.currentTarget.src = fallback;
+                      }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground">{product.title}</p>
+                      <p className="mt-1 text-xs text-muted">{product.brand}</p>
+                      <p className="mt-3 text-sm font-semibold text-foreground">{formatTzs(product.estimated_price_tzs)}</p>
+                    </div>
+                  </div>
                 </button>
               ))}
             </div>

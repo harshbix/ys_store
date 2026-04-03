@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AxiosError } from 'axios';
 import { useSessionStore } from '../store/session';
+import { useAdminAuthStore, useAuthStore } from '../store/auth';
 import { normalizeApiError } from '../lib/errors';
 
 const configuredBaseURL = import.meta.env.VITE_API_URL;
@@ -13,6 +14,7 @@ if (!baseURL) {
 export const apiClient = axios.create({
   baseURL,
   timeout: 15000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -22,6 +24,19 @@ apiClient.interceptors.request.use((config) => {
   const { guestSessionId } = useSessionStore.getState();
   if (guestSessionId) {
     config.headers['x-guest-session'] = guestSessionId;
+  }
+
+  const customerToken = useAuthStore.getState().accessToken;
+  const adminToken = useAdminAuthStore.getState().token;
+  const hasAuthHeader = Boolean(config.headers.Authorization);
+  const url = config.url || '';
+
+  if (!hasAuthHeader) {
+    if (adminToken && url.startsWith('/admin')) {
+      config.headers.Authorization = `Bearer ${adminToken}`;
+    } else if (customerToken && url.startsWith('/auth')) {
+      config.headers.Authorization = `Bearer ${customerToken}`;
+    }
   }
 
   return config;

@@ -1,11 +1,9 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import { Heart, LogIn, Menu, Search, ShoppingBag, UserCircle2, Wrench, X } from 'lucide-react';
+import { Heart, LogIn, Menu, Search, ShoppingBag, UserCircle2, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
-import { useSessionStore } from '../../store/session';
+import { useAdminAuthStore, useAuthStore } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
-import { AuthPromptBanner } from '../ui/AuthPromptBanner';
 import { SearchResultsOverlay } from '../ui/SearchResultsOverlay.tsx';
 
 const navLinks = [
@@ -19,14 +17,11 @@ const navLinks = [
 export function Header() {
   const { cartQuery } = useCart();
   const openMobileNav = useUiStore((state) => state.openMobileNav);
-  const openAccountModal = useUiStore((state) => state.openAccountModal);
-  const closeAccountModal = useUiStore((state) => state.closeAccountModal);
-  const accountModalOpen = useUiStore((state) => state.accountModalOpen);
   const searchOverlayOpen = useUiStore((state) => state.searchOverlayOpen);
   const openSearchOverlay = useUiStore((state) => state.openSearchOverlay);
   const closeSearchOverlay = useUiStore((state) => state.closeSearchOverlay);
-  const guestSessionId = useSessionStore((state) => state.guestSessionId);
-  const markAccountPromptSeen = useSessionStore((state) => state.markAccountPromptSeen);
+  const customerAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
+  const adminAuthenticated = useAdminAuthStore((state) => Boolean(state.token));
 
   const [isCompact, setIsCompact] = useState(false);
 
@@ -105,79 +100,24 @@ export function Header() {
             </span>
           </Link>
 
-          <button
-            type="button"
-            onClick={openAccountModal}
+          {adminAuthenticated ? (
+            <Link
+              to="/admin"
+              className="hidden min-h-11 items-center rounded-md border border-border px-3 text-sm text-muted transition hover:text-foreground sm:inline-flex"
+            >
+              Admin
+            </Link>
+          ) : null}
+
+          <Link
+            to="/login"
             className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border px-3 text-sm text-muted transition hover:text-foreground"
           >
-            <LogIn className="h-4 w-4" />
-            <span className="hidden sm:inline">Account</span>
-          </button>
+            {customerAuthenticated ? <UserCircle2 className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
+            <span className="hidden sm:inline">{customerAuthenticated ? 'Account' : 'Login'}</span>
+          </Link>
         </div>
       </div>
-
-      <AnimatePresence>
-        {accountModalOpen ? (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/70"
-              onClick={closeAccountModal}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              className="fixed inset-x-4 top-[15vh] z-50 mx-auto max-w-lg rounded-2xl border border-border bg-surface p-5"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Account and session information"
-            >
-              <div className="mb-4 flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">Account / Login</h2>
-                  <p className="text-sm text-muted">Guest-first shopping is active for speed and continuity.</p>
-                </div>
-                <button type="button" onClick={closeAccountModal} className="rounded-md border border-border p-2">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <AuthPromptBanner />
-
-              <div className="mt-4 rounded-xl border border-border bg-background p-3 text-xs text-muted">
-                <p className="inline-flex items-center gap-2">
-                  <UserCircle2 className="h-4 w-4" />
-                  Session: {guestSessionId || 'initializing...'}
-                </p>
-              </div>
-
-              <div className="mt-5 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    markAccountPromptSeen();
-                    closeAccountModal();
-                  }}
-                  className="min-h-11 rounded-full bg-primary px-5 text-sm font-semibold text-primaryForeground"
-                >
-                  Continue as Guest
-                </button>
-                <a
-                  href="https://wa.me/255700000000"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex min-h-11 items-center rounded-full border border-border px-5 text-sm font-semibold text-foreground"
-                >
-                  Contact Support
-                </a>
-              </div>
-            </motion.div>
-          </>
-        ) : null}
-      </AnimatePresence>
 
       <SearchResultsOverlay open={searchOverlayOpen} onClose={closeSearchOverlay} />
     </header>

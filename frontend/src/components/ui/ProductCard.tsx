@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { Heart, Plus, ShoppingBag } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Product } from '../../types/api';
 import { clampText, compactText, titleCase } from '../../lib/format';
+import { getProductImage, placeholderForProduct } from '../../utils/imageFallback';
 import { ConditionBadge } from './ConditionBadge';
 import { PriceDisplay } from './PriceDisplay';
 import { StockBadge } from './StockBadge';
@@ -16,6 +18,12 @@ type ProductCardProps = {
 
 export function ProductCard({ product, inWishlist, onToggleWishlist, onQuickAdd }: ProductCardProps) {
   const soldOut = product.stock_status === 'sold_out';
+  const fallbackImage = useMemo(() => placeholderForProduct(product), [product]);
+  const [imageSrc, setImageSrc] = useState(() => getProductImage(product));
+
+  useEffect(() => {
+    setImageSrc(getProductImage(product));
+  }, [product]);
 
   return (
     <motion.article
@@ -25,10 +33,20 @@ export function ProductCard({ product, inWishlist, onToggleWishlist, onQuickAdd 
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface"
     >
       <Link to={`/products/${product.slug}`} className="relative block overflow-hidden bg-gradient-to-br from-surfaceElevated to-surface p-3">
-        <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border/70 bg-surfaceElevated text-center">
-          <div>
-            <p className="text-xs uppercase tracking-widest text-muted">{titleCase(product.product_type)}</p>
-            <p className="mt-2 px-3 text-sm font-semibold text-foreground">{clampText(product.title, 52)}</p>
+        <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border/70 bg-surfaceElevated text-center">
+          <img
+            src={imageSrc}
+            alt={product.title}
+            loading="lazy"
+            className="h-full w-full object-cover"
+            onError={(event) => {
+              if (event.currentTarget.src.endsWith(fallbackImage)) return;
+              setImageSrc(fallbackImage);
+            }}
+          />
+          <div className="absolute inset-x-0 bottom-0 bg-black/45 px-3 py-2 text-left backdrop-blur-[1px]">
+            <p className="text-[10px] uppercase tracking-widest text-white/80">{titleCase(product.product_type)}</p>
+            <p className="mt-1 text-sm font-semibold text-white">{clampText(product.title, 52)}</p>
           </div>
         </div>
         <button

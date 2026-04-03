@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Heart, LogIn, ShoppingCart, Wrench, X } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
+import { useAdminAuthStore, useAuthStore } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
 
 const links = [
@@ -14,7 +15,8 @@ const links = [
 export function MobileNav() {
   const isOpen = useUiStore((state) => state.mobileNavOpen);
   const close = useUiStore((state) => state.closeMobileNav);
-  const openAccountModal = useUiStore((state) => state.openAccountModal);
+  const customerAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
+  const adminAuthenticated = useAdminAuthStore((state) => Boolean(state.token));
 
   return (
     <AnimatePresence>
@@ -74,17 +76,15 @@ export function MobileNav() {
                 <Wrench className="h-4 w-4" />
                 Build Your PC
               </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  close();
-                  openAccountModal();
-                }}
-                className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-muted"
-              >
+              <Link to="/login" onClick={close} className="flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm text-muted">
                 <LogIn className="h-4 w-4" />
-                Account / Login
-              </button>
+                {customerAuthenticated ? 'Account' : 'Login'}
+              </Link>
+              {adminAuthenticated ? (
+                <Link to="/admin" onClick={close} className="flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm text-muted">
+                  Admin Dashboard
+                </Link>
+              ) : null}
             </div>
           </motion.aside>
         </>

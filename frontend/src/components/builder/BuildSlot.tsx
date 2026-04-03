@@ -1,6 +1,7 @@
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import type { BuildItem, ComponentType } from '../../types/api';
 import { formatTzs } from '../../lib/currency';
+import { getProductImage, placeholderForProduct } from '../../utils/imageFallback';
 
 type BuildSlotProps = {
   componentType: ComponentType;
@@ -35,9 +36,24 @@ export function BuildSlot({ componentType, label, helper, item, pending, onPick,
       {item ? (
         <div className="mt-4 rounded-xl border border-border bg-background p-3">
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <p className="text-sm font-semibold text-foreground">{item.products?.title || 'Selected component'}</p>
-              <p className="mt-1 text-xs text-muted">{formatTzs(item.unit_estimated_price_tzs)}</p>
+            <div className="flex items-start gap-3">
+              {item.products ? (
+                <img
+                  src={getProductImage(item.products)}
+                  alt={item.products.title}
+                  className="h-12 w-12 rounded-md border border-border object-cover"
+                  onError={(event) => {
+                    const fallback = placeholderForProduct(item.products!);
+                    if (event.currentTarget.src.endsWith(fallback)) return;
+                    event.currentTarget.src = fallback;
+                  }}
+                />
+              ) : null}
+
+              <div>
+                <p className="text-sm font-semibold text-foreground">{item.products?.title || 'Selected component'}</p>
+                <p className="mt-1 text-xs text-muted">{formatTzs(item.unit_estimated_price_tzs)}</p>
+              </div>
             </div>
             <button
               type="button"

@@ -7,6 +7,7 @@ import { useProductDetail, useProducts } from '../hooks/useProducts';
 import { useWishlist } from '../hooks/useWishlist';
 import { formatTzs } from '../lib/currency';
 import { compactText, titleCase } from '../lib/format';
+import { getProductImage, placeholderForProduct } from '../utils/imageFallback';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { ConditionBadge } from '../components/ui/ConditionBadge';
 import { ErrorState } from '../components/feedback/ErrorState';
@@ -49,6 +50,8 @@ export default function ProductDetailPage() {
     return <ErrorState title="Product unavailable" description="This product could not be loaded." onRetry={() => detailQuery.refetch()} />;
   }
 
+  const heroImage = getProductImage(product);
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 pb-20">
       <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Shop', href: '/shop' }, { label: product.title }]} />
@@ -56,10 +59,22 @@ export default function ProductDetailPage() {
       <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-4">
           <div className="rounded-2xl border border-border bg-surface p-4">
-            <div className="aspect-[4/3] rounded-xl border border-border bg-surfaceElevated p-5">
-              <p className="text-xs uppercase tracking-widest text-muted">{titleCase(product.product_type)}</p>
-              <h1 className="mt-3 font-display text-2xl font-semibold text-foreground">{product.title}</h1>
-              <p className="mt-2 text-sm text-muted">{compactText(product.short_description)}</p>
+            <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-surfaceElevated">
+              <img
+                src={heroImage}
+                alt={product.title}
+                className="h-full w-full object-cover"
+                onError={(event) => {
+                  const fallback = placeholderForProduct(product);
+                  if (event.currentTarget.src.endsWith(fallback)) return;
+                  event.currentTarget.src = fallback;
+                }}
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-black/45 p-4 backdrop-blur-[1px]">
+                <p className="text-xs uppercase tracking-widest text-white/85">{titleCase(product.product_type)}</p>
+                <h1 className="mt-2 font-display text-2xl font-semibold text-white">{product.title}</h1>
+                <p className="mt-1 text-sm text-white/90">{compactText(product.short_description)}</p>
+              </div>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">

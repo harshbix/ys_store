@@ -220,9 +220,17 @@ export interface QuoteDetail extends QuoteRecord {
   items: QuoteItem[];
 }
 
+export interface WishlistItem {
+  id: string;
+  wishlist_id: string;
+  product_id: string;
+  created_at: string;
+  products?: Product;
+}
+
 export interface WishlistPayload {
   wishlist_id: string;
-  items: Array<{ id: string; wishlist_id: string; product_id: string; created_at: string }>;
+  items: WishlistItem[];
 }
 
 export interface OtpRequestPayload {

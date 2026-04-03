@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" fill="none">
+  <rect width="1200" height="900" rx="32" fill="#181A1F"/>
+  <rect x="220" y="330" width="760" height="240" rx="24" fill="#2A313B"/>
+  <rect x="280" y="390" width="180" height="120" rx="14" fill="#3A4452"/>
+  <text x="600" y="815" text-anchor="middle" fill="#D8C8A5" font-family="Arial, sans-serif" font-size="38">SSD Placeholder</text>
+</svg>
