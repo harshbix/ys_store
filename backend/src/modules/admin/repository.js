@@ -40,6 +40,10 @@ export async function listQuotesAdmin() {
   return supabase.from('quotes').select('*').order('created_at', { ascending: false });
 }
 
+export async function findQuoteById(quoteId) {
+  return supabase.from('quotes').select('*').eq('id', quoteId).maybeSingle();
+}
+
 export async function updateQuoteStatus(quoteId, payload) {
   return supabase.from('quotes').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', quoteId).select().single();
 }

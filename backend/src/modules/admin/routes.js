@@ -6,6 +6,7 @@ import {
   adminLoginSchema,
   adminProductSchema,
   productIdParamsSchema,
+  quoteIdParamsSchema,
   quickEditSchema,
   stockSchema,
   visibilitySchema,
@@ -16,6 +17,7 @@ import {
   logoutController,
   meController,
   listProductsController,
+  getProductByIdController,
   createProductController,
   updateProductController,
   duplicateProductController,
@@ -23,6 +25,7 @@ import {
   updateVisibilityController,
   quickEditController,
   listQuotesController,
+  getQuoteByIdController,
   updateQuoteStatusController
 } from './controller.js';
 
@@ -34,6 +37,7 @@ router.get('/me', requireAdmin, meController);
 
 router.get('/products', requireAdmin, listProductsController);
 router.post('/products', requireAdmin, validateRequest(adminProductSchema), createProductController);
+router.get('/products/:id', requireAdmin, validateRequest(productIdParamsSchema, 'params'), getProductByIdController);
 router.patch('/products/:id', requireAdmin, validateRequest(productIdParamsSchema, 'params'), validateRequest(adminProductSchema), updateProductController);
 router.post('/products/:id/duplicate', requireAdmin, validateRequest(productIdParamsSchema, 'params'), duplicateProductController);
 router.patch('/products/:id/stock', requireAdmin, validateRequest(productIdParamsSchema, 'params'), validateRequest(stockSchema), updateStockController);
@@ -41,6 +45,7 @@ router.patch('/products/:id/visibility', requireAdmin, validateRequest(productId
 router.patch('/products/:id/quick-edit', requireAdmin, validateRequest(productIdParamsSchema, 'params'), validateRequest(quickEditSchema), quickEditController);
 
 router.get('/quotes', requireAdmin, listQuotesController);
-router.patch('/quotes/:id/status', requireAdmin, validateRequest(productIdParamsSchema, 'params'), validateRequest(quoteStatusSchema), updateQuoteStatusController);
+router.get('/quotes/:id', requireAdmin, validateRequest(quoteIdParamsSchema, 'params'), getQuoteByIdController);
+router.patch('/quotes/:id/status', requireAdmin, validateRequest(quoteIdParamsSchema, 'params'), validateRequest(quoteStatusSchema), updateQuoteStatusController);
 
 export default router;
