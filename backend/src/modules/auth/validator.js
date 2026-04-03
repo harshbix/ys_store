@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const phoneSchema = z.string().regex(/^\+[1-9]\d{6,14}$/, 'Phone must be in E.164 format (e.g. +255712345678)');
+const phoneSchema = z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone must be in E.164 format (e.g. +255712345678)');
 
 export const requestOtpSchema = z.object({
   phone: phoneSchema

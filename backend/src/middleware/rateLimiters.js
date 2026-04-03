@@ -35,3 +35,15 @@ export const adminLoginLimiter = rateLimit({
     message: 'Too many admin login attempts, please retry in a moment.'
   }
 });
+
+export const adminApiLimiter = rateLimit({
+  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 60000),
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error_code: 'rate_limited',
+    message: 'Too many requests, please retry in a moment.'
+  }
+});

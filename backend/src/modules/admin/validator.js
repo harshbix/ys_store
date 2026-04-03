@@ -40,6 +40,7 @@ export const adminProductSchema = z.object({
 });
 
 export const productIdParamsSchema = z.object({ id: z.string().uuid() });
+export const quoteIdParamsSchema = z.object({ id: z.string().uuid() });
 
 export const quickEditSchema = z.object({
   estimated_price_tzs: z.number().int().nonnegative().optional(),
