@@ -15,17 +15,13 @@ export const QuoteHandoff = () => {
     const token = `live-${crypto.randomUUID()}`;
     
     await createQuote({
-      channel: 'whatsapp',
       customer_name: formData.name,
-      customer_phone: formData.phone,
       source_type: 'cart',
       source_id: cart.id,
-      idempotencyToken: token
-    });
+      idempotency_key: token    });
   };
 
-  const handleWhatsappRedirect = async () => {
-    if (quoteResult?.quote_code) {
+  const handleWhatsappRedirect = async () => {    if (quoteResult?.quote_code) {
       await trackClick(quoteResult.quote_code).catch(() => {
         // Fallback: Continue to redirect if tracking fails to not block user
       });

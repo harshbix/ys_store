@@ -31,11 +31,11 @@ export const Shop = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
             {[...Array(6)].map((_, i) => <div key={i} className="aspect-[4/5] bg-surfaceElevated animate-pulse rounded-md" />)}
           </div>
-        ) : data?.products?.length === 0 ? (
+        ) : data?.items?.length === 0 ? (
           <div className="py-20 text-center text-muted">No products found.</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
-            {data?.products.map((product) => (
+            {data?.items.map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

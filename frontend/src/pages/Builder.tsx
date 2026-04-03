@@ -54,7 +54,7 @@ export const Builder = () => {
         
         {CATEGORIES.map(category => {
           const selectedItem = itemsMap[category];
-          const availableProducts = allProducts?.products.filter(p => p.category.toLowerCase() === category.toLowerCase()) || [];
+          const availableProducts = allProducts?.items?.filter((p: any) => p.category.toLowerCase() === category.toLowerCase()) || [];
 
           return (
             <div key={category} className="border border-border p-8 rounded-sm bg-surface flex flex-col md:flex-row justify-between gap-6 transition-all hover:border-white group items-start md:items-center">
@@ -77,7 +77,7 @@ export const Builder = () => {
                     value=""
                   >
                     <option value="" disabled>Select {category}</option>
-                    {availableProducts.map(p => (
+                    {availableProducts.map((p: any) => (
                       <option key={p.id} value={p.id}>{p.name} — {formatCurrency(p.base_price)}</option>
                     ))}
                   </select>

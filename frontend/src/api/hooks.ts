@@ -7,7 +7,7 @@ export const useProducts = (params: Record<string, any>) => {
   return useQuery({
     queryKey: ['products', params],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<{products: Product[], total: number}>>('/products', { params });
+      const { data } = await apiClient.get<ApiResponse<{items: Product[], total: number}>>('/products', { params });
       return data.data;
     }
   });
@@ -37,7 +37,7 @@ export const useCart = () => {
 export const useAddToCart = () => {
   const queryCache = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { product_id: string; quantity: number; item_type: string }) => {
+    mutationFn: async (payload: { item_type: 'product' | 'custom_build'; product_id?: string; custom_build_id?: string; quantity: number }) => {
       const { data } = await apiClient.post<ApiResponse<Cart>>('/cart/items', payload);
       return data.data;
     },
@@ -133,10 +133,10 @@ export const useAddBuildToCart = (buildId: string) => {
 // --- QUOTES ---
 export const useCreateQuote = () => {
   return useMutation({
-    mutationFn: async (payload: { channel: string; customer_name: string; customer_phone: string; source_type: string; source_id?: string; idempotencyToken: string }) => {
-      const { idempotencyToken, ...body } = payload;
+    mutationFn: async (payload: { customer_name: string; notes?: string; source_type: 'cart' | 'build'; source_id: string; quote_type?: 'laptop' | 'desktop' | 'build' | 'upgrade' | 'warranty' | 'general'; idempotency_key?: string }) => {
+      const { idempotency_key, ...body } = payload;
       const { data } = await apiClient.post<ApiResponse<Quote>>('/quotes', body, {
-        headers: { 'Idempotency-Key': idempotencyToken }
+        headers: idempotency_key ? { 'Idempotency-Key': idempotency_key } : {}
       });
       return data.data;
     }
