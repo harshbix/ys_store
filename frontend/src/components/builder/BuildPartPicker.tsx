@@ -46,8 +46,19 @@ export function BuildPartPicker({ componentType, open, onClose, onSelect }: Buil
               </button>
             </div>
 
-            {productsQuery.isLoading ? <p className="text-sm text-muted">Loading components...</p> : null}
+            {productsQuery.isLoading ? (
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={`build-picker-skeleton-${index}`} className="h-24 animate-pulse rounded-xl border border-border bg-surface" />
+                ))}
+              </div>
+            ) : null}
+
             {productsQuery.isError ? <p className="text-sm text-danger">Failed to load components.</p> : null}
+
+            {!productsQuery.isLoading && !productsQuery.isError && products.length === 0 ? (
+              <p className="text-sm text-muted">No in-stock components available right now.</p>
+            ) : null}
 
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {products.map((product) => (

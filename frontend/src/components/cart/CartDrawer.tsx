@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useUiStore } from '../../store/ui';
 import { useCart } from '../../hooks/useCart';
+import { ErrorState } from '../feedback/ErrorState';
 import { CartItemRow } from './CartItemRow';
 import { CartSummary } from './CartSummary';
 
@@ -39,17 +40,35 @@ export function CartDrawer() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
-              <div className="space-y-px bg-border">
-              {items.map((item) => (
-                <CartItemRow
-                  key={item.id}
-                  item={item}
-                  busy={updateItem.isPending || removeItem.isPending}
-                  onQuantityChange={(quantity) => updateItem.mutate({ itemId: item.id, quantity })}
-                  onRemove={() => removeItem.mutate(item.id)}
+              {cartQuery.isLoading ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={`cart-skeleton-${index}`} className="h-20 animate-pulse rounded-xl border border-border bg-surface" />
+                  ))}
+                </div>
+              ) : null}
+
+              {cartQuery.isError ? (
+                <ErrorState
+                  title="Cart unavailable"
+                  description="Could not load cart right now."
+                  onRetry={() => cartQuery.refetch()}
                 />
-              ))}
-              </div>
+              ) : null}
+
+              {!cartQuery.isLoading && !cartQuery.isError ? (
+                <div className="space-y-px bg-border">
+                  {items.map((item) => (
+                    <CartItemRow
+                      key={item.id}
+                      item={item}
+                      busy={updateItem.isPending || removeItem.isPending}
+                      onQuantityChange={(quantity) => updateItem.mutate({ itemId: item.id, quantity })}
+                      onRemove={() => removeItem.mutate(item.id)}
+                    />
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             <div className="border-t border-border p-4">

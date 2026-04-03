@@ -1,5 +1,5 @@
 import type { ApiErrorEnvelope } from '../types/api';
-import { ApiFetchError } from './apiClient';
+import { ApiClientError } from './apiClient';
 
 export interface NormalizedError {
   status: number;
@@ -35,7 +35,7 @@ export function normalizeApiError(error: unknown): NormalizedError {
     return error;
   }
 
-  if (error instanceof ApiFetchError) {
+  if (error instanceof ApiClientError) {
     return {
       status: error.status,
       code: error.code || 'api_error',

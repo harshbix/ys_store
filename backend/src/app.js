@@ -9,9 +9,10 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestContext, morganRequestIdToken } from './middleware/requestContext.js';
 
 const app = express();
-const defaultAllowedOrigins = ['http://localhost:5173', 'https://your-vercel-domain.vercel.app'];
+const defaultAllowedOrigins = ['http://localhost:5173'];
 const configuredOrigins = env.frontendUrl.split(',').map((s) => s.trim()).filter(Boolean);
 const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...configuredOrigins]));
+const useCredentialedCors = true;
 
 app.use(helmet());
 app.use(cors({
@@ -20,7 +21,7 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
-  credentials: true
+  credentials: useCredentialedCors
 }));
 app.use(requestContext);
 morgan.token('request-id', morganRequestIdToken);

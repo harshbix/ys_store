@@ -57,7 +57,13 @@ export function SearchResultsOverlay({ open, onClose }: SearchResultsOverlayProp
                 <p className="p-4 text-sm text-muted">Start typing a brand name to search the catalog.</p>
               ) : null}
 
-              {productsQuery.isLoading ? <p className="p-4 text-sm text-muted">Searching...</p> : null}
+              {productsQuery.isLoading ? (
+                <div className="space-y-2 p-3">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div key={`search-skeleton-${index}`} className="h-12 animate-pulse rounded-lg border border-border bg-background" />
+                  ))}
+                </div>
+              ) : null}
 
               {productsQuery.isError ? <p className="p-4 text-sm text-danger">Unable to fetch search results right now.</p> : null}
 

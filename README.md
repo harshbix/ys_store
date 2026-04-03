@@ -22,3 +22,11 @@ After changing Vercel environment variables, trigger a redeploy so the new value
 Set `FRONTEND_URL` in backend env as a comma-separated allowlist. Example:
 
 - `FRONTEND_URL=http://localhost:5173,https://your-vercel-domain.vercel.app`
+
+In production, guest-session cookies are configured for cross-domain usage (`SameSite=None` and `Secure=true`), so frontend and backend must both be served over HTTPS.
+
+## Frontend Validation
+
+Run frontend API client scenario tests:
+
+- `cd frontend && npm test`

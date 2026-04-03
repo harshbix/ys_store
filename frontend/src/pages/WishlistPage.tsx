@@ -1,5 +1,6 @@
 import { EmptyState } from '../components/feedback/EmptyState';
 import { ErrorState } from '../components/feedback/ErrorState';
+import { SkeletonGrid } from '../components/feedback/SkeletonGrid';
 import { ProductGrid } from '../components/ui/ProductGrid';
 import { useCart } from '../hooks/useCart';
 import { useWishlist } from '../hooks/useWishlist';
@@ -23,7 +24,7 @@ export default function WishlistPage() {
         <EmptyState title="No saved products yet" description="Use the heart icon on products to save them here." actionHref="/shop" actionLabel="Browse products" />
       ) : null}
 
-      {isLoading ? <p className="text-sm text-muted">Loading saved products...</p> : null}
+      {isLoading ? <SkeletonGrid count={4} /> : null}
 
       {isError ? (
         <ErrorState title="Wishlist unavailable" description="Could not load your account wishlist right now." />

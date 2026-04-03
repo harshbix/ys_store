@@ -7,6 +7,7 @@ function newSessionToken() {
 
 export function ensureGuestSession(req, res, next) {
   const cookieName = env.sessionCookieName;
+  const isProduction = env.nodeEnv === 'production';
   let token = req.cookies?.[cookieName];
 
   if (!token) {
@@ -15,8 +16,8 @@ export function ensureGuestSession(req, res, next) {
 
     res.cookie(cookieName, token, {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: env.nodeEnv === 'production',
+      sameSite: isProduction ? 'none' : 'lax',
+      secure: isProduction,
       maxAge: maxAgeMs
     });
   }

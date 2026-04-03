@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react';
-import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet, useLocation, useRouteError } from 'react-router-dom';
 import { CartDrawer } from '../components/cart/CartDrawer';
+import { ErrorState } from '../components/feedback/ErrorState';
 import { PageLoader } from '../components/feedback/PageLoader';
 import { Layout } from '../components/layout/Layout';
 import { useAdminAuthStore } from '../store/auth';
@@ -41,10 +42,26 @@ function RootLayout() {
   );
 }
 
+function RootRouteError() {
+  const error = useRouteError();
+  console.error('[ROUTE ERROR]', error);
+
+  return (
+    <Layout>
+      <ErrorState
+        title="Page unavailable"
+        description="This page failed to load, but the app shell is still running."
+        onRetry={() => window.location.reload()}
+      />
+    </Layout>
+  );
+}
+
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <RootLayout />,
+    errorElement: <RootRouteError />,
     children: [
       { index: true, element: <PageBoundary><HomePage /></PageBoundary> },
       { path: 'shop', element: <PageBoundary><ShopPage /></PageBoundary> },

@@ -43,6 +43,14 @@ export default function AdminDashboardPage() {
           {productsQuery.isLoading ? <p className="text-xs text-muted">Loading...</p> : null}
         </div>
 
+        {productsQuery.isLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={`admin-products-skeleton-${index}`} className="h-10 animate-pulse rounded-lg border border-border bg-background" />
+            ))}
+          </div>
+        ) : null}
+
         {products.length === 0 && !productsQuery.isLoading ? (
           <p className="text-sm text-muted">No products returned by admin endpoint.</p>
         ) : null}
@@ -78,6 +86,14 @@ export default function AdminDashboardPage() {
           <h2 className="text-base font-semibold text-foreground">Quotes ({quotes.length})</h2>
           {quotesQuery.isLoading ? <p className="text-xs text-muted">Loading...</p> : null}
         </div>
+
+        {quotesQuery.isLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={`admin-quotes-skeleton-${index}`} className="h-10 animate-pulse rounded-lg border border-border bg-background" />
+            ))}
+          </div>
+        ) : null}
 
         {quotes.length === 0 && !quotesQuery.isLoading ? (
           <p className="text-sm text-muted">No quotes returned by admin endpoint.</p>

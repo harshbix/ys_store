@@ -2,12 +2,9 @@ import { useSessionStore } from '../store/session';
 import { useAdminAuthStore, useAuthStore } from '../store/auth';
 import { apiFetch, type ApiFetchOptions } from '../lib/apiClient';
 
-type QueryValue = string | number | boolean | null | undefined;
-type QueryParam = QueryValue | QueryValue[];
-
 interface ApiRequestConfig {
   headers?: HeadersInit;
-  params?: Record<string, QueryParam>;
+  params?: object;
   signal?: AbortSignal;
   timeoutMs?: number;
   retryCount?: number;
@@ -18,7 +15,7 @@ interface ApiResponse<T> {
   data: T;
 }
 
-function withQueryParams(endpoint: string, params?: Record<string, QueryParam>): string {
+function withQueryParams(endpoint: string, params?: object): string {
   if (!params) {
     return endpoint;
   }
@@ -26,21 +23,27 @@ function withQueryParams(endpoint: string, params?: Record<string, QueryParam>):
   const [path, existingQuery = ''] = endpoint.split('?');
   const searchParams = new URLSearchParams(existingQuery);
 
-  Object.entries(params).forEach(([key, value]) => {
+  Object.entries(params as Record<string, unknown>).forEach(([key, value]) => {
     if (value === undefined || value === null) {
       return;
     }
 
     if (Array.isArray(value)) {
       value.forEach((item) => {
-        if (item !== undefined && item !== null) {
+        if (
+          item !== undefined
+          && item !== null
+          && (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean')
+        ) {
           searchParams.append(key, String(item));
         }
       });
       return;
     }
 
-    searchParams.append(key, String(value));
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      searchParams.append(key, String(value));
+    }
   });
 
   const serialized = searchParams.toString();
