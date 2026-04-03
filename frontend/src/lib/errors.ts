@@ -1,5 +1,5 @@
-import { AxiosError } from 'axios';
 import type { ApiErrorEnvelope } from '../types/api';
+import { ApiFetchError } from './apiClient';
 
 export interface NormalizedError {
   status: number;
@@ -8,24 +8,48 @@ export interface NormalizedError {
   requestId?: string | null;
 }
 
+function isNormalizedError(error: unknown): error is NormalizedError {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const candidate = error as Partial<NormalizedError>;
+  return (
+    typeof candidate.status === 'number'
+    && typeof candidate.code === 'string'
+    && typeof candidate.message === 'string'
+  );
+}
+
+function isApiEnvelopeError(error: unknown): error is ApiErrorEnvelope {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const candidate = error as Partial<ApiErrorEnvelope>;
+  return candidate.success === false && typeof candidate.message === 'string';
+}
+
 export function normalizeApiError(error: unknown): NormalizedError {
-  if (error instanceof AxiosError) {
-    const status = error.response?.status ?? 500;
-    const envelope = error.response?.data as ApiErrorEnvelope | undefined;
+  if (isNormalizedError(error)) {
+    return error;
+  }
 
-    if (envelope && typeof envelope === 'object' && !envelope.success) {
-      return {
-        status,
-        code: envelope.error_code || 'api_error',
-        message: envelope.message || 'Request failed',
-        requestId: envelope.details?.request_id
-      };
-    }
-
+  if (error instanceof ApiFetchError) {
     return {
-      status,
-      code: 'network_error',
-      message: error.message || 'Network request failed'
+      status: error.status,
+      code: error.code || 'api_error',
+      message: error.message || 'Request failed',
+      requestId: error.requestId
+    };
+  }
+
+  if (isApiEnvelopeError(error)) {
+    return {
+      status: 500,
+      code: error.error_code || 'api_error',
+      message: error.message || 'Request failed',
+      requestId: error.details?.request_id
     };
   }
 
@@ -34,6 +58,16 @@ export function normalizeApiError(error: unknown): NormalizedError {
       status: 500,
       code: 'unknown_error',
       message: error.message
+    };
+  }
+
+  if (error && typeof error === 'object' && 'message' in error) {
+    const candidate = error as { message?: unknown; status?: unknown; code?: unknown; requestId?: unknown };
+    return {
+      status: typeof candidate.status === 'number' ? candidate.status : 500,
+      code: typeof candidate.code === 'string' ? candidate.code : 'unknown_error',
+      message: typeof candidate.message === 'string' ? candidate.message : 'Unexpected error occurred',
+      requestId: typeof candidate.requestId === 'string' ? candidate.requestId : null
     };
   }
 

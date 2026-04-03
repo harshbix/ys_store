@@ -1,51 +1,125 @@
-import axios from 'axios';
-import type { AxiosError } from 'axios';
 import { useSessionStore } from '../store/session';
 import { useAdminAuthStore, useAuthStore } from '../store/auth';
-import { normalizeApiError } from '../lib/errors';
-import { env } from '../utils/env';
+import { apiFetch, type ApiFetchOptions } from '../lib/apiClient';
 
-const configuredBaseURL = env.apiUrl;
-const baseURL = import.meta.env.DEV ? '/api' : configuredBaseURL;
+type QueryValue = string | number | boolean | null | undefined;
+type QueryParam = QueryValue | QueryValue[];
 
-if (!baseURL) {
-  throw new Error('VITE_API_URL is required. Set frontend/.env VITE_API_URL=https://ys-store-h1ec.onrender.com');
+interface ApiRequestConfig {
+  headers?: HeadersInit;
+  params?: Record<string, QueryParam>;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  retryCount?: number;
+  credentials?: RequestCredentials;
 }
 
-export const apiClient = axios.create({
-  baseURL,
-  timeout: 15000,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
+interface ApiResponse<T> {
+  data: T;
+}
 
-apiClient.interceptors.request.use((config) => {
+function withQueryParams(endpoint: string, params?: Record<string, QueryParam>): string {
+  if (!params) {
+    return endpoint;
+  }
+
+  const [path, existingQuery = ''] = endpoint.split('?');
+  const searchParams = new URLSearchParams(existingQuery);
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (item !== undefined && item !== null) {
+          searchParams.append(key, String(item));
+        }
+      });
+      return;
+    }
+
+    searchParams.append(key, String(value));
+  });
+
+  const serialized = searchParams.toString();
+  return serialized ? `${path}?${serialized}` : path;
+}
+
+function withAuthHeaders(endpoint: string, inputHeaders?: HeadersInit): Headers {
+  const headers = new Headers(inputHeaders);
   const { guestSessionId } = useSessionStore.getState();
-  if (guestSessionId) {
-    config.headers['x-guest-session'] = guestSessionId;
+
+  if (guestSessionId && !headers.has('x-guest-session')) {
+    headers.set('x-guest-session', guestSessionId);
   }
 
-  const customerToken = useAuthStore.getState().accessToken;
-  const adminToken = useAdminAuthStore.getState().token;
-  const hasAuthHeader = Boolean(config.headers.Authorization);
-  const url = config.url || '';
+  if (!headers.has('Authorization')) {
+    const customerToken = useAuthStore.getState().accessToken;
+    const adminToken = useAdminAuthStore.getState().token;
 
-  if (!hasAuthHeader) {
-    if (adminToken && url.startsWith('/admin')) {
-      config.headers.Authorization = `Bearer ${adminToken}`;
-    } else if (customerToken && url.startsWith('/auth')) {
-      config.headers.Authorization = `Bearer ${customerToken}`;
+    if (adminToken && endpoint.startsWith('/admin')) {
+      headers.set('Authorization', `Bearer ${adminToken}`);
+    } else if (customerToken && endpoint.startsWith('/auth')) {
+      headers.set('Authorization', `Bearer ${customerToken}`);
     }
   }
 
-  return config;
-});
+  return headers;
+}
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError) => {
-    return Promise.reject(normalizeApiError(error));
+function serializeBody(body: unknown): BodyInit | undefined {
+  if (body === undefined || body === null) {
+    return undefined;
   }
-);
+
+  if (
+    typeof body === 'string'
+    || body instanceof FormData
+    || body instanceof URLSearchParams
+    || body instanceof Blob
+  ) {
+    return body;
+  }
+
+  return JSON.stringify(body);
+}
+
+async function request<T>(
+  method: string,
+  endpoint: string,
+  body?: unknown,
+  config: ApiRequestConfig = {}
+): Promise<ApiResponse<T>> {
+  const { params, headers, ...requestConfig } = config;
+  const resolvedEndpoint = withQueryParams(endpoint, params);
+
+  const options: ApiFetchOptions = {
+    ...requestConfig,
+    method,
+    headers: withAuthHeaders(endpoint, headers),
+    body: serializeBody(body)
+  };
+
+  const data = await apiFetch<T>(resolvedEndpoint, options);
+  return { data };
+}
+
+export const apiClient = {
+  get<T>(endpoint: string, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+    return request<T>('GET', endpoint, undefined, config);
+  },
+  post<T>(endpoint: string, body?: unknown, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+    return request<T>('POST', endpoint, body, config);
+  },
+  put<T>(endpoint: string, body?: unknown, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+    return request<T>('PUT', endpoint, body, config);
+  },
+  patch<T>(endpoint: string, body?: unknown, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+    return request<T>('PATCH', endpoint, body, config);
+  },
+  delete<T>(endpoint: string, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+    return request<T>('DELETE', endpoint, undefined, config);
+  }
+};

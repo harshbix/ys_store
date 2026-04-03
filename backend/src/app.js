@@ -9,7 +9,9 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestContext, morganRequestIdToken } from './middleware/requestContext.js';
 
 const app = express();
-const allowedOrigins = env.frontendUrl.split(',').map((s) => s.trim()).filter(Boolean);
+const defaultAllowedOrigins = ['http://localhost:5173', 'https://your-vercel-domain.vercel.app'];
+const configuredOrigins = env.frontendUrl.split(',').map((s) => s.trim()).filter(Boolean);
+const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...configuredOrigins]));
 
 app.use(helmet());
 app.use(cors({
