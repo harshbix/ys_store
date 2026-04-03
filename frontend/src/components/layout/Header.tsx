@@ -1,12 +1,12 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Heart, LogIn, Menu, Search, ShoppingBag, UserCircle2, Wrench, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
 import { useSessionStore } from '../../store/session';
 import { useUiStore } from '../../store/ui';
 import { AuthPromptBanner } from '../ui/AuthPromptBanner';
-import { SearchResultsOverlay } from '../ui/SearchResultsOverlay';
+import { SearchResultsOverlay } from '../ui/SearchResultsOverlay.tsx';
 
 const navLinks = [
   { label: 'Shop', to: '/shop' },
@@ -30,11 +30,11 @@ export function Header() {
 
   const [isCompact, setIsCompact] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
     const handleScroll = () => setIsCompact(window.scrollY > 18);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  });
+  }, []);
 
   const cartCount = cartQuery.data?.data.items.length || 0;
 
