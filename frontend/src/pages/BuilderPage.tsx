@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BuildPartPicker } from '../components/builder/BuildPartPicker';
 import { BuildSlot } from '../components/builder/BuildSlot';
 import { BuildStickyBar } from '../components/builder/BuildStickyBar';
@@ -33,8 +33,11 @@ export default function BuilderPage() {
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerComponent, setPickerComponent] = useState<ComponentType | null>(null);
+  const ensuredRef = useRef(false);
 
   useEffect(() => {
+    if (ensuredRef.current) return;
+    ensuredRef.current = true;
     void ensureBuild();
   }, [ensureBuild]);
 

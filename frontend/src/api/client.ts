@@ -3,7 +3,8 @@ import type { AxiosError } from 'axios';
 import { useSessionStore } from '../store/session';
 import { normalizeApiError } from '../lib/errors';
 
-const baseURL = import.meta.env.VITE_API_URL;
+const configuredBaseURL = import.meta.env.VITE_API_URL;
+const baseURL = import.meta.env.DEV ? '/api' : configuredBaseURL;
 
 if (!baseURL) {
   throw new Error('VITE_API_URL is required. Create frontend/.env with VITE_API_URL=https://ys-store-h1ec.onrender.com/api');

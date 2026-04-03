@@ -19,7 +19,7 @@ interface SessionState {
 export const useSessionStore = create<SessionState>()(
   persist(
     (set, get) => ({
-      guestSessionId: '',
+      guestSessionId: generateGuestSessionId(),
       activeBuildId: null,
       wishlist: [],
       accountPromptSeen: false,
@@ -44,9 +44,9 @@ export const useSessionStore = create<SessionState>()(
       setActiveBuildId: (buildId) => set({ activeBuildId: buildId }),
       markAccountPromptSeen: () => set({ accountPromptSeen: true }),
       initializeSession: () => {
-        if (!get().guestSessionId) {
-          set({ guestSessionId: generateGuestSessionId() });
-        }
+        const current = get().guestSessionId;
+        if (typeof current === 'string' && current.trim().length > 0) return;
+        set({ guestSessionId: generateGuestSessionId() });
       }
     }),
     {

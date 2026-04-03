@@ -6,8 +6,10 @@ export function useGuestSession(): string {
   const initializeSession = useSessionStore((state) => state.initializeSession);
 
   useEffect(() => {
-    initializeSession();
-  }, [initializeSession]);
+    if (!guestSessionId) {
+      initializeSession();
+    }
+  }, [guestSessionId, initializeSession]);
 
   return guestSessionId;
 }

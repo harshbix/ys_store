@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addCartItem, getCart, removeCartItem, updateCartItem, type AddCartItemBody } from '../api/cart';
 import { queryKeys } from '../lib/queryKeys';
-import { useToast } from './useToast';
+import { useShowToast } from './useToast';
 
 export function useCart() {
   const queryClient = useQueryClient();
-  const { showToast } = useToast();
+  const showToast = useShowToast();
 
   const cartQuery = useQuery({
     queryKey: queryKeys.cart.current,

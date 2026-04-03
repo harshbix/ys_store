@@ -11,11 +11,11 @@ import {
 } from '../api/builds';
 import { queryKeys } from '../lib/queryKeys';
 import { useSessionStore } from '../store/session';
-import { useToast } from './useToast';
+import { useShowToast } from './useToast';
 
 export function useBuilds() {
   const queryClient = useQueryClient();
-  const { showToast } = useToast();
+  const showToast = useShowToast();
   const activeBuildId = useSessionStore((state) => state.activeBuildId);
   const setActiveBuildId = useSessionStore((state) => state.setActiveBuildId);
 
@@ -41,9 +41,10 @@ export function useBuilds() {
 
   const ensureBuild = useCallback(async (): Promise<string> => {
     if (activeBuildId) return activeBuildId;
+    if (createBuildMutation.isPending) return '';
     const response = await createBuildMutation.mutateAsync();
     return response.data.id;
-  }, [activeBuildId, createBuildMutation]);
+  }, [activeBuildId, createBuildMutation.isPending, createBuildMutation.mutateAsync]);
 
   const invalidateBuild = async (buildId: string) => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.builds.detail(buildId) });

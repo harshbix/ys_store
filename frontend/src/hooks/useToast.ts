@@ -28,10 +28,22 @@ export const useToastStore = create<ToastStore>((set) => ({
   clearToasts: () => set({ toasts: [] })
 }));
 
+export function useToastMessages() {
+  return useToastStore((state) => state.toasts);
+}
+
+export function useShowToast() {
+  return useToastStore((state) => state.showToast);
+}
+
+export function useDismissToast() {
+  return useToastStore((state) => state.dismissToast);
+}
+
 export function useToast() {
-  return useToastStore((state) => ({
-    toasts: state.toasts,
-    showToast: state.showToast,
-    dismissToast: state.dismissToast
-  }));
+  const toasts = useToastMessages();
+  const showToast = useShowToast();
+  const dismissToast = useDismissToast();
+
+  return { toasts, showToast, dismissToast };
 }

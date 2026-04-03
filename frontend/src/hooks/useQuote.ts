@@ -1,10 +1,10 @@
 import { useMutation } from '@tanstack/react-query';
 import { createQuote, trackQuoteWhatsappClick, type CreateQuoteBody } from '../api/quotes';
 import { generateIdempotencyKey } from '../lib/session';
-import { useToast } from './useToast';
+import { useShowToast } from './useToast';
 
 export function useQuote() {
-  const { showToast } = useToast();
+  const showToast = useShowToast();
 
   const createQuoteMutation = useMutation({
     mutationFn: async (payload: Omit<CreateQuoteBody, 'idempotency_key'>) => {

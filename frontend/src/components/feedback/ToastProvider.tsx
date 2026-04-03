@@ -1,9 +1,10 @@
 import type { PropsWithChildren } from 'react';
 import { Toast } from './Toast';
-import { useToast } from '../../hooks/useToast';
+import { useDismissToast, useToastMessages } from '../../hooks/useToast';
 
 export function ToastProvider({ children }: PropsWithChildren) {
-  const { toasts, dismissToast } = useToast();
+  const toasts = useToastMessages();
+  const dismissToast = useDismissToast();
 
   return (
     <>
