@@ -3,12 +3,13 @@ import type { AxiosError } from 'axios';
 import { useSessionStore } from '../store/session';
 import { useAdminAuthStore, useAuthStore } from '../store/auth';
 import { normalizeApiError } from '../lib/errors';
+import { env } from '../utils/env';
 
-const configuredBaseURL = import.meta.env.VITE_API_URL;
+const configuredBaseURL = env.apiUrl;
 const baseURL = import.meta.env.DEV ? '/api' : configuredBaseURL;
 
 if (!baseURL) {
-  throw new Error('VITE_API_URL is required. Create frontend/.env with VITE_API_URL=https://ys-store-h1ec.onrender.com/api');
+  throw new Error('VITE_API_URL is required. Set frontend/.env VITE_API_URL=https://ys-store-h1ec.onrender.com');
 }
 
 export const apiClient = axios.create({
