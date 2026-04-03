@@ -21,9 +21,10 @@ export async function findBuildWithItems(buildId) {
 }
 
 export async function createQuoteAndItemsTransactional(payload) {
-  // Safest MVP-compatible option: use a SQL function/RPC for true transaction semantics.
-  // This RPC must insert into quotes and quote_items atomically and return the quote row.
-  return supabase.rpc('create_quote_transactional', payload);
+  return supabase.rpc('create_quote_transactional', {
+    p_items: payload.p_items,
+    p_quote: payload.p_quote
+  });
 }
 
 export async function findQuoteByCode(quoteCode) {
