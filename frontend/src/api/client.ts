@@ -1,6 +1,7 @@
 import { useSessionStore } from '../store/session';
 import { useAdminAuthStore, useAuthStore } from '../store/auth';
 import { apiFetch, type ApiFetchOptions } from '../lib/apiClient';
+import { ApiClientError } from '../lib/apiClient';
 
 interface ApiRequestConfig {
   headers?: HeadersInit;
@@ -105,8 +106,25 @@ async function request<T>(
     body: serializeBody(body)
   };
 
-  const data = await apiFetch<T>(resolvedEndpoint, options);
-  return { data };
+  try {
+    const data = await apiFetch<T>(resolvedEndpoint, options);
+    return { data };
+  } catch (error) {
+    if (error instanceof ApiClientError && error.status === 401) {
+      const requestHeaders = new Headers(options.headers);
+      const hasAuthHeader = requestHeaders.has('Authorization');
+
+      if (hasAuthHeader) {
+        if (resolvedEndpoint.startsWith('/admin')) {
+          useAdminAuthStore.getState().clearSession();
+        } else if (resolvedEndpoint.startsWith('/auth')) {
+          useAuthStore.getState().logout();
+        }
+      }
+    }
+
+    throw error;
+  }
 }
 
 export const apiClient = {

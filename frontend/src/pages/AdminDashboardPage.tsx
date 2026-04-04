@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { getAdminProductById } from '../api/admin';
 import { ErrorState } from '../components/feedback/ErrorState';
+import { Button } from '../components/ui/Button';
 import { useAdmin } from '../hooks/useAdmin';
 import { useShowToast } from '../hooks/useToast';
 import { formatTzs } from '../lib/currency';
@@ -725,13 +726,12 @@ export default function AdminDashboardPage() {
           >
             View Storefront
           </Link>
-          <button
+          <Button
             type="button"
             onClick={() => void logout()}
-            className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primaryForeground"
           >
             Sign Out
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -769,13 +769,14 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-secondary">Search, filter, and take actions without leaving this page.</p>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={startCreateMode}
-              className="inline-flex min-h-10 items-center rounded-full border border-border px-4 text-xs font-semibold text-foreground"
             >
               Create New Product
-            </button>
+            </Button>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
@@ -1330,7 +1331,7 @@ export default function AdminDashboardPage() {
               ) : null}
 
               {uploadProgress ? (
-                <p className="text-xs text-secondary">
+                <p className="text-xs text-secondary" aria-live="polite">
                   Uploading {uploadProgress.current} of {uploadProgress.total} image(s)
                   {uploadProgress.fileName ? ` (${uploadProgress.fileName})` : ''}
                   {' '}• {uploadProgress.percent}%
@@ -1345,14 +1346,15 @@ export default function AdminDashboardPage() {
                       <li key={`${entry.file.name}-${entry.file.size}`}>{entry.file.name}: {entry.reason}</li>
                     ))}
                   </ul>
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => void handleRetryFailedUploads()}
                     disabled={isUploading}
-                    className="inline-flex min-h-9 items-center rounded-full border border-border px-3 text-xs font-semibold text-foreground disabled:opacity-50"
                   >
                     Retry Failed Uploads
-                  </button>
+                  </Button>
                 </div>
               ) : null}
 
@@ -1372,26 +1374,22 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <button
+              <Button
                 type="submit"
+                loading={isSubmittingForm}
                 disabled={isSubmittingForm}
-                className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primaryForeground disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSubmittingForm
-                  ? 'Saving...'
-                  : formMode === 'edit'
-                    ? 'Save Product Changes'
-                    : 'Create Product'}
-              </button>
+                {formMode === 'edit' ? 'Save Product Changes' : 'Create Product'}
+              </Button>
 
               {formMode === 'edit' && selectedProductId ? (
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => void handleDuplicate(selectedProductId)}
-                  className="inline-flex min-h-11 items-center rounded-full border border-border px-5 text-sm font-semibold text-foreground"
                 >
                   Duplicate Product
-                </button>
+                </Button>
               ) : null}
             </div>
           </form>

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { MessageCircle } from 'lucide-react';
+import { MapPin, ShieldCheck, Truck } from 'lucide-react';
 import { ProductRail } from '../components/ui/ProductRail';
+import { WhatsAppButton } from '../components/ui/WhatsAppButton';
 
 const categories = [
   { label: 'Shop', href: '/shop' },
@@ -13,6 +14,52 @@ const categories = [
 export default function HomePage() {
   return (
     <div className="space-y-10 pb-10 md:space-y-16">
+      <section className="grid gap-6 border border-border bg-surface p-5 md:grid-cols-[1.1fr_0.9fr] md:p-8">
+        <div>
+          <p className="label-11 text-secondary">YS STORE TANZANIA</p>
+          <h1 className="section-title mt-3 text-foreground">Premium PC systems with WhatsApp-first support</h1>
+          <p className="mt-3 max-w-xl text-[13px] text-secondary">
+            Browse curated gaming hardware, build with compatibility checks, and finalize through guided support.
+            Built for Dar es Salaam buyers and nationwide delivery.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link to="/shop" className="inline-flex h-11 items-center bg-primary px-5 text-[13px] font-medium text-primaryForeground">
+              Browse Products
+            </Link>
+            <WhatsAppButton
+              href="https://wa.me/255700000000"
+              label="Talk on WhatsApp"
+              className="inline-flex h-11 items-center gap-2 border border-border px-5 text-[13px] font-medium text-success"
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-px border border-border bg-border text-[12px]">
+          <div className="flex items-start gap-3 bg-background p-4 text-secondary">
+            <MapPin className="mt-0.5 h-4 w-4 text-accent" />
+            <div>
+              <p className="font-semibold text-foreground">Dar es Salaam Focused</p>
+              <p className="mt-1">Fast local coordination, with national delivery support across Tanzania.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 bg-background p-4 text-secondary">
+            <ShieldCheck className="mt-0.5 h-4 w-4 text-accent" />
+            <div>
+              <p className="font-semibold text-foreground">Quote-First Confidence</p>
+              <p className="mt-1">Final pricing, stock, and alternatives are confirmed before order commitment.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 bg-background p-4 text-secondary">
+            <Truck className="mt-0.5 h-4 w-4 text-accent" />
+            <div>
+              <p className="font-semibold text-foreground">Flexible Payments</p>
+              <p className="mt-1">M-Pesa, bank transfer, and cash coordination options via support team.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="grid grid-cols-2 gap-px bg-border md:grid-cols-5">
         {categories.map((category) => (
           <Link
@@ -52,15 +99,11 @@ export default function HomePage() {
           <p className="label-11 text-secondary">Trust</p>
           <p className="mt-2 text-[13px] text-secondary">WhatsApp-assisted purchasing, verified compatibility, and delivery follow-up across Tanzania with cross-border support on request.</p>
         </div>
-        <a
+        <WhatsAppButton
           href="https://wa.me/255700000000"
-          target="_blank"
-          rel="noreferrer"
+          label="WhatsApp Consultation"
           className="inline-flex h-11 items-center gap-2 border border-border px-5 text-[13px] font-medium text-success"
-        >
-          <MessageCircle className="h-4 w-4" />
-          WhatsApp Consultation
-        </a>
+        />
       </section>
     </div>
   );

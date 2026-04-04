@@ -20,6 +20,7 @@ export function ProductRail({ title, subtitle, type, viewAllTo }: ProductRailPro
   const query = useProducts({ type, sort: 'newest', page: 1, limit: 8 });
   const { addItem } = useCart();
   const { isInWishlist, toggle } = useWishlist();
+  const addingProductId = addItem.isPending ? (addItem.variables?.product_id ?? null) : null;
 
   const products = useMemo(() => query.data?.data.items || [], [query.data?.data.items]);
 
@@ -52,6 +53,7 @@ export function ProductRail({ title, subtitle, type, viewAllTo }: ProductRailPro
                 inWishlist={isInWishlist(product.id)}
                 onToggleWishlist={(current) => toggle({ id: current.id, slug: current.slug, title: current.title })}
                 onQuickAdd={(productId) => addItem.mutate({ item_type: 'product', product_id: productId, quantity: 1 })}
+                addingToCart={addingProductId === product.id}
               />
             </div>
           ))}
