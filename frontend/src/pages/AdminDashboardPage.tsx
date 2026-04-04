@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { getAdminProductById } from '../api/admin';
@@ -46,6 +46,18 @@ interface ProductFormState {
   is_featured: boolean;
   featured_tag: FeaturedTag | '';
   specs: ProductFormSpec[];
+}
+
+interface UploadProgressState {
+  current: number;
+  total: number;
+  percent: number;
+  fileName?: string;
+}
+
+interface FailedUploadEntry {
+  file: File;
+  reason: string;
 }
 
 const productTypeOptions: Array<{ value: ProductType | 'all'; label: string }> = [
@@ -372,7 +384,9 @@ export default function AdminDashboardPage() {
   const [actionProductId, setActionProductId] = useState<string | null>(null);
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(null);
+  const [failedUploads, setFailedUploads] = useState<FailedUploadEntry[]>([]);
+  const [isDropzoneActive, setIsDropzoneActive] = useState(false);
 
   const productDetailQuery = useQuery({
     queryKey: selectedProductId ? queryKeys.admin.productDetail(selectedProductId) : ['admin', 'product', 'draft'],
@@ -517,24 +531,33 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const uploadToSignedUrl = async (url: string, file: File) => {
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': file.type
-      },
-      body: file
-    });
+  const uploadToSignedUrl = async (url: string, file: File, onProgress?: (percent: number) => void) => {
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', url);
+      xhr.setRequestHeader('Content-Type', file.type);
 
-    if (!response.ok) {
-      throw new Error('Upload request failed');
-    }
+      xhr.upload.onprogress = (event) => {
+        if (!event.lengthComputable) return;
+        const percent = Math.round((event.loaded / event.total) * 100);
+        onProgress?.(Math.min(100, Math.max(0, percent)));
+      };
+
+      xhr.onerror = () => reject(new Error('Upload request failed'));
+      xhr.onabort = () => reject(new Error('Upload request cancelled'));
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+          return;
+        }
+        reject(new Error('Upload request failed'));
+      };
+
+      xhr.send(file);
+    });
   };
 
-  const handleMediaUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    event.target.value = '';
-
+  const handleMediaUploadFiles = async (files: File[]) => {
     if (!files.length) return;
     if (!selectedProductId) {
       showToast({
@@ -546,22 +569,38 @@ export default function AdminDashboardPage() {
     }
 
     setIsUploading(true);
-    setUploadProgress({ current: 0, total: files.length });
+    setUploadProgress({ current: 0, total: files.length, percent: 0 });
+    setFailedUploads([]);
+    const failed: FailedUploadEntry[] = [];
 
     let completedCount = 0;
 
     for (const file of files) {
       if (!file.type.startsWith('image/')) {
-        showToast({ title: 'Unsupported file', description: `${file.name} is not an image.`, variant: 'error' });
+        const reason = `${file.name} is not an image.`;
+        failed.push({ file, reason });
+        showToast({ title: 'Unsupported file', description: reason, variant: 'error' });
         continue;
       }
 
       if (file.size > 8 * 1024 * 1024) {
-        showToast({ title: 'Image too large', description: `${file.name} exceeds the 8MB upload limit.`, variant: 'error' });
+        const reason = `${file.name} exceeds the 8MB upload limit.`;
+        failed.push({ file, reason });
+        showToast({ title: 'Image too large', description: reason, variant: 'error' });
         continue;
       }
 
       try {
+        const variantProgress = {
+          original: 0,
+          thumb: 0,
+          full: 0
+        };
+        const pushProgress = () => {
+          const average = Math.round((variantProgress.original + variantProgress.thumb + variantProgress.full) / 3);
+          setUploadProgress({ current: completedCount, total: files.length, percent: average, fileName: file.name });
+        };
+
         const [original, thumb, full] = await Promise.all([
           createUploadUrlMutation.mutateAsync({
             owner_type: 'product',
@@ -587,9 +626,18 @@ export default function AdminDashboardPage() {
         ]);
 
         await Promise.all([
-          uploadToSignedUrl(original.data.signed_url, file),
-          uploadToSignedUrl(thumb.data.signed_url, file),
-          uploadToSignedUrl(full.data.signed_url, file)
+          uploadToSignedUrl(original.data.signed_url, file, (percent) => {
+            variantProgress.original = percent;
+            pushProgress();
+          }),
+          uploadToSignedUrl(thumb.data.signed_url, file, (percent) => {
+            variantProgress.thumb = percent;
+            pushProgress();
+          }),
+          uploadToSignedUrl(full.data.signed_url, file, (percent) => {
+            variantProgress.full = percent;
+            pushProgress();
+          })
         ]);
 
         await finalizeUploadMutation.mutateAsync({
@@ -605,11 +653,13 @@ export default function AdminDashboardPage() {
         });
 
         completedCount += 1;
-        setUploadProgress({ current: completedCount, total: files.length });
+        setUploadProgress({ current: completedCount, total: files.length, percent: 100, fileName: file.name });
       } catch (error) {
+        const reason = toUserMessage(error, `Could not upload ${file.name}. Please retry.`);
+        failed.push({ file, reason });
         showToast({
           title: 'Image upload failed',
-          description: toUserMessage(error, `Could not upload ${file.name}. Please retry.`),
+          description: reason,
           variant: 'error'
         });
       }
@@ -626,8 +676,38 @@ export default function AdminDashboardPage() {
       });
     }
 
+    if (failed.length > 0) {
+      setFailedUploads(failed);
+      showToast({
+        title: 'Some uploads failed',
+        description: `${failed.length} file${failed.length > 1 ? 's' : ''} can be retried.`,
+        variant: 'info'
+      });
+    }
+
     setUploadProgress(null);
     setIsUploading(false);
+  };
+
+  const handleMediaUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = '';
+    await handleMediaUploadFiles(files);
+  };
+
+  const handleRetryFailedUploads = async () => {
+    if (!failedUploads.length) return;
+    const files = failedUploads.map((entry) => entry.file);
+    await handleMediaUploadFiles(files);
+  };
+
+  const handleDrop = async (event: DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    setIsDropzoneActive(false);
+
+    const dropped = Array.from(event.dataTransfer.files || []);
+    if (!dropped.length) return;
+    await handleMediaUploadFiles(dropped);
   };
 
   return (
@@ -1224,21 +1304,56 @@ export default function AdminDashboardPage() {
                 <p className="text-xs text-secondary">Upload product images after the product is saved.</p>
               </div>
 
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                disabled={!selectedProductId || isUploading}
-                onChange={(event) => void handleMediaUpload(event)}
-                className="block w-full text-xs text-secondary file:mr-3 file:rounded-full file:border file:border-border file:bg-surface file:px-3 file:py-2 file:text-xs file:font-semibold file:text-foreground"
-              />
+              <label
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  if (!isDropzoneActive) setIsDropzoneActive(true);
+                }}
+                onDragLeave={() => setIsDropzoneActive(false)}
+                onDrop={(event) => void handleDrop(event)}
+                className={`block cursor-pointer rounded-xl border border-dashed p-3 text-xs transition ${isDropzoneActive ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-surface text-secondary'}`}
+              >
+                <span className="font-semibold text-foreground">Drag and drop images here</span>
+                <span className="ml-1">or click to select files</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  disabled={!selectedProductId || isUploading}
+                  onChange={(event) => void handleMediaUpload(event)}
+                  className="sr-only"
+                />
+              </label>
 
               {!selectedProductId ? (
                 <p className="text-xs text-muted">Save product first to enable uploads.</p>
               ) : null}
 
               {uploadProgress ? (
-                <p className="text-xs text-secondary">Uploading {uploadProgress.current} of {uploadProgress.total} image(s)...</p>
+                <p className="text-xs text-secondary">
+                  Uploading {uploadProgress.current} of {uploadProgress.total} image(s)
+                  {uploadProgress.fileName ? ` (${uploadProgress.fileName})` : ''}
+                  {' '}• {uploadProgress.percent}%
+                </p>
+              ) : null}
+
+              {failedUploads.length > 0 ? (
+                <div className="space-y-2 rounded-lg border border-danger/50 bg-danger/10 p-2">
+                  <p className="text-xs font-medium text-foreground">Failed uploads ({failedUploads.length})</p>
+                  <ul className="space-y-1 text-xs text-secondary">
+                    {failedUploads.slice(0, 3).map((entry) => (
+                      <li key={`${entry.file.name}-${entry.file.size}`}>{entry.file.name}: {entry.reason}</li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    onClick={() => void handleRetryFailedUploads()}
+                    disabled={isUploading}
+                    className="inline-flex min-h-9 items-center rounded-full border border-border px-3 text-xs font-semibold text-foreground disabled:opacity-50"
+                  >
+                    Retry Failed Uploads
+                  </button>
+                </div>
               ) : null}
 
               {productDetailQuery.data?.data.media?.length ? (
