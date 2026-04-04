@@ -14,47 +14,66 @@ const categories = [
 export default function HomePage() {
   return (
     <div className="space-y-10 pb-10 md:space-y-16">
-      <section className="grid gap-6 border border-border bg-surface p-5 md:grid-cols-[1.1fr_0.9fr] md:p-8">
-        <div>
-          <p className="label-11 text-secondary">YS STORE TANZANIA</p>
-          <h1 className="section-title mt-3 text-foreground">Premium PC systems with WhatsApp-first support</h1>
-          <p className="mt-3 max-w-xl text-[13px] text-secondary">
-            Browse curated gaming hardware, build with compatibility checks, and finalize through guided support.
-            Built for Dar es Salaam buyers and nationwide delivery.
-          </p>
-
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Link to="/shop" className="inline-flex h-11 items-center bg-primary px-5 text-[13px] font-medium text-primaryForeground">
-              Browse Products
-            </Link>
-            <WhatsAppButton
-              href="https://wa.me/255700000000"
-              label="Talk on WhatsApp"
-              className="inline-flex h-11 items-center gap-2 border border-border px-5 text-[13px] font-medium text-success"
-            />
-          </div>
+      <section className="relative overflow-hidden border border-border bg-surface">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-accent/10 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/3 h-52 w-52 rounded-full bg-primary/10 blur-3xl" />
         </div>
 
-        <div className="grid gap-px border border-border bg-border text-[12px]">
-          <div className="flex items-start gap-3 bg-background p-4 text-secondary">
-            <MapPin className="mt-0.5 h-4 w-4 text-accent" />
-            <div>
-              <p className="font-semibold text-foreground">Dar es Salaam Focused</p>
-              <p className="mt-1">Fast local coordination, with national delivery support across Tanzania.</p>
+        <div className="relative grid gap-6 p-5 md:grid-cols-[1.15fr_0.85fr] md:gap-8 md:p-8">
+          <div>
+            <p className="label-11 text-secondary">YS STORE | TANZANIA</p>
+            <h1 className="mt-3 text-[30px] font-light leading-[1.15] text-foreground md:text-[40px]">
+              Premium PC shopping with
+              <span className="block text-accent">human WhatsApp guidance</span>
+            </h1>
+            <p className="mt-4 max-w-xl text-[13px] leading-6 text-secondary">
+              Discover trusted hardware, build with compatibility checks, and confirm final pricing through a quote-first flow.
+              Built for Dar es Salaam and nationwide delivery support.
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Link to="/shop" className="inline-flex h-11 items-center bg-primary px-5 text-[13px] font-medium text-primaryForeground">
+                Explore Inventory
+              </Link>
+              <Link to="/builder" className="inline-flex h-11 items-center border border-border px-5 text-[13px] font-medium text-foreground">
+                Start Custom Build
+              </Link>
+              <WhatsAppButton
+                href="https://wa.me/255700000000"
+                label="Talk on WhatsApp"
+                className="inline-flex h-11 items-center gap-2 border border-border px-5 text-[13px] font-medium text-success"
+              />
+            </div>
+
+            <div className="mt-6 grid grid-cols-3 gap-px border border-border bg-border text-[11px] uppercase tracking-[0.08em] text-muted">
+              <div className="bg-background px-3 py-2.5">Quote-first checkout</div>
+              <div className="bg-background px-3 py-2.5">TZS pricing clarity</div>
+              <div className="bg-background px-3 py-2.5">Nationwide support</div>
             </div>
           </div>
-          <div className="flex items-start gap-3 bg-background p-4 text-secondary">
-            <ShieldCheck className="mt-0.5 h-4 w-4 text-accent" />
-            <div>
-              <p className="font-semibold text-foreground">Quote-First Confidence</p>
-              <p className="mt-1">Final pricing, stock, and alternatives are confirmed before order commitment.</p>
+
+          <div className="grid gap-px border border-border bg-border text-[12px]">
+            <div className="flex items-start gap-3 bg-background p-4 text-secondary">
+              <MapPin className="mt-0.5 h-4 w-4 text-accent" />
+              <div>
+                <p className="font-semibold text-foreground">Dar es Salaam Priority</p>
+                <p className="mt-1">Fast local coordination with delivery planning across Tanzania.</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-start gap-3 bg-background p-4 text-secondary">
-            <Truck className="mt-0.5 h-4 w-4 text-accent" />
-            <div>
-              <p className="font-semibold text-foreground">Flexible Payments</p>
-              <p className="mt-1">M-Pesa, bank transfer, and cash coordination options via support team.</p>
+            <div className="flex items-start gap-3 bg-background p-4 text-secondary">
+              <ShieldCheck className="mt-0.5 h-4 w-4 text-accent" />
+              <div>
+                <p className="font-semibold text-foreground">Verified Compatibility</p>
+                <p className="mt-1">Build validation helps prevent mismatched parts before quote confirmation.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 bg-background p-4 text-secondary">
+              <Truck className="mt-0.5 h-4 w-4 text-accent" />
+              <div>
+                <p className="font-semibold text-foreground">Flexible Payments</p>
+                <p className="mt-1">M-Pesa, bank transfer, or cash coordination through support team.</p>
+              </div>
             </div>
           </div>
         </div>
