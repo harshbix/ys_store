@@ -1,15 +1,24 @@
 import type { PropsWithChildren } from 'react';
-import { Toast } from './Toast';
-import { useDismissToast, useToastMessages } from '../../hooks/useToast';
+import { Toaster } from 'sonner';
+import 'sonner/dist/styles.css';
 
 export function ToastProvider({ children }: PropsWithChildren) {
-  const toasts = useToastMessages();
-  const dismissToast = useDismissToast();
-
   return (
     <>
       {children}
-      <Toast toasts={toasts} onDismiss={dismissToast} />
+      <Toaster
+        position="bottom-right"
+        richColors
+        closeButton
+        duration={4200}
+        toastOptions={{
+          classNames: {
+            toast: 'rounded-[2px] border border-border bg-surface text-foreground',
+            title: 'text-[13px] font-medium',
+            description: 'text-[12px] text-muted'
+          }
+        }}
+      />
     </>
   );
 }

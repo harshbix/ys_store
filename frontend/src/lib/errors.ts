@@ -81,3 +81,25 @@ export function normalizeApiError(error: unknown): NormalizedError {
 export function errorMessage(error: unknown, fallback = 'Something went wrong'): string {
   return normalizeApiError(error).message || fallback;
 }
+
+export function friendlyError(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
+  const normalized = normalizeApiError(error);
+
+  if (normalized.code === 'timeout') {
+    return 'Request timed out. Please retry.';
+  }
+
+  if (normalized.code === 'network_error' || normalized.status === 0) {
+    return 'Network issue detected. Check your connection and try again.';
+  }
+
+  if (normalized.status >= 500) {
+    return 'Server is temporarily unavailable. Please try again shortly.';
+  }
+
+  if (normalized.status === 401) {
+    return 'Your session has expired. Please sign in again.';
+  }
+
+  return normalized.message || fallback;
+}

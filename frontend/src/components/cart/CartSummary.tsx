@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatTzs } from '../../lib/currency';
+import { useAuthStore } from '../../store/auth';
 
 type CartSummaryProps = {
   itemCount: number;
@@ -9,6 +10,10 @@ type CartSummaryProps = {
 };
 
 export function CartSummary({ itemCount, estimatedTotal, ctaHref = '/checkout', ctaLabel = 'Proceed to Quote' }: CartSummaryProps) {
+  const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
+  const resolvedHref = isAuthenticated ? ctaHref : '/login';
+  const resolvedLabel = isAuthenticated ? ctaLabel : 'Sign In to Continue';
+
   return (
     <aside className="space-y-4 rounded-2xl border border-border bg-surface p-4">
       <div>
@@ -32,10 +37,11 @@ export function CartSummary({ itemCount, estimatedTotal, ctaHref = '/checkout', 
       </dl>
 
       <Link
-        to={ctaHref}
+        to={resolvedHref}
+        state={isAuthenticated ? undefined : { from: '/cart', returnTo: '/cart' }}
         className="inline-flex h-12 w-full items-center justify-center rounded-full bg-primary px-5 text-[13px] font-semibold text-primaryForeground"
       >
-        {ctaLabel}
+        {resolvedLabel}
       </Link>
     </aside>
   );

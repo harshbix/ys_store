@@ -1,12 +1,33 @@
+import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { CartItemRow } from '../components/cart/CartItemRow';
 import { CartSummary } from '../components/cart/CartSummary';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { SkeletonGrid } from '../components/feedback/SkeletonGrid';
 import { useCart } from '../hooks/useCart';
+import { useAuthStore } from '../store/auth';
 
 export default function CartPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
   const { cartQuery, updateItem, removeItem } = useCart();
+
+  useEffect(() => {
+    if (isAuthenticated) return;
+    navigate('/login', {
+      replace: true,
+      state: {
+        from: location.pathname,
+        returnTo: '/cart'
+      }
+    });
+  }, [isAuthenticated, location.pathname, navigate]);
+
+  if (!isAuthenticated) {
+    return <SkeletonGrid count={2} />;
+  }
 
   const items = cartQuery.data?.data.items || [];
   const total = cartQuery.data?.data.estimated_total_tzs || 0;

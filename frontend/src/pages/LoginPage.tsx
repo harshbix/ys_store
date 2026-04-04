@@ -1,15 +1,23 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { OtpCodeInput } from '../components/auth/OtpCodeInput';
 import { AuthPromptBanner } from '../components/ui/AuthPromptBanner';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
 import { InlineAlert } from '../components/feedback/InlineAlert';
 import { useAuth } from '../hooks/useAuth';
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, customerId, email, challengeId, requestOtpMutation, verifyOtpMutation, logout } = useAuth();
 
   const [emailInput, setEmailInput] = useState(email || '');
   const [codeInput, setCodeInput] = useState('');
   const [resendCountdown, setResendCountdown] = useState(0);
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
+  const googleAuthUrl = (import.meta.env.VITE_GOOGLE_AUTH_URL as string | undefined)?.trim();
+  const appleAuthUrl = (import.meta.env.VITE_APPLE_AUTH_URL as string | undefined)?.trim();
 
   useEffect(() => {
     if (!email && emailInput) return;
@@ -24,6 +32,13 @@ export default function LoginPage() {
 
     return () => window.clearTimeout(timer);
   }, [resendCountdown]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (returnTo) {
+      navigate(returnTo, { replace: true });
+    }
+  }, [isAuthenticated, navigate, returnTo]);
 
   const canRequestOtp = useMemo(() => /.+@.+\..+/.test(emailInput.trim()), [emailInput]);
   const canResend = resendCountdown === 0 && !requestOtpMutation.isPending;
@@ -85,25 +100,23 @@ export default function LoginPage() {
           </ol>
 
           <form onSubmit={onRequestOtp} className="space-y-3">
-            <label className="block text-sm font-medium text-foreground" htmlFor="email-input">
-              Email address
-            </label>
-            <input
+            <Input
               id="email-input"
+              label="Email Address"
               type="email"
               value={emailInput}
               onChange={(event) => setEmailInput(event.target.value)}
               placeholder="you@example.com"
               autoComplete="email"
-              className="min-h-11 w-full rounded-xl border border-border bg-inputBg px-3 text-sm text-foreground outline-none ring-0 placeholder:text-muted focus:border-accent"
+              hint="We will send a one-time passcode to this email."
             />
-            <button
+            <Button
               type="submit"
+              loading={requestOtpMutation.isPending}
               disabled={!canRequestOtp || requestOtpMutation.isPending}
-              className="min-h-11 rounded-full bg-primary px-5 text-sm font-semibold text-primaryForeground disabled:opacity-50"
             >
-              {requestOtpMutation.isPending ? 'Sending code...' : challengeId ? 'Send New Code' : 'Send Verification Code'}
-            </button>
+              {challengeId ? 'Send New Code' : 'Send Verification Code'}
+            </Button>
 
             {requestOtpMutation.isError ? (
               <InlineAlert message="We could not send your email code right now. Please try again." tone="error" />
@@ -111,24 +124,20 @@ export default function LoginPage() {
           </form>
 
           <form onSubmit={onVerifyOtp} className="mt-5 space-y-3 border-t border-border pt-4">
-            <label className="block text-sm font-medium text-foreground" htmlFor="code-input">
-              Enter verification code
-            </label>
-            <input
-              id="code-input"
+            <p className="label-11 text-secondary">Enter Verification Code</p>
+            <OtpCodeInput
               value={codeInput}
-              onChange={(event) => setCodeInput(event.target.value)}
-              placeholder="6-digit code"
-              inputMode="numeric"
-              className="min-h-11 w-full rounded-xl border border-border bg-inputBg px-3 text-sm text-foreground outline-none ring-0 placeholder:text-muted focus:border-accent"
+              onChange={setCodeInput}
+              disabled={verifyOtpMutation.isPending}
             />
-            <button
+            <Button
               type="submit"
+              variant="secondary"
+              loading={verifyOtpMutation.isPending}
               disabled={!challengeId || codeInput.trim().length < 4 || verifyOtpMutation.isPending}
-              className="min-h-11 rounded-full border border-border px-5 text-sm font-semibold text-foreground disabled:opacity-50"
             >
-              {verifyOtpMutation.isPending ? 'Verifying code...' : 'Verify and Continue'}
-            </button>
+              Verify and Continue
+            </Button>
 
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
               <span>Didn&apos;t receive the code?</span>
@@ -146,6 +155,24 @@ export default function LoginPage() {
               <InlineAlert message="That code was invalid or expired. Request a new one and try again." tone="error" />
             ) : null}
           </form>
+
+          {googleAuthUrl || appleAuthUrl ? (
+            <div className="mt-5 space-y-2 border-t border-border pt-4">
+              <p className="label-11 text-secondary">Other Sign-In Options</p>
+              <div className="flex flex-wrap gap-2">
+                {googleAuthUrl ? (
+                  <Button variant="ghost" onClick={() => window.location.assign(googleAuthUrl)}>
+                    Continue with Google
+                  </Button>
+                ) : null}
+                {appleAuthUrl ? (
+                  <Button variant="ghost" onClick={() => window.location.assign(appleAuthUrl)}>
+                    Continue with Apple
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </section>
       )}
 

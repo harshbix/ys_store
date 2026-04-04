@@ -6,6 +6,16 @@ const isProd = import.meta.env.PROD;
 const DEV_API_FALLBACK = 'http://localhost:3001/api';
 const PROD_API_FALLBACK = 'https://ys-store-h1ec.onrender.com/api';
 
+function isLoopbackHost(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    const host = parsed.hostname.toLowerCase();
+    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+  } catch {
+    return false;
+  }
+}
+
 function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/, '');
 }
@@ -24,6 +34,18 @@ function normalizeApiBaseUrl(value: string): string {
 
 const normalizedRaw = rawUrl?.trim() || '';
 const hasConfiguredApiUrl = Boolean(normalizedRaw);
+const isInvalidProdLoopback = isProd && hasConfiguredApiUrl && isLoopbackHost(normalizedRaw);
+
+if (isInvalidProdLoopback) {
+  console.error('[ENV WARNING] VITE_API_URL points to localhost/loopback in production. Using safe production fallback.');
+  useUiStore.setState({
+    apiUnavailable: true,
+    apiIssueType: 'missing_env',
+    apiIssueMessage: 'Service temporarily unavailable due to invalid production API configuration.',
+    apiIssueStatus: null,
+    apiIssueEndpoint: null
+  });
+}
 
 if (!hasConfiguredApiUrl) {
   if (isProd) {
@@ -41,16 +63,20 @@ if (!hasConfiguredApiUrl) {
 }
 
 const fallbackBase = isProd ? PROD_API_FALLBACK : DEV_API_FALLBACK;
+const resolvedBase = isInvalidProdLoopback
+  ? PROD_API_FALLBACK
+  : (hasConfiguredApiUrl ? normalizedRaw : fallbackBase);
 
 export const API_BASE_URL = normalizeApiBaseUrl(
-  hasConfiguredApiUrl ? normalizedRaw : fallbackBase
+  resolvedBase
 );
 
 export const API_CONFIG = {
   mode: import.meta.env.MODE,
   isProd,
   hasConfiguredApiUrl,
-  isMissingApiUrlInProd: isProd && !hasConfiguredApiUrl
+  isMissingApiUrlInProd: isProd && !hasConfiguredApiUrl,
+  isInvalidProdLoopback
 } as const;
 
 console.info('[API CONFIG]', {

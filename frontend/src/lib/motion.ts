@@ -1,5 +1,8 @@
 import type { Variants } from 'framer-motion';
 
+export const tapScale = { scale: 0.985, y: 1 } as const;
+export const springPress = { type: 'spring', stiffness: 520, damping: 32 } as const;
+
 export const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 10 },
   visible: {

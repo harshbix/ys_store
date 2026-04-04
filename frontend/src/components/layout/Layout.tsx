@@ -3,8 +3,8 @@ import { useGuestSession } from '../../hooks/useGuestSession';
 import { ApiStatusBanner } from '../feedback/ApiStatusBanner';
 import { Footer } from './Footer';
 import { Header } from './Header';
-import { MobileBottomNav } from './MobileBottomNav.tsx';
 import { MobileNav } from './MobileNav';
+import { PageWrapper } from './PageWrapper';
 
 export function Layout({ children }: PropsWithChildren) {
   useGuestSession();
@@ -16,13 +16,12 @@ export function Layout({ children }: PropsWithChildren) {
       </a>
       <Header />
       <MobileNav />
-      <main id="main-content" className="mx-auto w-full max-w-[1440px] px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:pb-12">
+      <PageWrapper>
         <div className="mb-4">
           <ApiStatusBanner />
         </div>
         {children}
-      </main>
-      <MobileBottomNav />
+      </PageWrapper>
       <Footer />
     </div>
   );

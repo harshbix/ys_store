@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import type { Product } from '../../types/api';
 import { compactText, titleCase } from '../../lib/format';
 import { getProductImage, placeholderForProduct } from '../../utils/imageFallback';
+import { Button } from './Button';
 import { ConditionBadge } from './ConditionBadge';
 import { PriceDisplay } from './PriceDisplay';
 
@@ -12,9 +13,10 @@ type ProductCardProps = {
   inWishlist?: boolean;
   onToggleWishlist?: (product: Product) => void;
   onQuickAdd?: (productId: string) => void;
+  addingToCart?: boolean;
 };
 
-export function ProductCard({ product, inWishlist, onToggleWishlist, onQuickAdd }: ProductCardProps) {
+export function ProductCard({ product, inWishlist, onToggleWishlist, onQuickAdd, addingToCart = false }: ProductCardProps) {
   const soldOut = product.stock_status === 'sold_out';
   const fallbackImage = useMemo(() => placeholderForProduct(product), [product]);
   const [imageSrc, setImageSrc] = useState(() => getProductImage(product));
@@ -67,15 +69,17 @@ export function ProductCard({ product, inWishlist, onToggleWishlist, onQuickAdd 
 
         <div className="mt-3 flex items-center justify-between gap-2">
           <PriceDisplay amount={product.estimated_price_tzs} className="font-mono text-[14px] font-medium text-foreground" />
-          <button
-            type="button"
-            disabled={soldOut}
+          <Button
+            size="sm"
+            variant="secondary"
+            loading={addingToCart}
+            disabled={soldOut || addingToCart}
             onClick={() => onQuickAdd?.(product.id)}
-            className="inline-flex h-8 w-8 items-center justify-center border border-border text-secondary transition hover:text-foreground disabled:opacity-40"
+            className="h-8 w-8 px-0"
             aria-label="Add to cart"
           >
             <ShoppingBag className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         </div>
       </div>
     </article>

@@ -68,6 +68,7 @@ export default function ShopPage() {
   const products = productsQuery.data?.data.items || [];
   const total = productsQuery.data?.data.total || 0;
   const totalPages = Math.max(1, Math.ceil(total / filters.limit));
+  const addingProductId = addItem.isPending ? (addItem.variables?.product_id ?? null) : null;
 
   const title = useMemo(() => {
     if (filters.type) return `${filters.type.charAt(0).toUpperCase()}${filters.type.slice(1)}`;
@@ -134,6 +135,7 @@ export default function ShopPage() {
                 isInWishlist={isInWishlist}
                 onToggleWishlist={(product) => toggle({ id: product.id, slug: product.slug, title: product.title })}
                 onQuickAdd={(productId) => addItem.mutate({ item_type: 'product', product_id: productId, quantity: 1 })}
+                addingProductId={addingProductId}
               />
 
               <div className="mt-8 flex items-center justify-center gap-3 text-[12px] text-secondary">
