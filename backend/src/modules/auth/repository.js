@@ -1,4 +1,6 @@
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase.js';
+import { env } from '../../config/env.js';
 
 const PRODUCT_SELECT = [
   'id',
@@ -47,12 +49,23 @@ const CART_ITEM_SELECT = [
   'created_at'
 ].join(',');
 
+function createAuthClient() {
+  return createClient(env.supabaseUrl, env.supabaseServiceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    }
+  });
+}
+
 export async function requestOtp(email) {
-  return supabase.auth.signInWithOtp({ email });
+  const authClient = createAuthClient();
+  return authClient.auth.signInWithOtp({ email });
 }
 
 export async function verifyOtp(email, token) {
-  return supabase.auth.verifyOtp({ email, token, type: 'email' });
+  const authClient = createAuthClient();
+  return authClient.auth.verifyOtp({ email, token, type: 'email' });
 }
 
 export async function getWishlistByCustomer(customerAuthId) {

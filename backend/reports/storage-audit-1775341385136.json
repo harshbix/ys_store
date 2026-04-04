@@ -1,0 +1,11 @@
+{
+  "summary": {
+    "generated_at": "2026-04-04T22:23:05.133Z",
+    "bucket": "media",
+    "public_prefix": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/",
+    "total_product_media_rows": 27,
+    "total_shop_media_rows": 0,
+    "rows_with_issues": 0
+  },
+  "findings": []
+}

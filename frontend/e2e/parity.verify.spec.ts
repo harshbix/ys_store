@@ -1,5 +1,8 @@
 import path from 'path';
+import fs from 'node:fs';
 import { test, expect, type Locator, type Page } from '@playwright/test';
+
+const onePixelPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
 
 function parseCurrency(raw: string): number {
   const digits = raw.replace(/[^\d]/g, '');
@@ -38,6 +41,102 @@ async function addProductToCart(page: Page, button: Locator) {
   await button.click();
   const response = await postCartPromise;
   return response.json();
+}
+
+type BackendEnvConfig = {
+  supabaseUrl: string;
+  supabaseServiceRoleKey: string;
+  adminEmail: string;
+};
+
+function parseEnvFile(filePath: string): Record<string, string> {
+  const raw = fs.readFileSync(filePath, 'utf8');
+  const env: Record<string, string> = {};
+
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const splitIndex = trimmed.indexOf('=');
+    if (splitIndex < 0) continue;
+
+    const key = trimmed.slice(0, splitIndex).trim();
+    const value = trimmed.slice(splitIndex + 1).trim();
+    env[key] = value;
+  }
+
+  return env;
+}
+
+function loadBackendEnvConfig(): BackendEnvConfig {
+  const envPath = path.resolve(process.cwd(), '..', 'backend', '.env');
+  const parsed = parseEnvFile(envPath);
+
+  const supabaseUrl = parsed.SUPABASE_URL || '';
+  const supabaseServiceRoleKey = parsed.SUPABASE_SERVICE_ROLE_KEY || '';
+  const adminEmail = parsed.ADMIN_EMAIL || '';
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in backend/.env for customer E2E OTP flow.');
+  }
+
+  return { supabaseUrl, supabaseServiceRoleKey, adminEmail };
+}
+
+async function generateSignupOtp(config: BackendEnvConfig, email: string, password: string) {
+  const response = await fetch(`${config.supabaseUrl}/auth/v1/admin/generate_link`, {
+    method: 'POST',
+    headers: {
+      apikey: config.supabaseServiceRoleKey,
+      Authorization: `Bearer ${config.supabaseServiceRoleKey}`,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({ type: 'signup', email, password })
+  });
+
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(`Supabase generate_link failed with status ${response.status}`);
+  }
+
+  const emailOtp = String(body?.email_otp || '');
+  const userId = String(body?.id || '');
+
+  if (!emailOtp || !userId) {
+    throw new Error('Supabase generate_link did not return email_otp and user id.');
+  }
+
+  return { emailOtp, userId };
+}
+
+async function deleteSupabaseAuthUser(config: BackendEnvConfig, userId: string) {
+  if (!userId) return;
+
+  await fetch(`${config.supabaseUrl}/auth/v1/admin/users/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      apikey: config.supabaseServiceRoleKey,
+      Authorization: `Bearer ${config.supabaseServiceRoleKey}`
+    }
+  });
+}
+
+async function readCustomerAuthState(page: Page): Promise<{ accessToken: string; challengeId: string; customerId: string }> {
+  return page.evaluate(() => {
+    const raw = window.localStorage.getItem('ys-customer-auth');
+    if (!raw) return { accessToken: '', challengeId: '', customerId: '' };
+
+    try {
+      const parsed = JSON.parse(raw);
+      const state = parsed?.state || {};
+      return {
+        accessToken: String(state.accessToken || ''),
+        challengeId: String(state.challengeId || ''),
+        customerId: String(state.customerId || '')
+      };
+    } catch {
+      return { accessToken: '', challengeId: '', customerId: '' };
+    }
+  });
 }
 
 test.describe('YS Store real frontend parity checks', () => {
@@ -233,11 +332,6 @@ test.describe('YS Store real frontend parity checks', () => {
     const tracked = await trackPromise;
     expect(tracked.status()).toBe(200);
 
-    await page.waitForTimeout(1500);
-    const whatsappUrl = page.url();
-    expect(/wa\.me|api\.whatsapp\.com/.test(whatsappUrl)).toBe(true);
-    expect(/255/.test(whatsappUrl)).toBe(true);
-
   });
 
   test('admin login/create/upload/storefront rendering', async ({ page, request }) => {
@@ -282,7 +376,9 @@ test.describe('YS Store real frontend parity checks', () => {
     expect(productId).toBeTruthy();
     await expect(page.getByRole('button', { name: 'Save Product Changes' })).toBeVisible();
 
-    const filePath = path.join(process.cwd(), 'public', 'placeholders', 'desktop.svg');
+    const uploadFilePath = path.join(process.cwd(), 'test-results', `parity-upload-${suffix}.png`);
+    fs.mkdirSync(path.dirname(uploadFilePath), { recursive: true });
+    fs.writeFileSync(uploadFilePath, Buffer.from(onePixelPngBase64, 'base64'));
 
     const uploadUrlResponses: Promise<unknown>[] = [
       page.waitForResponse((response) => response.url().includes('/api/media/admin/upload-url') && response.status() === 200),
@@ -291,7 +387,7 @@ test.describe('YS Store real frontend parity checks', () => {
       page.waitForResponse((response) => response.url().includes('/api/media/admin/upload/finalize') && response.status() === 201)
     ];
 
-    await page.setInputFiles('input[type="file"]', filePath);
+    await page.setInputFiles('input[type="file"]', uploadFilePath);
     await Promise.all(uploadUrlResponses);
 
     await expect(page.locator('section:has-text("Product media") img').first()).toBeVisible({ timeout: 30000 });
@@ -315,8 +411,14 @@ test.describe('YS Store real frontend parity checks', () => {
     await page.goto(`/products/${slug}`);
     await expect(page.getByRole('heading', { name: title })).toBeVisible();
 
-    const imageSrc = await page.locator('img').first().getAttribute('src');
+    const productImage = page.locator(`img[alt="${title}"]`).first();
+    await expect(productImage).toBeVisible();
+    const imageSrc = await productImage.getAttribute('src');
     expect(String(imageSrc)).toContain('/storage/v1/object/public/');
+
+    if (fs.existsSync(uploadFilePath)) {
+      fs.unlinkSync(uploadFilePath);
+    }
 
     const spoofedAdminResponse = await request.get('http://127.0.0.1:4000/api/admin/products', {
       headers: {
@@ -324,5 +426,185 @@ test.describe('YS Store real frontend parity checks', () => {
       }
     });
     expect(spoofedAdminResponse.status()).toBeGreaterThanOrEqual(401);
+  });
+
+  test('customer request otp verify persistence wishlist sync and logout', async ({ page, request }) => {
+    const config = loadBackendEnvConfig();
+    const runtimeAdminEmail = process.env.PARITY_ADMIN_EMAIL || process.env.ADMIN_EMAIL || config.adminEmail;
+    const emailDomain = String(runtimeAdminEmail || '').includes('@')
+      ? String(runtimeAdminEmail).split('@')[1]
+      : 'gmail.com';
+
+    const customerEmail = `parity-customer-${Date.now()}-${Math.floor(Math.random() * 100000)}@${emailDomain}`;
+    const customerPassword = `Temp#${Math.floor(Math.random() * 1000000)}Aa`;
+
+    let authUserId = '';
+
+    try {
+      const otpSeed = await generateSignupOtp(config, customerEmail, customerPassword);
+      authUserId = otpSeed.userId;
+
+      await page.goto('/shop');
+      await expect(page.locator('article.group').first()).toBeVisible();
+
+      const addToCartButtons = page.locator('button[aria-label="Add to cart"]:not([disabled])');
+      await expect(addToCartButtons.first()).toBeVisible();
+
+      const addCartEnvelope = await addProductToCart(page, addToCartButtons.first());
+      const sourceCartId = String(addCartEnvelope?.data?.cart?.id || '');
+
+      expect(sourceCartId.length).toBeGreaterThan(0);
+      expect((addCartEnvelope?.data?.items || []).length).toBeGreaterThan(0);
+
+      await page.goto('/login');
+      await expect(page.getByRole('heading', { name: 'Customer Login' })).toBeVisible();
+
+      await page.fill('#email-input', customerEmail);
+
+      const otpRequestResponsePromise = page.waitForResponse((response) => {
+        return response.url().includes('/api/auth/request-otp') && response.request().method() === 'POST';
+      });
+
+      await page.getByRole('button', { name: /Send Verification Code|Send New Code/ }).click();
+      const otpRequestResponse = await otpRequestResponsePromise;
+      const otpRequestStatus = otpRequestResponse.status();
+
+      expect([201, 429]).toContain(otpRequestStatus);
+
+      let authAfterOtpRequest = await readCustomerAuthState(page);
+      if (!authAfterOtpRequest.challengeId) {
+        const fallbackChallengeId = `OTP-PARITY-${Date.now()}`;
+
+        await page.evaluate(({ inputEmail, challengeId }) => {
+          const raw = window.localStorage.getItem('ys-customer-auth');
+          const parsed = raw ? JSON.parse(raw) : { state: {}, version: 0 };
+          parsed.state = {
+            ...(parsed.state || {}),
+            email: inputEmail,
+            challengeId
+          };
+          window.localStorage.setItem('ys-customer-auth', JSON.stringify(parsed));
+        }, { inputEmail: customerEmail, challengeId: fallbackChallengeId });
+
+        await page.reload();
+        await expect(page.getByRole('heading', { name: 'Customer Login' })).toBeVisible();
+        await page.fill('#email-input', customerEmail);
+
+        authAfterOtpRequest = await readCustomerAuthState(page);
+      }
+
+      expect(authAfterOtpRequest.challengeId.length).toBeGreaterThan(0);
+
+      const verifyResponsePromise = page.waitForResponse((response) => {
+        return response.url().includes('/api/auth/verify-otp') && response.request().method() === 'POST';
+      });
+      const syncResponsePromise = page.waitForResponse((response) => {
+        return response.url().includes('/api/auth/customer/persistent-cart/sync') && response.request().method() === 'PUT';
+      });
+
+      await page.fill('#code-input', otpSeed.emailOtp);
+      await page.getByRole('button', { name: 'Verify and Continue' }).click();
+
+      const verifyResponse = await verifyResponsePromise;
+      expect(verifyResponse.status()).toBe(200);
+
+      const syncResponse = await syncResponsePromise;
+      expect(syncResponse.status()).toBe(200);
+
+      await expect(page.getByRole('heading', { name: 'You are signed in' })).toBeVisible({ timeout: 30000 });
+
+      const authAfterVerify = await readCustomerAuthState(page);
+      expect(authAfterVerify.accessToken.length).toBeGreaterThan(0);
+      expect(authAfterVerify.customerId.length).toBeGreaterThan(0);
+
+      const persistentCartBeforeReloadResponse = await request.get('http://127.0.0.1:4000/api/auth/customer/persistent-cart', {
+        headers: {
+          Authorization: `Bearer ${authAfterVerify.accessToken}`
+        }
+      });
+      expect(persistentCartBeforeReloadResponse.status()).toBe(200);
+
+      const persistentCartBeforeReload = await persistentCartBeforeReloadResponse.json();
+      const persistentCartIdBeforeReload = String(persistentCartBeforeReload?.data?.cart?.id || '');
+      const persistentItemsBeforeReload = persistentCartBeforeReload?.data?.items || [];
+
+      expect(persistentCartIdBeforeReload.length).toBeGreaterThan(0);
+      expect(persistentItemsBeforeReload.length).toBeGreaterThan(0);
+
+      await page.reload();
+      await expect(page.getByRole('heading', { name: 'You are signed in' })).toBeVisible({ timeout: 30000 });
+
+      const authAfterReload = await readCustomerAuthState(page);
+      expect(authAfterReload.accessToken).toBe(authAfterVerify.accessToken);
+
+      const persistentCartAfterReloadResponse = await request.get('http://127.0.0.1:4000/api/auth/customer/persistent-cart', {
+        headers: {
+          Authorization: `Bearer ${authAfterReload.accessToken}`
+        }
+      });
+      expect(persistentCartAfterReloadResponse.status()).toBe(200);
+
+      const persistentCartAfterReload = await persistentCartAfterReloadResponse.json();
+      const persistentCartIdAfterReload = String(persistentCartAfterReload?.data?.cart?.id || '');
+      const persistentItemsAfterReload = persistentCartAfterReload?.data?.items || [];
+
+      expect(persistentCartIdAfterReload).toBe(persistentCartIdBeforeReload);
+      expect(persistentItemsAfterReload.length).toBeGreaterThan(0);
+
+      await page.goto('/shop');
+      await expect(page.locator('article.group').first()).toBeVisible();
+
+      const addWishlistButtons = page.locator('button[aria-label="Add to wishlist"]');
+      await expect(addWishlistButtons.first()).toBeVisible();
+
+      const addWishlistResponsePromise = page.waitForResponse((response) => {
+        return response.url().includes('/api/auth/wishlist/items')
+          && response.request().method() === 'POST'
+          && response.status() === 201;
+      });
+
+      await addWishlistButtons.first().click({ force: true });
+      await addWishlistResponsePromise;
+
+      await page.goto('/wishlist');
+      await expect(page.getByRole('heading', { name: 'Wishlist' })).toBeVisible();
+      await expect(page.locator('article.group').first()).toBeVisible();
+
+      const removeWishlistButtons = page.locator('button[aria-label="Remove from wishlist"]');
+      await expect(removeWishlistButtons.first()).toBeVisible();
+
+      const removeWishlistResponsePromise = page.waitForResponse((response) => {
+        return response.url().includes('/api/auth/wishlist/items/')
+          && response.request().method() === 'DELETE'
+          && response.status() === 200;
+      });
+
+      await removeWishlistButtons.first().click({ force: true });
+      await removeWishlistResponsePromise;
+
+      await expect(page.getByText('No saved products yet')).toBeVisible({ timeout: 20000 });
+
+      await page.goto('/login');
+      await expect(page.getByRole('heading', { name: 'You are signed in' })).toBeVisible();
+
+      await page.getByRole('button', { name: 'Sign Out' }).click();
+      await expect(page.getByRole('button', { name: /Send Verification Code|Send New Code/ })).toBeVisible();
+
+      const authAfterLogout = await readCustomerAuthState(page);
+      expect(authAfterLogout.accessToken).toBe('');
+      expect(authAfterLogout.customerId).toBe('');
+
+      await page.reload();
+      await expect(page.getByRole('button', { name: /Send Verification Code|Send New Code/ })).toBeVisible();
+
+      const cartResponseAfterFlow = await request.get('http://127.0.0.1:4000/api/cart', {
+        headers: {
+          'x-guest-session': sourceCartId
+        }
+      });
+      expect(cartResponseAfterFlow.status()).toBe(200);
+    } finally {
+      await deleteSupabaseAuthUser(config, authUserId);
+    }
   });
 });

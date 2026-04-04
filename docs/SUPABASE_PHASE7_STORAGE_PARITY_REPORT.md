@@ -28,6 +28,7 @@ Added scripts under `backend/scripts/storage`:
 Added npm scripts in `backend/package.json`:
 - `storage:ensure-bucket`
 - `storage:audit-media`
+- `storage:normalize-media`
 
 ### 3) SQL migrations already staged for this track
 
@@ -40,6 +41,7 @@ From `backend/`:
 
 ```bash
 npm run storage:ensure-bucket
+npm run storage:normalize-media
 npm run storage:audit-media
 ```
 
@@ -67,19 +69,34 @@ Expected behavior:
   - `product_media`: `id,product_id,original_url,thumb_url,full_url`
   - `shop_media`: `id,original_url,thumb_url,full_url`
 
-3. Media audit final run
+3. Media URL normalization run
+- Command: `npm run storage:normalize-media`
+- Result summary:
+  - `targeted_rows`: 8
+  - `changed_rows`: 8
+  - `failed_rows`: 0
+- Normalization report: `backend/reports/storage-normalization-1775339633196.json`
+- Changed `product_media.id` values:
+  - `06f9601c-49aa-48b9-9ad7-4a9149c1810f`
+  - `08fe356e-6eb5-4a74-ae05-cb449092c8dc`
+  - `1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68`
+  - `2e772583-8f80-4f4e-9e5f-d60105d4950a`
+  - `4c71bb29-b7c4-4083-86d8-126204b80ac1`
+  - `6898c975-997c-4092-9f6f-e4098e9d86a2`
+  - `84a8e315-8d13-44a8-8070-c74b7095c4b6`
+  - `d50aea1e-4027-407a-9bd5-399cc8aa7f82`
+
+4. Media audit final run
 - Command: `npm run storage:audit-media`
 - Result summary:
-  - `total_product_media_rows`: 22
+  - `total_product_media_rows`: 23
   - `total_shop_media_rows`: 0
-  - `rows_with_issues`: 8
-- Report: `backend/reports/storage-audit-1775337342697.json`
+  - `rows_with_issues`: 0
+- Report: `backend/reports/storage-audit-1775339637372.json`
 
-4. Real admin upload verification
+5. Real admin upload verification
 - Frontend parity E2E confirms `/api/media/admin/upload-url` and `/api/media/admin/upload/finalize` execute successfully and storefront renders uploaded media URL from Supabase storage public path.
 
 ## Notes
 
-Remaining remediation work from audit report:
-- 8 `product_media` rows still point at external placeholder URLs (`picsum.photos`) instead of canonical Supabase bucket public URLs.
-- This does not break runtime contracts but should be normalized before strict production cutover.
+Storage canonicalization blocker is cleared: the latest audit reports zero non-canonical media rows.

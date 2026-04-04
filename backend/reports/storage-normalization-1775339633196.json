@@ -1,0 +1,287 @@
+{
+  "summary": {
+    "generated_at": "2026-04-04T21:53:53.196Z",
+    "bucket": "media",
+    "public_prefix": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/",
+    "total_rows_scanned": 23,
+    "targeted_rows": 8,
+    "changed_rows": 8,
+    "failed_rows": 0,
+    "duration_ms": 46374
+  },
+  "changed": [
+    {
+      "id": "06f9601c-49aa-48b9-9ad7-4a9149c1810f",
+      "product_id": "10000000-0000-4000-8000-000000000004",
+      "previous": {
+        "original_url": "https://picsum.photos/seed/ys-monitor/1200/900",
+        "thumb_url": "https://picsum.photos/seed/ys-monitor/640/480",
+        "full_url": "https://picsum.photos/seed/ys-monitor/1600/1200"
+      },
+      "current": {
+        "original_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/06f9601c-49aa-48b9-9ad7-4a9149c1810f/1775339590321-original_url.jpg",
+        "thumb_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/06f9601c-49aa-48b9-9ad7-4a9149c1810f/1775339590321-thumb_url.jpg",
+        "full_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/06f9601c-49aa-48b9-9ad7-4a9149c1810f/1775339590321-full_url.jpg"
+      },
+      "uploads": {
+        "original_url": {
+          "object_path": "normalized/product_media/06f9601c-49aa-48b9-9ad7-4a9149c1810f/1775339590321-original_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/06f9601c-49aa-48b9-9ad7-4a9149c1810f/1775339590321-original_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "thumb_url": {
+          "object_path": "normalized/product_media/06f9601c-49aa-48b9-9ad7-4a9149c1810f/1775339590321-thumb_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/06f9601c-49aa-48b9-9ad7-4a9149c1810f/1775339590321-thumb_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "full_url": {
+          "object_path": "normalized/product_media/06f9601c-49aa-48b9-9ad7-4a9149c1810f/1775339590321-full_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/06f9601c-49aa-48b9-9ad7-4a9149c1810f/1775339590321-full_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        }
+      }
+    },
+    {
+      "id": "08fe356e-6eb5-4a74-ae05-cb449092c8dc",
+      "product_id": "10000000-0000-4000-8000-000000000001",
+      "previous": {
+        "original_url": "https://picsum.photos/seed/ys-4070-a/1200/900",
+        "thumb_url": "https://picsum.photos/seed/ys-4070-a/640/480",
+        "full_url": "https://picsum.photos/seed/ys-4070-a/1600/1200"
+      },
+      "current": {
+        "original_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/08fe356e-6eb5-4a74-ae05-cb449092c8dc/1775339596957-original_url.jpg",
+        "thumb_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/08fe356e-6eb5-4a74-ae05-cb449092c8dc/1775339596957-thumb_url.jpg",
+        "full_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/08fe356e-6eb5-4a74-ae05-cb449092c8dc/1775339596957-full_url.jpg"
+      },
+      "uploads": {
+        "original_url": {
+          "object_path": "normalized/product_media/08fe356e-6eb5-4a74-ae05-cb449092c8dc/1775339596957-original_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/08fe356e-6eb5-4a74-ae05-cb449092c8dc/1775339596957-original_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "thumb_url": {
+          "object_path": "normalized/product_media/08fe356e-6eb5-4a74-ae05-cb449092c8dc/1775339596957-thumb_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/08fe356e-6eb5-4a74-ae05-cb449092c8dc/1775339596957-thumb_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "full_url": {
+          "object_path": "normalized/product_media/08fe356e-6eb5-4a74-ae05-cb449092c8dc/1775339596957-full_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/08fe356e-6eb5-4a74-ae05-cb449092c8dc/1775339596957-full_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        }
+      }
+    },
+    {
+      "id": "1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68",
+      "product_id": "10000000-0000-4000-8000-000000000008",
+      "previous": {
+        "original_url": "https://picsum.photos/seed/ys-km/1200/900",
+        "thumb_url": "https://picsum.photos/seed/ys-km/640/480",
+        "full_url": "https://picsum.photos/seed/ys-km/1600/1200"
+      },
+      "current": {
+        "original_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68/1775339601352-original_url.jpg",
+        "thumb_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68/1775339601352-thumb_url.jpg",
+        "full_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68/1775339601352-full_url.jpg"
+      },
+      "uploads": {
+        "original_url": {
+          "object_path": "normalized/product_media/1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68/1775339601352-original_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68/1775339601352-original_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "thumb_url": {
+          "object_path": "normalized/product_media/1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68/1775339601352-thumb_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68/1775339601352-thumb_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "full_url": {
+          "object_path": "normalized/product_media/1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68/1775339601352-full_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68/1775339601352-full_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        }
+      }
+    },
+    {
+      "id": "2e772583-8f80-4f4e-9e5f-d60105d4950a",
+      "product_id": "10000000-0000-4000-8000-000000000007",
+      "previous": {
+        "original_url": "https://picsum.photos/seed/ys-office/1200/900",
+        "thumb_url": "https://picsum.photos/seed/ys-office/640/480",
+        "full_url": "https://picsum.photos/seed/ys-office/1600/1200"
+      },
+      "current": {
+        "original_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/2e772583-8f80-4f4e-9e5f-d60105d4950a/1775339608354-original_url.jpg",
+        "thumb_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/2e772583-8f80-4f4e-9e5f-d60105d4950a/1775339608354-thumb_url.jpg",
+        "full_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/2e772583-8f80-4f4e-9e5f-d60105d4950a/1775339608354-full_url.jpg"
+      },
+      "uploads": {
+        "original_url": {
+          "object_path": "normalized/product_media/2e772583-8f80-4f4e-9e5f-d60105d4950a/1775339608354-original_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/2e772583-8f80-4f4e-9e5f-d60105d4950a/1775339608354-original_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "thumb_url": {
+          "object_path": "normalized/product_media/2e772583-8f80-4f4e-9e5f-d60105d4950a/1775339608354-thumb_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/2e772583-8f80-4f4e-9e5f-d60105d4950a/1775339608354-thumb_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "full_url": {
+          "object_path": "normalized/product_media/2e772583-8f80-4f4e-9e5f-d60105d4950a/1775339608354-full_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/2e772583-8f80-4f4e-9e5f-d60105d4950a/1775339608354-full_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        }
+      }
+    },
+    {
+      "id": "4c71bb29-b7c4-4083-86d8-126204b80ac1",
+      "product_id": "10000000-0000-4000-8000-000000000002",
+      "previous": {
+        "original_url": "https://picsum.photos/seed/ys-4060-l/1200/900",
+        "thumb_url": "https://picsum.photos/seed/ys-4060-l/640/480",
+        "full_url": "https://picsum.photos/seed/ys-4060-l/1600/1200"
+      },
+      "current": {
+        "original_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/4c71bb29-b7c4-4083-86d8-126204b80ac1/1775339613994-original_url.jpg",
+        "thumb_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/4c71bb29-b7c4-4083-86d8-126204b80ac1/1775339613994-thumb_url.jpg",
+        "full_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/4c71bb29-b7c4-4083-86d8-126204b80ac1/1775339613994-full_url.jpg"
+      },
+      "uploads": {
+        "original_url": {
+          "object_path": "normalized/product_media/4c71bb29-b7c4-4083-86d8-126204b80ac1/1775339613994-original_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/4c71bb29-b7c4-4083-86d8-126204b80ac1/1775339613994-original_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "thumb_url": {
+          "object_path": "normalized/product_media/4c71bb29-b7c4-4083-86d8-126204b80ac1/1775339613994-thumb_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/4c71bb29-b7c4-4083-86d8-126204b80ac1/1775339613994-thumb_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "full_url": {
+          "object_path": "normalized/product_media/4c71bb29-b7c4-4083-86d8-126204b80ac1/1775339613994-full_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/4c71bb29-b7c4-4083-86d8-126204b80ac1/1775339613994-full_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        }
+      }
+    },
+    {
+      "id": "6898c975-997c-4092-9f6f-e4098e9d86a2",
+      "product_id": "10000000-0000-4000-8000-000000000005",
+      "previous": {
+        "original_url": "https://picsum.photos/seed/ys-legion/1200/900",
+        "thumb_url": "https://picsum.photos/seed/ys-legion/640/480",
+        "full_url": "https://picsum.photos/seed/ys-legion/1600/1200"
+      },
+      "current": {
+        "original_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/6898c975-997c-4092-9f6f-e4098e9d86a2/1775339619861-original_url.jpg",
+        "thumb_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/6898c975-997c-4092-9f6f-e4098e9d86a2/1775339619861-thumb_url.jpg",
+        "full_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/6898c975-997c-4092-9f6f-e4098e9d86a2/1775339619861-full_url.jpg"
+      },
+      "uploads": {
+        "original_url": {
+          "object_path": "normalized/product_media/6898c975-997c-4092-9f6f-e4098e9d86a2/1775339619861-original_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/6898c975-997c-4092-9f6f-e4098e9d86a2/1775339619861-original_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "thumb_url": {
+          "object_path": "normalized/product_media/6898c975-997c-4092-9f6f-e4098e9d86a2/1775339619861-thumb_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/6898c975-997c-4092-9f6f-e4098e9d86a2/1775339619861-thumb_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "full_url": {
+          "object_path": "normalized/product_media/6898c975-997c-4092-9f6f-e4098e9d86a2/1775339619861-full_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/6898c975-997c-4092-9f6f-e4098e9d86a2/1775339619861-full_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        }
+      }
+    },
+    {
+      "id": "84a8e315-8d13-44a8-8070-c74b7095c4b6",
+      "product_id": "10000000-0000-4000-8000-000000000006",
+      "previous": {
+        "original_url": "https://picsum.photos/seed/ys-ram/1200/900",
+        "thumb_url": "https://picsum.photos/seed/ys-ram/640/480",
+        "full_url": "https://picsum.photos/seed/ys-ram/1600/1200"
+      },
+      "current": {
+        "original_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/84a8e315-8d13-44a8-8070-c74b7095c4b6/1775339624687-original_url.jpg",
+        "thumb_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/84a8e315-8d13-44a8-8070-c74b7095c4b6/1775339624687-thumb_url.jpg",
+        "full_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/84a8e315-8d13-44a8-8070-c74b7095c4b6/1775339624687-full_url.jpg"
+      },
+      "uploads": {
+        "original_url": {
+          "object_path": "normalized/product_media/84a8e315-8d13-44a8-8070-c74b7095c4b6/1775339624687-original_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/84a8e315-8d13-44a8-8070-c74b7095c4b6/1775339624687-original_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "thumb_url": {
+          "object_path": "normalized/product_media/84a8e315-8d13-44a8-8070-c74b7095c4b6/1775339624687-thumb_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/84a8e315-8d13-44a8-8070-c74b7095c4b6/1775339624687-thumb_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "full_url": {
+          "object_path": "normalized/product_media/84a8e315-8d13-44a8-8070-c74b7095c4b6/1775339624687-full_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/84a8e315-8d13-44a8-8070-c74b7095c4b6/1775339624687-full_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        }
+      }
+    },
+    {
+      "id": "d50aea1e-4027-407a-9bd5-399cc8aa7f82",
+      "product_id": "10000000-0000-4000-8000-000000000003",
+      "previous": {
+        "original_url": "https://picsum.photos/seed/ys-4070-g/1200/900",
+        "thumb_url": "https://picsum.photos/seed/ys-4070-g/640/480",
+        "full_url": "https://picsum.photos/seed/ys-4070-g/1600/1200"
+      },
+      "current": {
+        "original_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/d50aea1e-4027-407a-9bd5-399cc8aa7f82/1775339630579-original_url.jpg",
+        "thumb_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/d50aea1e-4027-407a-9bd5-399cc8aa7f82/1775339630579-thumb_url.jpg",
+        "full_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/d50aea1e-4027-407a-9bd5-399cc8aa7f82/1775339630579-full_url.jpg"
+      },
+      "uploads": {
+        "original_url": {
+          "object_path": "normalized/product_media/d50aea1e-4027-407a-9bd5-399cc8aa7f82/1775339630579-original_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/d50aea1e-4027-407a-9bd5-399cc8aa7f82/1775339630579-original_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "thumb_url": {
+          "object_path": "normalized/product_media/d50aea1e-4027-407a-9bd5-399cc8aa7f82/1775339630579-thumb_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/d50aea1e-4027-407a-9bd5-399cc8aa7f82/1775339630579-thumb_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        },
+        "full_url": {
+          "object_path": "normalized/product_media/d50aea1e-4027-407a-9bd5-399cc8aa7f82/1775339630579-full_url.jpg",
+          "public_url": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/normalized/product_media/d50aea1e-4027-407a-9bd5-399cc8aa7f82/1775339630579-full_url.jpg",
+          "source": "fetched",
+          "content_type": "image/jpeg"
+        }
+      }
+    }
+  ],
+  "errors": []
+}
