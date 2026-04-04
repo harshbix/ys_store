@@ -1,0 +1,41 @@
+{
+    "generated_at":  "2026-04-05T00:22:18.2290720+03:00",
+    "sample_count":  12,
+    "backend":  "http://127.0.0.1:4000/api",
+    "note":  "Live backend latency sample. Legacy runtime baseline not available in current workspace session.",
+    "results":  [
+                    {
+                        "name":  "GET /api/products?page=1\u0026limit=20\u0026sort=newest",
+                        "stats":  {
+                                      "count":  12,
+                                      "min_ms":  339.12,
+                                      "p50_ms":  342.27,
+                                      "p95_ms":  348.2,
+                                      "max_ms":  348.2,
+                                      "avg_ms":  342.65
+                                  }
+                    },
+                    {
+                        "name":  "GET /api/cart (guest session)",
+                        "stats":  {
+                                      "count":  12,
+                                      "min_ms":  663.32,
+                                      "p50_ms":  669.18,
+                                      "p95_ms":  685.02,
+                                      "max_ms":  685.02,
+                                      "avg_ms":  670.67
+                                  }
+                    },
+                    {
+                        "name":  "POST /api/quotes (cart source)",
+                        "stats":  {
+                                      "count":  12,
+                                      "min_ms":  333.09,
+                                      "p50_ms":  339.42,
+                                      "p95_ms":  1488.53,
+                                      "max_ms":  1488.53,
+                                      "avg_ms":  434.37
+                                  }
+                    }
+                ]
+}

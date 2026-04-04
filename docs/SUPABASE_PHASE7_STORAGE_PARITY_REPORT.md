@@ -51,10 +51,35 @@ Expected behavior:
 
 - [x] Scripts added for bucket bootstrap and media audit.
 - [x] Scripts aligned to existing env vars (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`).
-- [ ] Execute scripts against target Supabase environment.
-- [ ] Review generated audit report and remediate non-canonical URLs if any.
-- [ ] Re-run admin media upload/finalize flow test after remediation.
+- [x] Execute scripts against target Supabase environment.
+- [x] Review generated audit report and identify non-canonical URLs.
+- [x] Re-run admin media upload/finalize flow test after script fix.
+
+## Execution Results (2026-04-04)
+
+1. Bucket validation
+- Command: `npm run storage:ensure-bucket`
+- Result: bucket already exists (`media`).
+
+2. Media audit runtime fix
+- Initial `storage:audit-media` run failed because `shop_media` was queried with `product_id` in the select list.
+- Script was fixed to use table-specific column selections:
+  - `product_media`: `id,product_id,original_url,thumb_url,full_url`
+  - `shop_media`: `id,original_url,thumb_url,full_url`
+
+3. Media audit final run
+- Command: `npm run storage:audit-media`
+- Result summary:
+  - `total_product_media_rows`: 22
+  - `total_shop_media_rows`: 0
+  - `rows_with_issues`: 8
+- Report: `backend/reports/storage-audit-1775337342697.json`
+
+4. Real admin upload verification
+- Frontend parity E2E confirms `/api/media/admin/upload-url` and `/api/media/admin/upload/finalize` execute successfully and storefront renders uploaded media URL from Supabase storage public path.
 
 ## Notes
 
-This phase introduces operational tooling only and does not change frontend contract payload shapes.
+Remaining remediation work from audit report:
+- 8 `product_media` rows still point at external placeholder URLs (`picsum.photos`) instead of canonical Supabase bucket public URLs.
+- This does not break runtime contracts but should be normalized before strict production cutover.

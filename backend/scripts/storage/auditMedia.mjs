@@ -49,13 +49,13 @@ function rowIssues(row, ownerType) {
   return {
     owner_type: ownerType,
     id: row.id,
-    product_id: row.product_id || null,
+    product_id: ownerType === 'product' ? (row.product_id || null) : null,
     issues
   };
 }
 
-async function fetchRows(tableName) {
-  const result = await supabase.from(tableName).select('id,product_id,original_url,thumb_url,full_url');
+async function fetchRows(tableName, selectColumns) {
+  const result = await supabase.from(tableName).select(selectColumns);
   if (result.error) {
     throw new Error(`Failed to query ${tableName}: ${result.error.message}`);
   }
@@ -64,8 +64,8 @@ async function fetchRows(tableName) {
 
 async function main() {
   const [productMedia, shopMedia] = await Promise.all([
-    fetchRows('product_media'),
-    fetchRows('shop_media')
+    fetchRows('product_media', 'id,product_id,original_url,thumb_url,full_url'),
+    fetchRows('shop_media', 'id,original_url,thumb_url,full_url')
   ]);
 
   const findings = [

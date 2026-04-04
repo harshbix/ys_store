@@ -20,7 +20,34 @@ import { env } from '../../config/env.js';
 
 export async function startOtp(email) {
   const result = await requestOtp(email);
-  if (result.error) throw { status: 500, code: 'otp_request_failed', message: 'Could not send email verification code' };
+  if (result.error) {
+    const providerStatus = Number(result.error.status);
+    const providerCode = String(result.error.code || '').toLowerCase();
+
+    let status = Number.isInteger(providerStatus) && providerStatus >= 400 && providerStatus < 500
+      ? providerStatus
+      : 0;
+
+    if (!status) {
+      if (providerCode === 'over_email_send_rate_limit') {
+        status = 429;
+      } else if (providerCode === 'email_address_invalid') {
+        status = 400;
+      }
+    }
+
+    if (!status) {
+      status = 500;
+    }
+
+    throw {
+      status,
+      code: 'otp_request_failed',
+      message: status === 429
+        ? 'Too many OTP requests. Please try again later.'
+        : 'Could not send email verification code'
+    };
+  }
   return { challenge_id: `OTP-${Date.now()}` };
 }
 

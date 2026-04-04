@@ -16,6 +16,16 @@ interface SessionState {
   markAccountPromptSeen: () => void;
 }
 
+function hasPersistedSessionState(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return Boolean(window.localStorage.getItem('ys-session-storage'));
+  } catch {
+    return false;
+  }
+}
+
 export const useSessionStore = create<SessionState>()(
   persist(
     (set, get) => ({
@@ -45,7 +55,13 @@ export const useSessionStore = create<SessionState>()(
       markAccountPromptSeen: () => set({ accountPromptSeen: true }),
       initializeSession: () => {
         const current = get().guestSessionId;
-        if (typeof current === 'string' && current.trim().length > 0) return;
+        if (typeof current === 'string' && current.trim().length > 0) {
+          // Force initial persistence for environments where the first render can reload before any other state write.
+          if (!hasPersistedSessionState()) {
+            set({ guestSessionId: current });
+          }
+          return;
+        }
         set({ guestSessionId: generateGuestSessionId() });
       }
     }),

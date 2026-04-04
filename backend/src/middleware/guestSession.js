@@ -17,9 +17,23 @@ function normalizeHeaderSessionToken(value) {
   return token;
 }
 
+function isCrossOriginRequest(req) {
+  const origin = req.headers.origin;
+  if (!origin) return false;
+
+  try {
+    const requestOrigin = new URL(origin).origin;
+    const appOrigin = new URL(env.appBaseUrl).origin;
+    return requestOrigin !== appOrigin;
+  } catch {
+    return false;
+  }
+}
+
 export function ensureGuestSession(req, res, next) {
   const cookieName = env.sessionCookieName;
   const isProduction = env.nodeEnv === 'production';
+  const useCrossSiteCookie = isProduction || isCrossOriginRequest(req);
   let token = req.cookies?.[cookieName];
 
   const headerToken = normalizeHeaderSessionToken(req.headers['x-guest-session']);
@@ -30,7 +44,7 @@ export function ensureGuestSession(req, res, next) {
 
     res.cookie(cookieName, token, {
       httpOnly: true,
-      sameSite: isProduction ? 'none' : 'lax',
+      sameSite: useCrossSiteCookie ? 'none' : 'lax',
       secure: isProduction,
       maxAge: maxAgeMs
     });

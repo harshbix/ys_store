@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-04-04T21:24:47.771Z",
+  "backend": "http://127.0.0.1:4000/api",
+  "scenarios": {
+    "guest_build_ownership": {
+      "create_build_status": 201,
+      "owner_read_status": 200,
+      "attacker_read_status": 404,
+      "attacker_error_code": "build_not_found"
+    },
+    "guest_quote_ownership": {
+      "create_quote_status": 201,
+      "owner_click_status": 200,
+      "attacker_click_status": 404,
+      "attacker_error_code": "quote_not_found"
+    },
+    "admin_guard": {
+      "no_auth_status": 401,
+      "fake_token_status": 401,
+      "valid_token_status": 200
+    },
+    "customer_scope": {
+      "wishlist_a_initial_status": 200,
+      "wishlist_b_initial_status": 200,
+      "wishlist_add_a_status": 201,
+      "wishlist_a_items_after_add": 1,
+      "wishlist_b_items_after_add": 0,
+      "wishlist_ids_distinct": true
+    }
+  }
+}

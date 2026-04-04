@@ -1,0 +1,188 @@
+{
+  "summary": {
+    "generated_at": "2026-04-04T21:15:42.695Z",
+    "bucket": "media",
+    "public_prefix": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/",
+    "total_product_media_rows": 22,
+    "total_shop_media_rows": 0,
+    "rows_with_issues": 8
+  },
+  "findings": [
+    {
+      "owner_type": "product",
+      "id": "08fe356e-6eb5-4a74-ae05-cb449092c8dc",
+      "product_id": "10000000-0000-4000-8000-000000000001",
+      "issues": [
+        {
+          "field": "original_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-4070-a/1200/900"
+        },
+        {
+          "field": "thumb_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-4070-a/640/480"
+        },
+        {
+          "field": "full_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-4070-a/1600/1200"
+        }
+      ]
+    },
+    {
+      "owner_type": "product",
+      "id": "4c71bb29-b7c4-4083-86d8-126204b80ac1",
+      "product_id": "10000000-0000-4000-8000-000000000002",
+      "issues": [
+        {
+          "field": "original_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-4060-l/1200/900"
+        },
+        {
+          "field": "thumb_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-4060-l/640/480"
+        },
+        {
+          "field": "full_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-4060-l/1600/1200"
+        }
+      ]
+    },
+    {
+      "owner_type": "product",
+      "id": "d50aea1e-4027-407a-9bd5-399cc8aa7f82",
+      "product_id": "10000000-0000-4000-8000-000000000003",
+      "issues": [
+        {
+          "field": "original_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-4070-g/1200/900"
+        },
+        {
+          "field": "thumb_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-4070-g/640/480"
+        },
+        {
+          "field": "full_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-4070-g/1600/1200"
+        }
+      ]
+    },
+    {
+      "owner_type": "product",
+      "id": "06f9601c-49aa-48b9-9ad7-4a9149c1810f",
+      "product_id": "10000000-0000-4000-8000-000000000004",
+      "issues": [
+        {
+          "field": "original_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-monitor/1200/900"
+        },
+        {
+          "field": "thumb_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-monitor/640/480"
+        },
+        {
+          "field": "full_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-monitor/1600/1200"
+        }
+      ]
+    },
+    {
+      "owner_type": "product",
+      "id": "6898c975-997c-4092-9f6f-e4098e9d86a2",
+      "product_id": "10000000-0000-4000-8000-000000000005",
+      "issues": [
+        {
+          "field": "original_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-legion/1200/900"
+        },
+        {
+          "field": "thumb_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-legion/640/480"
+        },
+        {
+          "field": "full_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-legion/1600/1200"
+        }
+      ]
+    },
+    {
+      "owner_type": "product",
+      "id": "84a8e315-8d13-44a8-8070-c74b7095c4b6",
+      "product_id": "10000000-0000-4000-8000-000000000006",
+      "issues": [
+        {
+          "field": "original_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-ram/1200/900"
+        },
+        {
+          "field": "thumb_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-ram/640/480"
+        },
+        {
+          "field": "full_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-ram/1600/1200"
+        }
+      ]
+    },
+    {
+      "owner_type": "product",
+      "id": "2e772583-8f80-4f4e-9e5f-d60105d4950a",
+      "product_id": "10000000-0000-4000-8000-000000000007",
+      "issues": [
+        {
+          "field": "original_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-office/1200/900"
+        },
+        {
+          "field": "thumb_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-office/640/480"
+        },
+        {
+          "field": "full_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-office/1600/1200"
+        }
+      ]
+    },
+    {
+      "owner_type": "product",
+      "id": "1824f9f5-dac3-48d6-b7fe-0efc0f9e9f68",
+      "product_id": "10000000-0000-4000-8000-000000000008",
+      "issues": [
+        {
+          "field": "original_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-km/1200/900"
+        },
+        {
+          "field": "thumb_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-km/640/480"
+        },
+        {
+          "field": "full_url",
+          "type": "external_or_mismatched_bucket",
+          "value": "https://picsum.photos/seed/ys-km/1600/1200"
+        }
+      ]
+    }
+  ]
+}

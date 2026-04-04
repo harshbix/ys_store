@@ -9,16 +9,53 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestContext, morganRequestIdToken } from './middleware/requestContext.js';
 
 const app = express();
-const defaultAllowedOrigins = ['http://localhost:5173'];
-const configuredOrigins = env.frontendUrl.split(',').map((s) => s.trim()).filter(Boolean);
-const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...configuredOrigins]));
+const defaultAllowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:4173'
+];
+
+function normalizeOrigin(value) {
+  return String(value || '').trim().replace(/\/+$/, '').toLowerCase();
+}
+
+function expandLoopbackVariants(origin) {
+  const normalized = normalizeOrigin(origin);
+  if (!normalized) return [];
+
+  try {
+    const url = new URL(normalized);
+    if (url.hostname === 'localhost') {
+      const loopback = `${url.protocol}//127.0.0.1${url.port ? `:${url.port}` : ''}`;
+      return [normalized, loopback];
+    }
+
+    if (url.hostname === '127.0.0.1') {
+      const localhost = `${url.protocol}//localhost${url.port ? `:${url.port}` : ''}`;
+      return [normalized, localhost];
+    }
+  } catch {
+    return [normalized];
+  }
+
+  return [normalized];
+}
+
+const configuredOrigins = env.frontendUrl
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .flatMap(expandLoopbackVariants);
+
+const allowedOrigins = new Set([...defaultAllowedOrigins, ...configuredOrigins].map(normalizeOrigin));
 const useCredentialedCors = true;
 
 app.use(helmet());
 app.use(cors({
   origin(origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (allowedOrigins.has(normalizeOrigin(origin))) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: useCredentialedCors
