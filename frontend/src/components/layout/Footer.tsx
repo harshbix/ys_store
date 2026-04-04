@@ -37,7 +37,7 @@ export function Footer() {
         <section>
           <h3 className="label-11 text-secondary">Brand</h3>
           <p className="mt-4 text-[13px] leading-6 text-secondary">
-            YS STORE curates premium PC hardware with quote-first support for Dar es Salaam buyers.
+            YS STORE curates premium PC hardware with quote-first support for buyers across Tanzania and international requests.
           </p>
           <a
             href="https://wa.me/255700000000"
@@ -53,7 +53,7 @@ export function Footer() {
       <div className="border-t border-border">
         <div className="mx-auto flex w-full max-w-[1440px] flex-col items-start justify-between gap-2 px-4 py-4 text-[11px] text-muted sm:flex-row sm:px-6 lg:px-8">
           <p>© {new Date().getFullYear()} YS STORE. All rights reserved.</p>
-          <p>Dar es Salaam, Tanzania</p>
+          <p>Serving all Tanzania + cross-border clients</p>
         </div>
       </div>
     </footer>

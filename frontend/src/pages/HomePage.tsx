@@ -41,7 +41,7 @@ export default function HomePage() {
         <div className="space-y-2 text-[11px] uppercase tracking-[0.1em] text-muted">
           <p>Live Build Validation</p>
           <p>Quote-First Checkout</p>
-          <p>Dar es Salaam Support</p>
+          <p>Tanzania-Wide Support</p>
         </div>
       </section>
 
@@ -50,7 +50,7 @@ export default function HomePage() {
       <section className="grid gap-4 border-y border-border py-7 md:grid-cols-[1fr_auto] md:items-center">
         <div>
           <p className="label-11 text-secondary">Trust</p>
-          <p className="mt-2 text-[13px] text-secondary">WhatsApp-assisted purchasing, verified compatibility, and local follow-up in Dar es Salaam.</p>
+          <p className="mt-2 text-[13px] text-secondary">WhatsApp-assisted purchasing, verified compatibility, and delivery follow-up across Tanzania with cross-border support on request.</p>
         </div>
         <a
           href="https://wa.me/255700000000"

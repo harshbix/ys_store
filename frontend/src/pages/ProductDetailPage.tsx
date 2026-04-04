@@ -105,7 +105,7 @@ export default function ProductDetailPage() {
     {
       key: 'shipping',
       title: 'Shipping',
-      content: <p className="text-[13px] leading-6 text-secondary">Delivery coordination and pickup support are available for Dar es Salaam orders via WhatsApp follow-up.</p>
+      content: <p className="text-[13px] leading-6 text-secondary">Delivery coordination and pickup support are available across Tanzania, with cross-border options handled via WhatsApp follow-up.</p>
     },
     {
       key: 'warranty',

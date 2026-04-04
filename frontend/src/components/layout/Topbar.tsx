@@ -6,7 +6,7 @@ export function Topbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
         <p className="inline-flex items-center gap-2">
           <ShieldCheck className="h-3.5 w-3.5" />
-          Premium PC hardware support in Dar es Salaam, Tanzania
+          Premium PC hardware support across Tanzania and beyond
         </p>
         <a
           href="https://wa.me/255700000000"
