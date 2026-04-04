@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BadgeCheck, Cpu, Gamepad2, Laptop, MoveDown, Sparkles, Truck, Wrench } from 'lucide-react';
+import { BadgeCheck, Cpu, Gamepad2, Laptop, Sparkles, Truck, Wrench } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
@@ -278,12 +278,6 @@ export default function HomePage() {
           </motion.div>
         </div>
 
-        <div className="pointer-events-none absolute bottom-4 left-1/2 z-[1] -translate-x-1/2 text-center text-[10px] uppercase tracking-[0.28em] text-secondary">
-          <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/70 backdrop-blur">
-            <MoveDown className="h-4 w-4 animate-bounce" />
-          </div>
-          <p className="mt-2">Scroll</p>
-        </div>
       </section>
 
       <motion.section
