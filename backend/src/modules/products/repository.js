@@ -1,7 +1,57 @@
 import { supabase } from '../../lib/supabase.js';
 
+const PRODUCT_SELECT = [
+  'id',
+  'sku',
+  'slug',
+  'title',
+  'product_type',
+  'brand',
+  'model_name',
+  'condition',
+  'stock_status',
+  'estimated_price_tzs',
+  'short_description',
+  'long_description',
+  'warranty_text',
+  'is_visible',
+  'is_featured',
+  'featured_tag',
+  'created_by_admin_id',
+  'created_at',
+  'updated_at'
+].join(',');
+
+const PRODUCT_SPEC_SELECT = [
+  'id',
+  'product_id',
+  'spec_key',
+  'value_text',
+  'value_number',
+  'value_bool',
+  'value_json',
+  'unit',
+  'sort_order',
+  'created_at'
+].join(',');
+
+const PRODUCT_MEDIA_SELECT = [
+  'id',
+  'product_id',
+  'original_url',
+  'thumb_url',
+  'full_url',
+  'width',
+  'height',
+  'size_bytes',
+  'alt_text',
+  'is_primary',
+  'sort_order',
+  'created_at'
+].join(',');
+
 export async function findProducts(filters, productIds = null) {
-  let query = supabase.from('products').select('*', { count: 'exact' }).eq('is_visible', true);
+  let query = supabase.from('products').select(PRODUCT_SELECT, { count: 'exact' }).eq('is_visible', true);
 
   if (filters.type) query = query.eq('product_type', filters.type);
   if (filters.brand) query = query.ilike('brand', `%${filters.brand}%`);
@@ -27,15 +77,15 @@ export async function findProducts(filters, productIds = null) {
 }
 
 export async function findProductBySlug(slug) {
-  return supabase.from('products').select('*').eq('slug', slug).eq('is_visible', true).maybeSingle();
+  return supabase.from('products').select(PRODUCT_SELECT).eq('slug', slug).eq('is_visible', true).maybeSingle();
 }
 
 export async function findProductSpecs(productId) {
-  return supabase.from('product_specs').select('*').eq('product_id', productId).order('sort_order', { ascending: true });
+  return supabase.from('product_specs').select(PRODUCT_SPEC_SELECT).eq('product_id', productId).order('sort_order', { ascending: true });
 }
 
 export async function findProductMedia(productId) {
-  return supabase.from('product_media').select('*').eq('product_id', productId).order('sort_order', { ascending: true });
+  return supabase.from('product_media').select(PRODUCT_MEDIA_SELECT).eq('product_id', productId).order('sort_order', { ascending: true });
 }
 
 export async function findFilterOptions(productType) {
@@ -47,13 +97,13 @@ export async function findFilterOptions(productType) {
 }
 
 export async function findCompareProducts(productIds) {
-  return supabase.from('products').select('*').in('id', productIds).eq('is_visible', true);
+  return supabase.from('products').select(PRODUCT_SELECT).in('id', productIds).eq('is_visible', true);
 }
 
 export async function findSpecsForProducts(productIds) {
   return supabase
     .from('product_specs')
-    .select('*')
+    .select(PRODUCT_SPEC_SELECT)
     .in('product_id', productIds)
     .order('sort_order', { ascending: true });
 }

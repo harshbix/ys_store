@@ -2,6 +2,8 @@ import {
   findQuoteByIdempotencyKey,
   findCartWithItems,
   findBuildWithItems,
+  findCartById,
+  findBuildById,
   createQuoteAndItemsTransactional,
   findQuoteByCode,
   findQuoteItems,
@@ -17,6 +19,13 @@ function inferQuoteType(payload, items) {
   if (items.some((i) => /laptop/i.test(i.title_snapshot || ''))) return 'laptop';
   if (items.some((i) => /desktop/i.test(i.title_snapshot || ''))) return 'desktop';
   return 'general';
+}
+
+function isOwnedByIdentity(row, identity) {
+  if (!row) return false;
+  if (identity.sessionToken && row.session_token && row.session_token === identity.sessionToken) return true;
+  if (identity.customerAuthId && row.customer_auth_id && row.customer_auth_id === identity.customerAuthId) return true;
+  return false;
 }
 
 export async function createQuote(payload, identity) {
@@ -35,6 +44,7 @@ export async function createQuote(payload, identity) {
   if (payload.source_type === 'cart') {
     const { cartRes, itemsRes } = await findCartWithItems(payload.source_id);
     if (cartRes.error || !cartRes.data) throw { status: 404, code: 'cart_not_found', message: 'Cart not found' };
+    if (!isOwnedByIdentity(cartRes.data, identity)) throw { status: 404, code: 'cart_not_found', message: 'Cart not found' };
     if (itemsRes.error) throw { status: 500, code: 'cart_items_failed', message: itemsRes.error.message };
 
     items = (itemsRes.data || []).map((i) => ({
@@ -50,6 +60,7 @@ export async function createQuote(payload, identity) {
   } else {
     const { buildRes, itemsRes } = await findBuildWithItems(payload.source_id);
     if (buildRes.error || !buildRes.data) throw { status: 404, code: 'build_not_found', message: 'Build not found' };
+    if (!isOwnedByIdentity(buildRes.data, identity)) throw { status: 404, code: 'build_not_found', message: 'Build not found' };
     if (itemsRes.error) throw { status: 500, code: 'build_items_failed', message: itemsRes.error.message };
 
     replacementSummary = buildRes.data.replacement_summary;
@@ -138,6 +149,26 @@ export async function getQuote(quoteCode) {
 }
 
 export async function trackWhatsappClick(quoteCode, identity) {
+  const quoteRes = await findQuoteByCode(quoteCode);
+  if (quoteRes.error) throw { status: 500, code: 'quote_lookup_failed', message: quoteRes.error.message };
+  if (!quoteRes.data) throw { status: 404, code: 'quote_not_found', message: 'Quote not found' };
+
+  if (quoteRes.data.source_cart_id) {
+    const cartRes = await findCartById(quoteRes.data.source_cart_id);
+    if (cartRes.error) throw { status: 500, code: 'cart_lookup_failed', message: cartRes.error.message };
+    if (!cartRes.data || !isOwnedByIdentity(cartRes.data, identity)) {
+      throw { status: 404, code: 'quote_not_found', message: 'Quote not found' };
+    }
+  }
+
+  if (quoteRes.data.source_build_id) {
+    const buildRes = await findBuildById(quoteRes.data.source_build_id);
+    if (buildRes.error) throw { status: 500, code: 'build_lookup_failed', message: buildRes.error.message };
+    if (!buildRes.data || !isOwnedByIdentity(buildRes.data, identity)) {
+      throw { status: 404, code: 'quote_not_found', message: 'Quote not found' };
+    }
+  }
+
   const updated = await markWhatsappClick(quoteCode);
   if (updated.error) throw { status: 500, code: 'whatsapp_click_failed', message: updated.error.message };
 

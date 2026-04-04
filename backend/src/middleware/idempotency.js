@@ -2,9 +2,9 @@ import crypto from 'crypto';
 
 // Supports client-provided key and a deterministic fallback for quote creation.
 export function quoteIdempotencyKey(req, res, next) {
-  const headerKey = req.headers['x-idempotency-key'];
+  const headerKey = req.headers['x-idempotency-key'] || req.headers['idempotency-key'];
   if (headerKey) {
-    req.idempotencyKey = String(headerKey);
+    req.idempotencyKey = String(Array.isArray(headerKey) ? headerKey[0] : headerKey).trim();
     return next();
   }
 

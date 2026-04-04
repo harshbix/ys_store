@@ -4,6 +4,7 @@ import {
   findCartItems,
   insertCartItem,
   findCartItemByRef,
+  findCartItemById,
   updateCartItem,
   deleteCartItem,
   findProductPriceAndTitle,
@@ -45,7 +46,7 @@ export async function addItemToCart(identity, payload) {
   }
 
   if (payload.item_type === 'custom_build') {
-    const build = await findBuildPriceAndTitle(payload.custom_build_id);
+    const build = await findBuildPriceAndTitle(payload.custom_build_id, identity);
     if (build.error) throw { status: 400, code: 'invalid_build', message: build.error.message };
     unit = build.data.total_estimated_price_tzs;
     title = build.data.name || 'Custom Build';
@@ -79,13 +80,23 @@ export async function addItemToCart(identity, payload) {
 }
 
 export async function updateItemQuantity(identity, itemId, quantity) {
-  const updated = await updateCartItem(itemId, { quantity });
+  const cart = await getOrCreateActiveCart(identity);
+  const existing = await findCartItemById(cart.id, itemId);
+  if (existing.error) throw { status: 500, code: 'cart_item_lookup_failed', message: existing.error.message };
+  if (!existing.data) throw { status: 404, code: 'cart_item_not_found', message: 'Cart item not found' };
+
+  const updated = await updateCartItem(itemId, { quantity }, cart.id);
   if (updated.error) throw { status: 500, code: 'cart_item_update_failed', message: updated.error.message };
   return getCartWithItems(identity);
 }
 
 export async function removeItemFromCart(identity, itemId) {
-  const removed = await deleteCartItem(itemId);
+  const cart = await getOrCreateActiveCart(identity);
+  const existing = await findCartItemById(cart.id, itemId);
+  if (existing.error) throw { status: 500, code: 'cart_item_lookup_failed', message: existing.error.message };
+  if (!existing.data) throw { status: 404, code: 'cart_item_not_found', message: 'Cart item not found' };
+
+  const removed = await deleteCartItem(itemId, cart.id);
   if (removed.error) throw { status: 500, code: 'cart_item_delete_failed', message: removed.error.message };
   return getCartWithItems(identity);
 }

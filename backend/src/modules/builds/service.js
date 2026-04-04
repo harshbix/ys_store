@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import {
   createBuildRow,
   findBuildById,
+  findBuildByIdForIdentity,
   findBuildItems,
   findBuildItemById,
   upsertBuildComponent,
@@ -23,8 +24,10 @@ function findSpec(specs, key) {
   return specs.find((s) => s.spec_key === key) || null;
 }
 
-async function assertBuildExists(buildId) {
-  const buildRes = await findBuildById(buildId);
+async function assertBuildExists(buildId, identity = null) {
+  const buildRes = identity
+    ? await findBuildByIdForIdentity(buildId, identity)
+    : await findBuildById(buildId);
 
   if (buildRes.error) {
     throw { status: 500, code: 'build_lookup_failed', message: buildRes.error.message };
@@ -51,18 +54,17 @@ export async function createBuild(identity, payload) {
   return result.data;
 }
 
-export async function getBuild(buildId) {
-  const [buildRes, itemsRes] = await Promise.all([findBuildById(buildId), findBuildItems(buildId)]);
+export async function getBuild(buildId, identity = null) {
+  const buildRes = await assertBuildExists(buildId, identity);
+  const itemsRes = await findBuildItems(buildId);
 
-  if (buildRes.error) throw { status: 500, code: 'build_lookup_failed', message: buildRes.error.message };
-  if (!buildRes.data) throw { status: 404, code: 'build_not_found', message: 'Build not found' };
   if (itemsRes.error) throw { status: 500, code: 'build_items_failed', message: itemsRes.error.message };
 
-  return { ...buildRes.data, items: itemsRes.data || [] };
+  return { ...buildRes, items: itemsRes.data || [] };
 }
 
-export async function setBuildComponent(buildId, payload) {
-  await assertBuildExists(buildId);
+export async function setBuildComponent(buildId, payload, identity = null) {
+  await assertBuildExists(buildId, identity);
 
   const productRes = await findProductPrice(payload.product_id);
   if (productRes.error || !productRes.data) {
@@ -81,11 +83,11 @@ export async function setBuildComponent(buildId, payload) {
 
   if (upserted.error) throw { status: 500, code: 'build_item_upsert_failed', message: upserted.error.message };
 
-  return getBuild(buildId);
+  return getBuild(buildId, identity);
 }
 
-export async function removeBuildItem(buildId, itemId) {
-  await assertBuildExists(buildId);
+export async function removeBuildItem(buildId, itemId, identity = null) {
+  await assertBuildExists(buildId, identity);
 
   const itemRes = await findBuildItemById(itemId);
   if (itemRes.error) {
@@ -98,11 +100,11 @@ export async function removeBuildItem(buildId, itemId) {
 
   const removed = await deleteBuildItem(itemId, buildId);
   if (removed.error) throw { status: 500, code: 'build_item_delete_failed', message: removed.error.message };
-  return getBuild(buildId);
+  return getBuild(buildId, identity);
 }
 
-export async function validateBuild(buildId, autoReplace) {
-  const build = await getBuild(buildId);
+export async function validateBuild(buildId, autoReplace, identity = null) {
+  const build = await getBuild(buildId, identity);
   const items = build.items || [];
 
   const errors = [];
@@ -227,7 +229,7 @@ export async function validateBuild(buildId, autoReplace) {
     }
   }
 
-  const refreshed = await getBuild(buildId);
+  const refreshed = await getBuild(buildId, identity);
   const refreshedItems = refreshed.items || [];
   const nextStatus = errors.length > 0 ? 'invalid' : warnings.length > 0 ? 'warning' : 'valid';
   const total = refreshedItems.reduce((acc, i) => acc + Number(i.unit_estimated_price_tzs || 0) * Number(i.quantity || 1), 0);
@@ -253,7 +255,7 @@ export async function validateBuild(buildId, autoReplace) {
 }
 
 export async function addBuildToCart(buildId, identity) {
-  const build = await getBuild(buildId);
+  const build = await getBuild(buildId, identity);
   if (!build) throw { status: 404, code: 'build_not_found', message: 'Build not found' };
 
   const cart = await addItemToCart(identity, {
