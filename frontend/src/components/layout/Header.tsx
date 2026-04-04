@@ -50,8 +50,8 @@ export function Header() {
             <Menu className="h-4 w-4" />
           </button>
 
-          <Link to="/" className="absolute left-1/2 -translate-x-1/2 text-[12px] font-light tracking-[0.24em] text-foreground">
-            YS STORE
+          <Link to="/" aria-label="Home" className="absolute left-1/2 -translate-x-1/2">
+            <span className="block h-3 w-24" aria-hidden="true" />
           </Link>
 
           <div className="ml-auto flex items-center gap-1">
@@ -92,8 +92,8 @@ export function Header() {
             ))}
           </nav>
 
-          <Link to="/" className="text-[12px] font-light tracking-[0.24em] text-foreground">
-            YS STORE
+          <Link to="/" aria-label="Home">
+            <span className="block h-3 w-24" aria-hidden="true" />
           </Link>
 
           <div className="flex flex-1 items-center justify-end gap-1">
