@@ -166,7 +166,7 @@ export default function HomePage() {
     <div className="space-y-14 pb-10 md:space-y-20">
       <section
         ref={heroRef}
-        className="relative flex min-h-[calc(100svh-52px)] items-center overflow-hidden border border-border bg-background px-4 py-6 sm:px-6 lg:px-8"
+        className="relative flex min-h-[100svh] items-center overflow-hidden border border-border bg-background px-4 py-6 sm:px-6 lg:px-8 -mx-4 -mt-6 sm:-mx-6 sm:-mt-6 lg:-mx-8 lg:-mt-6"
       >
         <div
           className="pointer-events-none absolute inset-0 transition-[background-position] duration-150 ease-out"
