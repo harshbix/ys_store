@@ -66,7 +66,7 @@ export default function HomePage() {
 
           <motion.div variants={fadeInUp} className="flex flex-wrap gap-3">
             <Button size="lg" onClick={() => navigate('/shop')}>
-              Explore products
+              Products
               <ArrowRight className="h-4 w-4" />
             </Button>
             <Button size="lg" variant="secondary" onClick={() => navigate('/builder')}>
@@ -197,7 +197,7 @@ export default function HomePage() {
 
           <div className="flex flex-wrap justify-center gap-3">
             <Button size="lg" onClick={() => navigate('/shop')}>
-              Explore products
+              Products
             </Button>
             <a
               href="https://wa.me/255700000000"
