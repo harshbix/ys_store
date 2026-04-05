@@ -68,6 +68,24 @@ export async function verifyOtp(email, token) {
   return authClient.auth.verifyOtp({ email, token, type: 'email' });
 }
 
+export async function registerWithPassword(email, password, fullName) {
+  const authClient = createAuthClient();
+  return authClient.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName
+      }
+    }
+  });
+}
+
+export async function loginWithPassword(email, password) {
+  const authClient = createAuthClient();
+  return authClient.auth.signInWithPassword({ email, password });
+}
+
 export async function getWishlistByCustomer(customerAuthId) {
   return supabase.from('wishlists').select('*').eq('customer_auth_id', customerAuthId).maybeSingle();
 }

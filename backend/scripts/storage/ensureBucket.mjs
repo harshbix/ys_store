@@ -24,9 +24,30 @@ async function main() {
     throw new Error(`Failed to list buckets: ${listed.error.message}`);
   }
 
-  const exists = (listed.data || []).some((bucket) => bucket.name === bucketName || bucket.id === bucketName);
-  if (exists) {
-    console.log(`[storage] bucket already exists: ${bucketName}`);
+  const existing = (listed.data || []).find((bucket) => bucket.name === bucketName || bucket.id === bucketName);
+  if (existing) {
+    if (existing.public) {
+      console.log(`[storage] bucket already exists and is public: ${bucketName}`);
+      return;
+    }
+
+    const updated = await supabase.storage.updateBucket(bucketName, {
+      public: true,
+      fileSizeLimit: 10 * 1024 * 1024,
+      allowedMimeTypes: [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/avif',
+        'image/gif'
+      ]
+    });
+
+    if (updated.error) {
+      throw new Error(`Failed to update bucket ${bucketName}: ${updated.error.message}`);
+    }
+
+    console.log(`[storage] bucket updated to public: ${bucketName}`);
     return;
   }
 

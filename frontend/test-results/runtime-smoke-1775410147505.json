@@ -1,0 +1,119 @@
+{
+  "startedAt": "2026-04-05T17:28:41.393Z",
+  "baseUrl": "http://127.0.0.1:5177",
+  "apiUrl": "https://ys-store-h1ec.onrender.com/api",
+  "flows": {
+    "auth": {
+      "pass": false,
+      "failureCause": "backend bug",
+      "checks": [
+        {
+          "name": "redirected to login from cart intent",
+          "pass": true,
+          "evidence": {
+            "url": "http://127.0.0.1:5177/login"
+          }
+        },
+        {
+          "name": "return target stored as /cart",
+          "pass": true,
+          "evidence": {
+            "state": {
+              "from": "/shop",
+              "returnTo": "/cart"
+            }
+          }
+        },
+        {
+          "name": "OTP request receives API response",
+          "pass": false,
+          "evidence": {
+            "requestFired": true,
+            "failed": "net::ERR_ABORTED"
+          }
+        }
+      ],
+      "network": {
+        "request": {
+          "url": "https://ys-store-h1ec.onrender.com/api/auth/request-otp",
+          "origin": "https://ys-store-h1ec.onrender.com",
+          "routeKind": "live-backend-direct",
+          "method": "POST",
+          "resourceType": "fetch",
+          "headers": {
+            "sec-ch-ua-platform": "\"Windows\"",
+            "referer": "http://127.0.0.1:5177/",
+            "x-guest-session": "guest_live_e47cf3d92ebc46cba287",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36",
+            "sec-ch-ua": "\"HeadlessChrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0"
+          },
+          "cookies": "",
+          "bodyText": "{\"email\":\"smoke.test+1775410121728@gmail.com\"}",
+          "bodyJson": {
+            "email": "smoke.test+1775410121728@gmail.com"
+          }
+        },
+        "response": null,
+        "contextCookies": []
+      }
+    },
+    "adminPosting": {
+      "pass": false,
+      "failureCause": "backend bug",
+      "checks": [
+        {
+          "name": "admin credentials available",
+          "pass": true,
+          "evidence": {
+            "hasEmail": true,
+            "hasPassword": true
+          }
+        },
+        {
+          "name": "admin login receives API response",
+          "pass": false,
+          "evidence": {
+            "requestFired": true,
+            "failed": "net::ERR_ABORTED"
+          }
+        }
+      ],
+      "loginNetwork": {
+        "request": {
+          "url": "https://ys-store-h1ec.onrender.com/api/admin/login",
+          "origin": "https://ys-store-h1ec.onrender.com",
+          "routeKind": "live-backend-direct",
+          "method": "POST",
+          "resourceType": "fetch",
+          "headers": {
+            "sec-ch-ua-platform": "\"Windows\"",
+            "referer": "http://127.0.0.1:5177/",
+            "x-guest-session": "guest_live_e47cf3d92ebc46cba287",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36",
+            "sec-ch-ua": "\"HeadlessChrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0"
+          },
+          "cookies": "",
+          "bodyText": "{\"email\":\"kidabixson@gmail.com\",\"password\":\"12345678\"}",
+          "bodyJson": {
+            "email": "kidabixson@gmail.com",
+            "password": "12345678"
+          }
+        },
+        "response": null,
+        "contextCookies": []
+      }
+    }
+  },
+  "completedAt": "2026-04-05T17:29:07.505Z",
+  "summary": {
+    "passedFlows": [],
+    "failedFlows": [
+      "auth",
+      "adminPosting"
+    ]
+  }
+}

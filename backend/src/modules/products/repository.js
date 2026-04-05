@@ -17,6 +17,7 @@ const PRODUCT_SELECT = [
   'is_visible',
   'is_featured',
   'featured_tag',
+  'media:product_media!left(thumb_url,full_url,original_url,is_primary,sort_order)',
   'created_by_admin_id',
   'created_at',
   'updated_at'

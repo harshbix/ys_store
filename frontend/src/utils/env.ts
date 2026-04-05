@@ -1,10 +1,18 @@
-function parseBoolean(value: string | undefined, defaultValue = false): boolean {
-  if (value === undefined) return defaultValue;
-  return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
+function readString(value: string | undefined): string {
+  return (value || '').trim();
 }
 
 export const env = {
-  enableDevFixtures: import.meta.env.DEV && parseBoolean(import.meta.env.VITE_ENABLE_DEV_FIXTURES, false),
+  enableDevFixtures: false,
+  supabaseUrl: readString(import.meta.env.VITE_SUPABASE_URL),
+  supabaseAnonKey: readString(import.meta.env.VITE_SUPABASE_ANON_KEY),
+  apiUrl: readString(import.meta.env.VITE_API_URL),
   isDev: import.meta.env.DEV,
   isProd: import.meta.env.PROD
+};
+
+export const supabaseEnvState = {
+  hasUrl: Boolean(env.supabaseUrl),
+  hasAnonKey: Boolean(env.supabaseAnonKey),
+  isConfigured: Boolean(env.supabaseUrl && env.supabaseAnonKey)
 };

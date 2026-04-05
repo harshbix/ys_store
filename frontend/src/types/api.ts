@@ -51,6 +51,7 @@ export interface Product {
   is_visible: boolean;
   is_featured: boolean;
   featured_tag: string | null;
+  media?: ProductMedia[];
   created_by_admin_id: string | null;
   created_at: string;
   updated_at: string;
@@ -241,4 +242,10 @@ export interface OtpVerifyPayload {
   access_token: string;
   customer_id: string;
   challenge_id: string;
+}
+
+export interface PasswordAuthPayload {
+  access_token: string;
+  customer_id: string;
+  challenge_id?: string | null;
 }

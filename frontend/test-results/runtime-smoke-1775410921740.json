@@ -1,0 +1,49 @@
+{
+  "startedAt": "2026-04-05T17:41:59.028Z",
+  "baseUrl": "http://127.0.0.1:5173",
+  "apiUrl": "https://ys-store-h1ec.onrender.com/api",
+  "flows": {
+    "auth": {
+      "pass": false,
+      "failureCause": "frontend bug",
+      "checks": [
+        {
+          "name": "flow execution",
+          "pass": false,
+          "evidence": {
+            "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5173/shop\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/shop\", waiting until \"domcontentloaded\"\u001b[22m\n"
+          }
+        }
+      ]
+    },
+    "adminPosting": {
+      "pass": false,
+      "failureCause": "frontend bug",
+      "checks": [
+        {
+          "name": "admin credentials available",
+          "pass": true,
+          "evidence": {
+            "hasEmail": true,
+            "hasPassword": true
+          }
+        },
+        {
+          "name": "flow execution",
+          "pass": false,
+          "evidence": {
+            "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5173/admin/login\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/admin/login\", waiting until \"domcontentloaded\"\u001b[22m\n"
+          }
+        }
+      ]
+    }
+  },
+  "completedAt": "2026-04-05T17:42:01.739Z",
+  "summary": {
+    "passedFlows": [],
+    "failedFlows": [
+      "auth",
+      "adminPosting"
+    ]
+  }
+}

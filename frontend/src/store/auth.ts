@@ -6,9 +6,7 @@ interface CustomerAuthStore {
   accessToken: string | null;
   customerId: string | null;
   email: string | null;
-  challengeId: string | null;
-  setOtpRequest: (email: string, challengeId: string) => void;
-  completeLogin: (accessToken: string, customerId: string) => void;
+  completeLogin: (accessToken: string, customerId: string, email?: string | null) => void;
   logout: () => void;
 }
 
@@ -25,10 +23,8 @@ export const useAuthStore = create<CustomerAuthStore>()(
       accessToken: null,
       customerId: null,
       email: null,
-      challengeId: null,
-      setOtpRequest: (email, challengeId) => set({ email, challengeId }),
-      completeLogin: (accessToken, customerId) => set({ accessToken, customerId }),
-      logout: () => set({ accessToken: null, customerId: null, email: null, challengeId: null })
+      completeLogin: (accessToken, customerId, email = null) => set({ accessToken, customerId, email }),
+      logout: () => set({ accessToken: null, customerId: null, email: null })
     }),
     {
       name: 'ys-customer-auth'

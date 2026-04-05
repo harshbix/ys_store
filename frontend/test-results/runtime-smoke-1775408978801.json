@@ -1,0 +1,68 @@
+{
+  "startedAt": "2026-04-05T17:09:36.230Z",
+  "baseUrl": "http://127.0.0.1:4175",
+  "apiUrl": "https://ys-store-h1ec.onrender.com/api",
+  "flows": {
+    "auth": {
+      "pass": false,
+      "failureCause": "backend bug",
+      "checks": [
+        {
+          "name": "redirected to login from cart intent",
+          "pass": true,
+          "evidence": {
+            "url": "http://127.0.0.1:4175/login"
+          }
+        },
+        {
+          "name": "return target stored as /cart",
+          "pass": true,
+          "evidence": {
+            "state": {
+              "from": "/shop",
+              "returnTo": "/cart"
+            }
+          }
+        },
+        {
+          "name": "OTP request receives API response",
+          "pass": false,
+          "evidence": {
+            "requestFired": true,
+            "failed": "net::ERR_FAILED"
+          }
+        }
+      ]
+    },
+    "adminPosting": {
+      "pass": false,
+      "failureCause": "backend bug",
+      "checks": [
+        {
+          "name": "admin credentials available",
+          "pass": true,
+          "evidence": {
+            "hasEmail": true,
+            "hasPassword": true
+          }
+        },
+        {
+          "name": "admin login receives API response",
+          "pass": false,
+          "evidence": {
+            "requestFired": true,
+            "failed": "net::ERR_FAILED"
+          }
+        }
+      ]
+    }
+  },
+  "completedAt": "2026-04-05T17:09:38.800Z",
+  "summary": {
+    "passedFlows": [],
+    "failedFlows": [
+      "auth",
+      "adminPosting"
+    ]
+  }
+}

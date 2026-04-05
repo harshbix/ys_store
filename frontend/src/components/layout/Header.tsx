@@ -1,22 +1,27 @@
 import { Heart, Menu, Search, ShoppingBag, UserCircle2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
+import { useShowToast } from '../../hooks/useToast';
 import { useAdminAuthStore, useAuthStore } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
 import { SearchResultsOverlay } from '../ui/SearchResultsOverlay.tsx';
-import { ThemeToggle } from '../ui/ThemeToggle';
 
 const navLinks = [
+  { label: 'Home', to: '/' },
   { label: 'Shop', to: '/shop' },
-  { label: 'Desktops', to: '/shop?type=desktop' },
-  { label: 'Laptops', to: '/shop?type=laptop' },
-  { label: 'Parts', to: '/shop?type=component' },
-  { label: 'Builder', to: '/builder' },
-  { label: 'Sale', to: '/shop?featured_tag=hot_deal' }
+  { label: 'Gaming Laptops', to: '/shop?type=laptop' },
+  { label: 'Gaming Desktops', to: '/shop?type=desktop' },
+  { label: 'Accessories', to: '/shop?type=accessory' },
+  { label: 'Custom PC Build', to: '/builder' },
+  { label: 'Blog', to: '/blog' },
+  { label: 'Contact', to: '/contact' }
 ];
 
 export function Header() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const showToast = useShowToast();
   const { cartQuery } = useCart();
   const openMobileNav = useUiStore((state) => state.openMobileNav);
   const openCartDrawer = useUiStore((state) => state.openCartDrawer);
@@ -37,9 +42,28 @@ export function Header() {
   const cartCount = cartQuery.data?.data.items.length || 0;
   const accountHref = adminAuthenticated ? '/admin' : '/login';
 
+  const handleCartIntent = () => {
+    if (customerAuthenticated) {
+      openCartDrawer();
+      return;
+    }
+
+    showToast({
+      title: 'Please log in first',
+      description: 'Sign in to open your cart.',
+      variant: 'info'
+    });
+    navigate('/login', {
+      state: {
+        from: location.pathname,
+        returnTo: '/cart'
+      }
+    });
+  };
+
   return (
-    <header className={`sticky top-0 z-30 border-b transition ${isScrolled ? 'border-border bg-background/95 backdrop-blur' : 'border-transparent bg-background'}`}>
-      <div className="mx-auto h-[52px] w-full max-w-[1440px] px-4 sm:px-6 lg:px-8">
+    <header className={`sticky top-0 z-30 transition ${isScrolled ? 'border-b border-border bg-background/95 backdrop-blur' : 'border-b border-border/30 bg-background'}`}>
+      <div className="mx-auto h-14 w-full max-w-[1440px] px-4 sm:px-6 lg:px-8">
         <div className="relative flex h-full items-center justify-between lg:hidden">
           <button
             type="button"
@@ -47,46 +71,55 @@ export function Header() {
             className="inline-flex h-9 w-9 items-center justify-center text-secondary"
             aria-label="Open menu"
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="h-[18px] w-[18px]" />
           </button>
 
           <Link to="/" aria-label="Home" className="absolute left-1/2 -translate-x-1/2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[10px] font-semibold tracking-[0.14em] text-foreground backdrop-blur">
-              YS
+            <span className="text-[12px] font-semibold tracking-[0.2em] text-foreground">
+              YS STORE
             </span>
           </Link>
 
-          <div className="ml-auto flex items-center gap-1">
-            <ThemeToggle compact />
-
+          <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
               onClick={openSearchOverlay}
               className="inline-flex h-9 w-9 items-center justify-center text-secondary"
               aria-label="Open product search"
             >
-              <Search className="h-4 w-4" />
+              <Search className="h-[18px] w-[18px]" />
             </button>
 
-            <Link to="/cart" className="relative inline-flex h-9 w-9 items-center justify-center text-secondary" aria-label="Cart">
-              <ShoppingBag className="h-4 w-4" />
+            <button
+              type="button"
+              onClick={handleCartIntent}
+              className="relative inline-flex h-9 w-9 items-center justify-center text-secondary"
+              aria-label="Cart"
+            >
+              <ShoppingBag className="h-[18px] w-[18px]" />
               {cartCount > 0 ? (
                 <span className="absolute right-0 top-0 inline-flex min-h-4 min-w-4 animate-pulse-soft items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] font-medium text-primaryForeground" aria-live="polite">
                   {cartCount}
                 </span>
               ) : null}
-            </Link>
+            </button>
           </div>
         </div>
 
-        <div className="hidden h-full items-center lg:flex">
-          <nav className="flex flex-1 items-center gap-5">
+        <div className="hidden h-full items-center gap-12 lg:flex">
+          <Link to="/" aria-label="Home" className="shrink-0">
+            <span className="text-[12px] font-semibold tracking-[0.2em] text-foreground">
+              YS STORE
+            </span>
+          </Link>
+
+          <nav className="flex items-center gap-6">
             {navLinks.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `nav-13 text-[13px] transition ${isActive ? 'text-foreground' : 'text-secondary hover:text-foreground'}`
+                  `text-[12px] font-medium tracking-[0.04em] transition ${isActive ? 'text-foreground' : 'text-secondary hover:text-foreground'}`
                 }
               >
                 {link.label}
@@ -94,35 +127,27 @@ export function Header() {
             ))}
           </nav>
 
-          <Link to="/" aria-label="Home">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[10px] font-semibold tracking-[0.14em] text-foreground backdrop-blur">
-              YS
-            </span>
-          </Link>
-
-          <div className="flex flex-1 items-center justify-end gap-1">
-            <ThemeToggle compact />
-
+          <div className="ml-auto flex items-center gap-5">
             <button
               type="button"
               onClick={openSearchOverlay}
               className="inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground"
               aria-label="Search"
             >
-              <Search className="h-4 w-4" />
+              <Search className="h-[18px] w-[18px]" />
             </button>
 
             <Link to="/wishlist" className="inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground" aria-label="Wishlist">
-              <Heart className="h-4 w-4" />
+              <Heart className="h-[18px] w-[18px]" />
             </Link>
 
             <button
               type="button"
-              onClick={openCartDrawer}
+              onClick={handleCartIntent}
               className="relative inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground"
               aria-label="Open cart"
             >
-              <ShoppingBag className="h-4 w-4" />
+              <ShoppingBag className="h-[18px] w-[18px]" />
               {cartCount > 0 ? (
                 <span className="absolute right-0 top-0 inline-flex min-h-4 min-w-4 animate-pulse-soft items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] font-medium text-primaryForeground" aria-live="polite">
                   {cartCount}
@@ -135,7 +160,7 @@ export function Header() {
               className="inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground"
               aria-label={customerAuthenticated ? 'Account' : 'Login'}
             >
-              <UserCircle2 className="h-4 w-4" />
+              <UserCircle2 className="h-[18px] w-[18px]" />
             </Link>
           </div>
         </div>

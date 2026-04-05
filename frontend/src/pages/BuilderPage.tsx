@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BuildPartPicker } from '../components/builder/BuildPartPicker';
 import { BuildSlot } from '../components/builder/BuildSlot';
 import { BuildStickyBar } from '../components/builder/BuildStickyBar';
 import { BuildSummary } from '../components/builder/BuildSummary';
 import { CompatibilityBanner } from '../components/builder/CompatibilityBanner';
 import { ErrorState } from '../components/feedback/ErrorState';
+import { Button } from '../components/ui/Button';
 import { useBuilds } from '../hooks/useBuilds';
 import type { BuildItem, ComponentType, Product } from '../types/api';
 
@@ -20,6 +22,7 @@ const slotDefinitions: Array<{ key: ComponentType; label: string; helper: string
 ];
 
 export default function BuilderPage() {
+  const navigate = useNavigate();
   const {
     activeBuildId,
     buildQuery,
@@ -87,6 +90,9 @@ export default function BuilderPage() {
 
   return (
     <div className="space-y-5 pb-24 lg:pb-8">
+      <Button size="sm" variant="secondary" onClick={() => navigate(-1)}>
+        Back
+      </Button>
       <header>
         <h1 className="section-title text-foreground">PC Builder</h1>
         <p className="mt-2 text-[13px] text-secondary">Create or resume your build, validate compatibility, then add to cart.</p>

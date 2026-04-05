@@ -1,6 +1,7 @@
 import { SlidersHorizontal } from 'lucide-react';
 import { useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Button } from '../components/ui/Button';
 import { useCart } from '../hooks/useCart';
 import { useProducts } from '../hooks/useProducts';
 import { useWishlist } from '../hooks/useWishlist';
@@ -56,6 +57,7 @@ function writeFilters(current: ProductFilters, patch: Partial<ProductFilters>): 
 }
 
 export default function ShopPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = readFilters(searchParams);
   const productsQuery = useProducts(filters);
@@ -94,6 +96,9 @@ export default function ShopPage() {
   return (
     <div className="space-y-6 pb-8 md:space-y-8">
       <header className="space-y-4 border-b border-border pb-4">
+        <Button size="sm" variant="secondary" onClick={() => navigate(-1)}>
+          Back
+        </Button>
         <div className="flex items-end justify-between gap-3">
           <div>
             <h1 className="section-title text-foreground">{title}</h1>

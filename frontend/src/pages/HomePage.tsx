@@ -1,430 +1,215 @@
 import { motion } from 'framer-motion';
-import { BadgeCheck, Cpu, Gamepad2, Laptop, Sparkles, Truck, Wrench } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowRight, BadgeCheck, MessageCircle, ShieldCheck, Truck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ErrorState } from '../components/feedback/ErrorState';
+import { EmptyState } from '../components/feedback/EmptyState';
+import { SkeletonGrid } from '../components/feedback/SkeletonGrid';
+import { ProductGrid } from '../components/ui/ProductGrid';
 import { Button } from '../components/ui/Button';
-import { formatTzs } from '../lib/currency';
+import { useCart } from '../hooks/useCart';
+import { useProducts } from '../hooks/useProducts';
+import { useWishlist } from '../hooks/useWishlist';
 import { fadeInUp, staggerContainer } from '../lib/motion';
-import { getFixtureProducts } from '../fixtures/products';
-import { getProductImage } from '../utils/imageFallback';
-import { cn } from '../lib/cn';
 
-type Spotlight = {
-  x: number;
-  y: number;
-};
-
-type FeaturedBuild = {
-  name: string;
-  spec: string;
-  price: number;
-  href: string;
-  productImage: string;
-  tone: 'blue' | 'purple' | 'cyan' | 'gold';
-};
-
-const shortcutLinks = [
-  { label: 'Gaming PCs', href: '/shop?type=desktop', icon: Gamepad2 },
-  { label: 'Laptops', href: '/shop?type=laptop', icon: Laptop },
-  { label: 'Components', href: '/shop?type=component', icon: Cpu }
+const categoryShortcuts = [
+  { label: 'Gaming Laptops', href: '/shop?type=laptop' },
+  { label: 'Gaming Desktops', href: '/shop?type=desktop' },
+  { label: 'Accessories', href: '/shop?type=accessory' },
+  { label: 'Custom PC Build', href: '/builder' }
 ] as const;
 
-const valueBlocks = [
-  { title: 'Fast Delivery', text: 'Dar es Salaam priority, nationwide follow-through.', icon: Truck },
-  { title: 'Expert Builds', text: 'Compatibility checked before quote approval.', icon: Wrench },
-  { title: 'Verified Parts', text: 'Curated stock with clear condition tags.', icon: BadgeCheck },
-  { title: 'WhatsApp Support', text: 'Human help when decisions need context.', icon: Sparkles }
+const trustSignals = [
+  { title: 'Genuine Products', icon: BadgeCheck },
+  { title: 'Warranty', icon: ShieldCheck },
+  { title: 'Dar es Salaam Delivery', icon: Truck },
+  { title: 'WhatsApp Support', icon: MessageCircle }
 ] as const;
-
-function toneClass(tone: FeaturedBuild['tone']): string {
-  switch (tone) {
-    case 'blue':
-      return 'from-cyan-500/20 via-sky-500/10 to-transparent';
-    case 'purple':
-      return 'from-violet-500/20 via-fuchsia-500/10 to-transparent';
-    case 'cyan':
-      return 'from-cyan-400/20 via-cyan-500/10 to-transparent';
-    case 'gold':
-      return 'from-amber-400/20 via-orange-400/10 to-transparent';
-  }
-}
-
-function buildFeaturedBuilds(): FeaturedBuild[] {
-  const products = getFixtureProducts();
-  const desktop = products.find((product) => product.product_type === 'desktop');
-  const laptop = products.find((product) => product.product_type === 'laptop');
-  const component = products.find((product) => product.product_type === 'component');
-  const accessory = products.find((product) => product.product_type === 'accessory');
-
-  return [
-    {
-      name: 'Titan 4070',
-      spec: 'RTX 4070 • 32GB DDR5',
-      price: desktop?.estimated_price_tzs || 3450000,
-      href: desktop ? `/products/${desktop.slug}` : '/builder',
-      productImage: desktop ? getProductImage(desktop) : '/placeholders/desktop.svg',
-      tone: 'blue'
-    },
-    {
-      name: 'A16 4060',
-      spec: 'RTX 4060 • 165Hz panel',
-      price: laptop?.estimated_price_tzs || 2890000,
-      href: laptop ? `/products/${laptop.slug}` : '/builder',
-      productImage: laptop ? getProductImage(laptop) : '/placeholders/laptop.svg',
-      tone: 'purple'
-    },
-    {
-      name: '4070 Super Core',
-      spec: 'GPU upgrade • 1440p ready',
-      price: component?.estimated_price_tzs || 1850000,
-      href: component ? `/products/${component.slug}` : '/builder',
-      productImage: component ? getProductImage(component) : '/placeholders/component.svg',
-      tone: 'cyan'
-    },
-    {
-      name: 'Vision 27',
-      spec: '27" QHD • 165Hz',
-      price: accessory?.estimated_price_tzs || 520000,
-      href: accessory ? `/products/${accessory.slug}` : '/builder',
-      productImage: accessory ? getProductImage(accessory) : '/placeholders/accessory.svg',
-      tone: 'gold'
-    }
-  ];
-}
-
-function FeaturedBuildCard({ build }: { build: FeaturedBuild }) {
-  return (
-    <motion.div
-      whileHover={{ y: -6, scale: 1.01 }}
-      transition={{ type: 'spring', stiffness: 280, damping: 26 }}
-      className="group relative overflow-hidden border border-border bg-surface"
-    >
-      <div className={cn('pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition duration-300 group-hover:opacity-100', toneClass(build.tone))} />
-      <Link to={build.href} className="relative block">
-        <div className="relative aspect-[4/5] overflow-hidden bg-background">
-          <img
-            src={build.productImage}
-            alt={build.name}
-            loading="lazy"
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.05]"
-          />
-          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-background to-transparent" />
-          <div className="absolute left-4 top-4 inline-flex items-center rounded-full border border-border bg-background/80 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-secondary backdrop-blur">
-            Featured Build
-          </div>
-        </div>
-
-        <div className="space-y-2 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="text-[16px] font-medium text-foreground">{build.name}</h3>
-            <span className="font-mono text-[14px] text-foreground">{formatTzs(build.price)}</span>
-          </div>
-          <p className="text-[12px] text-secondary">{build.spec}</p>
-          <p className="text-[11px] uppercase tracking-[0.14em] text-muted">Open build</p>
-        </div>
-      </Link>
-    </motion.div>
-  );
-}
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const heroRef = useRef<HTMLElement | null>(null);
-  const featuredBuilds = useMemo(() => buildFeaturedBuilds(), []);
-  const [spotlight, setSpotlight] = useState<Spotlight>({ x: 68, y: 24 });
+  const productsQuery = useProducts({
+    page: 1,
+    limit: 8,
+    sort: 'newest'
+  });
+  const { addItem } = useCart();
+  const { isInWishlist, toggle } = useWishlist();
 
-  useEffect(() => {
-    const element = heroRef.current;
-    if (!element) return;
-
-    const handlePointerMove = (event: PointerEvent) => {
-      const rect = element.getBoundingClientRect();
-      const nextX = ((event.clientX - rect.left) / rect.width) * 100;
-      const nextY = ((event.clientY - rect.top) / rect.height) * 100;
-      setSpotlight({
-        x: Math.min(100, Math.max(0, nextX)),
-        y: Math.min(100, Math.max(0, nextY))
-      });
-    };
-
-    const handlePointerLeave = () => setSpotlight({ x: 68, y: 24 });
-
-    element.addEventListener('pointermove', handlePointerMove);
-    element.addEventListener('pointerleave', handlePointerLeave);
-
-    return () => {
-      element.removeEventListener('pointermove', handlePointerMove);
-      element.removeEventListener('pointerleave', handlePointerLeave);
-    };
-  }, []);
-
-  const scrollToFeaturedBuilds = () => {
-    document.getElementById('featured-builds')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  const products = productsQuery.data?.data.items || [];
+  const addingProductId = addItem.isPending ? (addItem.variables?.product_id ?? null) : null;
 
   return (
-    <div className="space-y-14 pb-10 md:space-y-20">
-      <section
-        ref={heroRef}
-        className="relative flex min-h-[100svh] items-center overflow-hidden border border-border bg-background px-4 py-6 sm:px-6 lg:px-8 -mx-4 -mt-6 sm:-mx-6 sm:-mt-6 lg:-mx-8 lg:-mt-6"
-      >
-        <div
-          className="pointer-events-none absolute inset-0 transition-[background-position] duration-150 ease-out"
-          style={{
-            backgroundImage: `radial-gradient(circle at ${spotlight.x}% ${spotlight.y}%, rgba(59, 130, 246, 0.18), transparent 30%), radial-gradient(circle at ${100 - spotlight.x}% ${100 - spotlight.y}%, rgba(168, 85, 247, 0.16), transparent 26%), linear-gradient(180deg, rgba(4,6,10,0.98) 0%, rgba(7,10,16,1) 100%)`
-          }}
-        />
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25 [mask-image:radial-gradient(circle_at_center,black,transparent_78%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_35%,rgba(0,0,0,0.34)_100%)]" />
-
-        <div className="relative mx-auto grid w-full max-w-[1440px] items-center gap-10 lg:grid-cols-[1fr_520px] lg:gap-12">
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="max-w-2xl"
-          >
-            <motion.p variants={fadeInUp} className="label-11 text-secondary">
-              Premium gaming hardware
-            </motion.p>
-            <motion.h1
-              variants={fadeInUp}
-              className="mt-4 max-w-xl text-[42px] font-light leading-[0.98] tracking-[-0.04em] text-foreground sm:text-[56px] lg:text-[72px]"
-            >
-              Build Power.
-            </motion.h1>
-            <motion.p variants={fadeInUp} className="mt-5 max-w-lg text-[13px] leading-6 text-secondary sm:text-[14px]">
-              Engineered systems, curated parts, and WhatsApp support from first click to final quote.
-            </motion.p>
-
-            <motion.div variants={fadeInUp} className="mt-7 flex flex-wrap gap-3">
-              <Button size="lg" onClick={() => navigate('/builder')} className="min-w-[160px]">
-                Build Your PC
-              </Button>
-              <Button size="lg" variant="secondary" onClick={scrollToFeaturedBuilds} className="min-w-[160px]">
-                Explore Builds
-              </Button>
-            </motion.div>
-
-            <motion.div variants={fadeInUp} className="mt-8 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted">
-              <span className="h-px w-10 bg-border" />
-              <span>Dar es Salaam • Tanzania • WhatsApp-first</span>
-            </motion.div>
-          </motion.div>
-
-          <motion.div
+    <div className="space-y-20 pb-24 md:space-y-28">
+      {/* HERO SECTION */}
+      <section className="grid gap-8 md:grid-cols-2 md:items-center md:gap-12">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="space-y-6"
+        >
+          <motion.h1
             variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="relative mx-auto w-full max-w-[520px]"
-            style={{
-              transform: 'translate3d(0, 0, 0)'
-            }}
+            className="text-[44px] font-light leading-[1.1] tracking-[-0.02em] text-foreground sm:text-[56px] lg:text-[72px]"
           >
-            <div
-              className="absolute inset-0 rounded-[28px] bg-gradient-to-br from-cyan-500/12 via-violet-500/10 to-transparent blur-3xl"
-              style={{ transform: 'translate3d(0, 0, 0)' }}
-            />
-            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div>
-                  <p className="label-11 text-secondary">Cinematic build</p>
-                  <p className="mt-1 text-[14px] font-medium text-foreground">Featured system preview</p>
-                </div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-secondary">
-                  <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.9)]" />
-                  Live ready
-                </span>
-              </div>
+            Serious tech,
+            <br />
+            done right.
+          </motion.h1>
 
-              <div className="relative mt-4 overflow-hidden rounded-[24px] border border-white/10 bg-[#071019] p-3">
-                <motion.img
-                  src={featuredBuilds[0].productImage}
-                  alt={featuredBuilds[0].name}
-                  loading="lazy"
-                  className="h-[340px] w-full object-cover object-center opacity-90"
-                  animate={{ y: [0, -6, 0] }}
-                  transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{
-                    transform: `translate3d(${(spotlight.x - 50) / 18}px, ${(spotlight.y - 50) / 20}px, 0)`
-                  }}
-                />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_35%,rgba(4,6,10,0.64)_100%)]" />
-                <div className="absolute bottom-3 left-3 right-3 grid gap-2 sm:grid-cols-3">
-                  {[
-                    'GPU first',
-                    'Quiet thermals',
-                    'Quote ready'
-                  ].map((item) => (
-                    <div key={item} className="rounded-full border border-white/10 bg-black/40 px-3 py-2 text-center text-[11px] text-secondary backdrop-blur">
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
+          <motion.p
+            variants={fadeInUp}
+            className="max-w-xl text-[15px] leading-7 text-secondary sm:text-[16px]"
+          >
+            Premium gaming systems curated and ready to ship.
+          </motion.p>
 
-              <div className="mt-4 grid gap-px overflow-hidden rounded-[20px] border border-white/10 bg-white/10 text-[12px]">
-                <div className="grid grid-cols-[1fr_auto] items-center bg-background/95 px-4 py-3">
-                  <span className="text-secondary">Price</span>
-                  <span className="font-mono text-foreground">{formatTzs(featuredBuilds[0].price)}</span>
-                </div>
-                <div className="grid grid-cols-[1fr_auto] items-center bg-background/95 px-4 py-3">
-                  <span className="text-secondary">Experience</span>
-                  <span className="text-foreground">Premium / Fast / Responsive</span>
-                </div>
-              </div>
-            </div>
+          <motion.div variants={fadeInUp} className="flex flex-wrap gap-3">
+            <Button size="lg" onClick={() => navigate('/shop')}>
+              Explore products
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Button size="lg" variant="secondary" onClick={() => navigate('/builder')}>
+              Build your PC
+            </Button>
           </motion.div>
-        </div>
-
-      </section>
-
-      <motion.section
-        id="featured-builds"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        className="space-y-5"
-      >
-        <motion.div variants={fadeInUp} className="flex items-end justify-between gap-3">
-          <div>
-            <p className="label-11 text-secondary">Featured Builds</p>
-            <h2 className="mt-2 text-[22px] font-light tracking-[-0.03em] text-foreground sm:text-[28px]">Visual-first presets</h2>
-          </div>
-          <Link to="/builder" className="label-11 text-[11px] font-normal text-secondary transition hover:text-foreground">
-            Open Builder
-          </Link>
         </motion.div>
 
-        <div className="grid auto-cols-[minmax(280px,1fr)] grid-flow-col gap-4 overflow-x-auto pb-2 md:grid-flow-row md:grid-cols-2 xl:grid-cols-4">
-          {featuredBuilds.map((build, index) => (
-            <motion.div key={build.name} variants={fadeInUp} transition={{ delay: index * 0.04 }}>
-              <FeaturedBuildCard build={build} />
+        <motion.div
+          variants={fadeInUp}
+          className="relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-slate-900/30 to-black/30 h-80"
+        >
+          <img
+            src="/hero/gaming-pc-minimal.jpg"
+            alt="Gaming setup"
+            className="h-full w-full object-cover"
+          />
+        </motion.div>
+      </section>
+
+      {/* FEATURED PRODUCTS */}
+      <section className="space-y-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center">
+          <p className="text-[12px] font-medium tracking-[0.1em] text-secondary uppercase">Featured</p>
+          <h2 className="mt-2 text-[32px] font-light text-foreground">Latest listings</h2>
+        </motion.div>
+
+        {productsQuery.isLoading ? <SkeletonGrid count={8} /> : null}
+        {productsQuery.isError ? (
+          <ErrorState
+            title="Could not load products"
+            description="Please check your connection and try again."
+            onRetry={() => productsQuery.refetch()}
+          />
+        ) : null}
+        {!productsQuery.isLoading && !productsQuery.isError && products.length === 0 ? (
+          <EmptyState
+            title="No products live yet"
+            description="New products will appear here as soon as they are posted."
+          />
+        ) : null}
+
+        {!productsQuery.isLoading && !productsQuery.isError && products.length > 0 ? (
+          <ProductGrid
+            products={products}
+            isInWishlist={isInWishlist}
+            onToggleWishlist={(product) => toggle({ id: product.id, slug: product.slug, title: product.title })}
+            onQuickAdd={(productId) => addItem.mutate({ item_type: 'product', product_id: productId, quantity: 1 })}
+            addingProductId={addingProductId}
+          />
+        ) : null}
+      </section>
+
+      {/* CATEGORY SHORTCUTS */}
+      <section className="space-y-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center">
+          <p className="text-[12px] font-medium tracking-[0.1em] text-secondary uppercase">Shop by</p>
+          <h2 className="mt-2 text-[32px] font-light text-foreground">Category</h2>
+        </motion.div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {categoryShortcuts.map((item, idx) => (
+            <motion.div
+              key={item.label}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+            >
+              <Link
+                to={item.href}
+                className="group relative flex h-32 items-end justify-start overflow-hidden rounded-xl border border-border/20 bg-gradient-to-tr from-slate-900/40 to-slate-900/10 p-6 transition duration-300 hover:border-border/40 hover:bg-gradient-to-tr hover:from-slate-850 hover:to-slate-900/20"
+              >
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 pointer-events-none" />
+                <div className="relative">
+                  <h3 className="text-[16px] font-medium text-foreground">{item.label}</h3>
+                  <div className="mt-2 flex items-center gap-1.5 text-[12px] text-accent opacity-0 transition group-hover:opacity-100">
+                    Explore
+                    <ArrowRight className="h-3 w-3" />
+                  </div>
+                </div>
+              </Link>
             </motion.div>
           ))}
         </div>
-      </motion.section>
+      </section>
 
-      <motion.section
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.25 }}
-        className="grid gap-6 border border-border bg-surface p-5 lg:grid-cols-[1fr_420px] lg:p-7"
-      >
-        <motion.div variants={fadeInUp} className="max-w-xl">
-          <p className="label-11 text-secondary">PC Builder</p>
-          <h2 className="mt-3 text-[26px] font-light tracking-[-0.04em] text-foreground sm:text-[34px]">
-            Design Your Machine
-          </h2>
-          <p className="mt-3 max-w-lg text-[13px] leading-6 text-secondary">
-            Choose a direction, validate compatibility, and move straight into a guided quote flow.
-          </p>
-          <div className="mt-6">
-            <Button size="lg" onClick={() => navigate('/builder')}>
-              Start Building
+      {/* TRUST STRIP */}
+      <section>
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="border-t border-b border-border/20 py-12"
+        >
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {trustSignals.map((signal, idx) => {
+              const Icon = signal.icon;
+              return (
+                <motion.div
+                  key={signal.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-5 w-5 text-accent" />
+                    <h3 className="text-[14px] font-medium text-foreground">{signal.title}</h3>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col items-center gap-6 text-center"
+        >
+          <div className="space-y-3">
+            <h2 className="text-[40px] font-light text-foreground">Ready?</h2>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button size="lg" onClick={() => navigate('/shop')}>
+              Explore products
             </Button>
-          </div>
-        </motion.div>
-
-        <motion.div variants={fadeInUp} className="relative min-h-[260px] overflow-hidden rounded-[24px] border border-border bg-background p-5">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.12),transparent_32%)]" />
-          <div className="relative grid h-full gap-3 sm:grid-cols-2">
-            {[
-              { label: 'CPU', tone: 'bg-cyan-500/15 text-cyan-300', offset: 'sm:translate-y-6' },
-              { label: 'GPU', tone: 'bg-violet-500/15 text-violet-300', offset: 'sm:-translate-y-2' },
-              { label: 'RAM', tone: 'bg-sky-500/15 text-sky-300', offset: 'sm:translate-y-3' },
-              { label: 'Case', tone: 'bg-white/8 text-secondary', offset: 'sm:-translate-y-6' }
-            ].map((part, index) => (
-              <motion.div
-                key={part.label}
-                animate={{ y: [0, -4, 0], opacity: [0.9, 1, 0.9] }}
-                transition={{ duration: 6 + index, repeat: Infinity, ease: 'easeInOut' }}
-                className={cn('flex items-center justify-between rounded-[18px] border border-border bg-surface px-4 py-4 text-[12px]', part.offset)}
-              >
-                <span className={cn('rounded-full px-3 py-1 font-medium', part.tone)}>{part.label}</span>
-                <span className="text-muted">assembling</span>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </motion.section>
-
-      <motion.section
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        className="grid grid-cols-1 gap-3 sm:grid-cols-3"
-      >
-        {shortcutLinks.map((item) => {
-          const Icon = item.icon;
-          return (
-            <motion.div key={item.label} variants={fadeInUp} whileHover={{ y: -4, scale: 1.01 }} transition={{ type: 'spring', stiffness: 260, damping: 24 }}>
-              <Link
-                to={item.href}
-                className="group flex min-h-24 flex-col justify-between border border-border bg-surface p-4 transition hover:border-accent/50 hover:bg-surfaceElevated"
-              >
-                <Icon className="h-5 w-5 text-secondary transition group-hover:text-accent" />
-                <span className="mt-6 text-[14px] font-medium text-foreground">{item.label}</span>
-              </Link>
-            </motion.div>
-          );
-        })}
-      </motion.section>
-
-      <motion.section
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
-      >
-        {valueBlocks.map((block, index) => {
-          const Icon = block.icon;
-          return (
-            <motion.div
-              key={block.title}
-              variants={fadeInUp}
-              transition={{ delay: index * 0.04 }}
-              className="border border-border bg-surface p-4"
+            <a
+              href="https://wa.me/255700000000"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-12 items-center rounded-lg bg-success px-6 text-[14px] font-medium text-primaryForeground transition hover:opacity-90"
             >
-              <div className="flex items-start gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-accent">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-[13px] font-medium text-foreground">{block.title}</p>
-                  <p className="mt-1 text-[12px] leading-5 text-secondary">{block.text}</p>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
-      </motion.section>
-
-      <motion.section
-        variants={fadeInUp}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.25 }}
-        className="relative overflow-hidden border border-border bg-surface px-5 py-10 sm:px-8"
-      >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.14),transparent_30%)]" />
-        <div className="relative flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-          <div>
-            <p className="label-11 text-secondary">Final Call</p>
-            <h2 className="mt-3 text-[28px] font-light tracking-[-0.04em] text-foreground sm:text-[38px]">
-              Ready to Upgrade?
-            </h2>
+              Chat on WhatsApp
+            </a>
           </div>
-          <Button size="lg" onClick={() => navigate('/builder')}>
-            Start Now
-          </Button>
-        </div>
-      </motion.section>
+        </motion.div>
+      </section>
     </div>
   );
 }

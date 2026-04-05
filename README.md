@@ -1,6 +1,12 @@
 # ys_store
 this is the comprehensive e commerce website for ys store
 
+## Current App Status
+
+For a clear, up-to-date list of what the app can do and cannot do yet, see:
+
+- [docs/APP_CAPABILITIES_AND_LIMITATIONS.md](docs/APP_CAPABILITIES_AND_LIMITATIONS.md)
+
 Security note: do not store credentials in this repository. Use environment variables and a local .env file that is git-ignored.
 
 ## Frontend to Backend Connection

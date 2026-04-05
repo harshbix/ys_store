@@ -1,5 +1,7 @@
 import { ok, created } from '../../utils/apiResponse.js';
 import {
+  registerCustomer,
+  loginCustomer,
   startOtp,
   confirmOtp,
   getWishlist,
@@ -8,6 +10,24 @@ import {
   getPersistentCart,
   syncPersistentCart
 } from './service.js';
+
+export async function registerController(req, res, next) {
+  try {
+    const data = await registerCustomer(req.body.full_name, req.body.email, req.body.password);
+    return created(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function loginController(req, res, next) {
+  try {
+    const data = await loginCustomer(req.body.email, req.body.password);
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
 
 export async function requestOtpController(req, res, next) {
   try {

@@ -2,15 +2,15 @@ export interface CustomerAuthState {
   accessToken: string | null;
   customerId: string | null;
   email: string | null;
-  challengeId: string | null;
 }
 
-export interface OtpRequestInput {
+export interface RegisterInput {
+  full_name: string;
   email: string;
+  password: string;
 }
 
-export interface OtpVerifyInput {
+export interface PasswordLoginInput {
   email: string;
-  challenge_id: string;
-  code: string;
+  password: string;
 }

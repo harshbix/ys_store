@@ -14,6 +14,9 @@ const CartPage = lazy(() => import('../pages/CartPage'));
 const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
 const WishlistPage = lazy(() => import('../pages/WishlistPage'));
 const LoginPage = lazy(() => import('../pages/LoginPage'));
+const RegisterPage = lazy(() => import('../pages/RegisterPage'));
+const BlogPage = lazy(() => import('../pages/BlogPage'));
+const ContactPage = lazy(() => import('../pages/ContactPage'));
 const AdminLoginPage = lazy(() => import('../pages/AdminLoginPage'));
 const AdminDashboardPage = lazy(() => import('../pages/AdminDashboardPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
@@ -71,6 +74,9 @@ export const router = createBrowserRouter([
       { path: 'checkout', element: <PageBoundary><CheckoutPage /></PageBoundary> },
       { path: 'wishlist', element: <PageBoundary><WishlistPage /></PageBoundary> },
       { path: 'login', element: <PageBoundary><LoginPage /></PageBoundary> },
+      { path: 'register', element: <PageBoundary><RegisterPage /></PageBoundary> },
+      { path: 'blog', element: <PageBoundary><BlogPage /></PageBoundary> },
+      { path: 'contact', element: <PageBoundary><ContactPage /></PageBoundary> },
       { path: 'admin/login', element: <PageBoundary><AdminLoginPage /></PageBoundary> },
       {
         path: 'admin',

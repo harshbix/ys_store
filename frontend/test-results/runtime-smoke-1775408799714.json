@@ -1,0 +1,66 @@
+{
+  "startedAt": "2026-04-05T17:05:37.974Z",
+  "baseUrl": "http://127.0.0.1:4174",
+  "apiUrl": "https://ys-store-h1ec.onrender.com/api",
+  "flows": {
+    "auth": {
+      "pass": false,
+      "failureCause": "frontend bug",
+      "checks": [
+        {
+          "name": "redirected to login from cart intent",
+          "pass": true,
+          "evidence": {
+            "url": "http://127.0.0.1:4174/login"
+          }
+        },
+        {
+          "name": "return target stored as /cart",
+          "pass": true,
+          "evidence": {
+            "state": {
+              "from": "/shop",
+              "returnTo": "/cart"
+            }
+          }
+        },
+        {
+          "name": "flow execution",
+          "pass": false,
+          "evidence": {
+            "error": "page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\""
+          }
+        }
+      ]
+    },
+    "adminPosting": {
+      "pass": false,
+      "failureCause": "frontend bug",
+      "checks": [
+        {
+          "name": "admin credentials available",
+          "pass": true,
+          "evidence": {
+            "hasEmail": true,
+            "hasPassword": true
+          }
+        },
+        {
+          "name": "flow execution",
+          "pass": false,
+          "evidence": {
+            "error": "page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\""
+          }
+        }
+      ]
+    }
+  },
+  "completedAt": "2026-04-05T17:06:39.714Z",
+  "summary": {
+    "passedFlows": [],
+    "failedFlows": [
+      "auth",
+      "adminPosting"
+    ]
+  }
+}

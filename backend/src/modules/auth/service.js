@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import {
+  registerWithPassword,
+  loginWithPassword,
   requestOtp,
   verifyOtp,
   getWishlistByCustomer,
@@ -17,6 +19,58 @@ import {
   markCartExpired
 } from './repository.js';
 import { env } from '../../config/env.js';
+
+function issueCustomerToken(customerAuthId) {
+  return jwt.sign({ sub: customerAuthId, type: 'customer' }, env.adminJwtSecret, { expiresIn: '30d' });
+}
+
+function authPayloadFromUser(user, challengeId = null) {
+  return {
+    access_token: issueCustomerToken(user.id),
+    customer_id: user.id,
+    challenge_id: challengeId
+  };
+}
+
+export async function registerCustomer(fullName, email, password) {
+  const created = await registerWithPassword(email, password, fullName);
+
+  if (created.error) {
+    const providerStatus = Number(created.error.status);
+    const providerCode = String(created.error.code || '').toLowerCase();
+
+    let status = providerStatus === 422 ? 409 : 400;
+    if (providerStatus === 429 || providerCode === 'over_email_send_rate_limit') {
+      status = 429;
+    }
+
+    const message = status === 429
+      ? 'Too many account requests right now. Please try again later.'
+      : 'Could not create account with this email.';
+
+    throw {
+      status,
+      code: 'register_failed',
+      message
+    };
+  }
+
+  const user = created.data?.user;
+  if (!user?.id) {
+    throw { status: 500, code: 'register_failed', message: 'Account created but login session could not start.' };
+  }
+
+  return authPayloadFromUser(user, null);
+}
+
+export async function loginCustomer(email, password) {
+  const result = await loginWithPassword(email, password);
+  if (result.error || !result.data?.user?.id) {
+    throw { status: 401, code: 'login_failed', message: 'Invalid email or password.' };
+  }
+
+  return authPayloadFromUser(result.data.user, null);
+}
 
 export async function startOtp(email) {
   const result = await requestOtp(email);
@@ -55,8 +109,7 @@ export async function confirmOtp(challengeId, code, email) {
   const result = await verifyOtp(email, code);
   if (result.error) throw { status: 401, code: 'otp_verify_failed', message: 'Invalid or expired verification code' };
 
-  const token = jwt.sign({ sub: result.data.user.id, type: 'customer' }, env.adminJwtSecret, { expiresIn: '30d' });
-  return { access_token: token, customer_id: result.data.user.id, challenge_id: challengeId };
+  return authPayloadFromUser(result.data.user, challengeId);
 }
 
 async function ensureWishlist(customerAuthId) {

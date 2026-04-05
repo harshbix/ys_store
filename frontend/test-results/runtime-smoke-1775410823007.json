@@ -1,0 +1,436 @@
+{
+  "startedAt": "2026-04-05T17:40:06.111Z",
+  "baseUrl": "http://127.0.0.1:5173",
+  "apiUrl": "https://ys-store-h1ec.onrender.com/api",
+  "flows": {
+    "auth": {
+      "pass": false,
+      "failureCause": "environment/config issue",
+      "checks": [
+        {
+          "name": "redirected to login from cart intent",
+          "pass": true,
+          "evidence": {
+            "url": "http://127.0.0.1:5173/login"
+          }
+        },
+        {
+          "name": "return target stored as /cart",
+          "pass": true,
+          "evidence": {
+            "state": {
+              "from": "/shop",
+              "returnTo": "/cart"
+            }
+          }
+        },
+        {
+          "name": "OTP request receives API response",
+          "pass": true,
+          "evidence": {
+            "requestFired": true,
+            "failed": null
+          }
+        },
+        {
+          "name": "OTP request succeeds",
+          "pass": false,
+          "evidence": {
+            "status": 429,
+            "challengeIdPresent": false
+          }
+        }
+      ],
+      "network": {
+        "request": {
+          "url": "https://ys-store-h1ec.onrender.com/api/auth/request-otp",
+          "origin": "https://ys-store-h1ec.onrender.com",
+          "routeKind": "live-backend-direct",
+          "method": "POST",
+          "resourceType": "fetch",
+          "headers": {
+            "sec-ch-ua-platform": "\"Windows\"",
+            "referer": "http://127.0.0.1:5173/",
+            "x-guest-session": "guest_live_98b4f445ab28437d9d8c",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36",
+            "sec-ch-ua": "\"HeadlessChrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0"
+          },
+          "cookies": "",
+          "bodyText": "{\"email\":\"smoke.test+1775410806480@gmail.com\"}",
+          "bodyJson": {
+            "email": "smoke.test+1775410806480@gmail.com"
+          }
+        },
+        "response": {
+          "url": "https://ys-store-h1ec.onrender.com/api/auth/request-otp",
+          "status": 429,
+          "ok": false,
+          "headers": {
+            "x-request-id": "1ecf8d28-ab7c-4f5c-a8ce-709cb02f888c",
+            "ratelimit-policy": "10;w=60",
+            "content-encoding": "br",
+            "cf-cache-status": "DYNAMIC",
+            "etag": "W/\"bd-zVYRWdpkwXRpKYtMmBDdUq4+xgU\"",
+            "x-content-type-options": "nosniff",
+            "alt-svc": "h3=\":443\"; ma=86400",
+            "rndr-id": "e1f8e592-f3c2-479b",
+            "x-render-origin-server": "Render",
+            "server-timing": "cfExtPri",
+            "content-type": "application/json; charset=utf-8",
+            "priority": "u=1,i",
+            "referrer-policy": "no-referrer",
+            "content-length": "149",
+            "x-xss-protection": "0",
+            "origin-agent-cluster": "?1",
+            "server": "cloudflare",
+            "ratelimit-remaining": "9",
+            "ratelimit-reset": "60",
+            "x-permitted-cross-domain-policies": "none",
+            "date": "Sun, 05 Apr 2026 17:40:08 GMT",
+            "vary": "Origin, Accept-Encoding",
+            "x-frame-options": "SAMEORIGIN",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+            "x-dns-prefetch-control": "off",
+            "cross-origin-opener-policy": "same-origin",
+            "cross-origin-resource-policy": "same-origin",
+            "access-control-allow-credentials": "true",
+            "ratelimit-limit": "10",
+            "x-download-options": "noopen",
+            "cf-ray": "9e7a560e5dc6dea2-DAR",
+            "access-control-allow-origin": "http://127.0.0.1:5173"
+          },
+          "bodyText": "{\"success\":false,\"error_code\":\"otp_request_failed\",\"message\":\"Too many OTP requests. Please try again later.\",\"details\":{\"details\":null,\"request_id\":\"1ecf8d28-ab7c-4f5c-a8ce-709cb02f888c\"}}",
+          "bodyJson": {
+            "success": false,
+            "error_code": "otp_request_failed",
+            "message": "Too many OTP requests. Please try again later.",
+            "details": {
+              "details": null,
+              "request_id": "1ecf8d28-ab7c-4f5c-a8ce-709cb02f888c"
+            }
+          }
+        },
+        "contextCookies": []
+      }
+    },
+    "adminPosting": {
+      "pass": false,
+      "failureCause": "frontend bug",
+      "checks": [
+        {
+          "name": "admin credentials available",
+          "pass": true,
+          "evidence": {
+            "hasEmail": true,
+            "hasPassword": true
+          }
+        },
+        {
+          "name": "admin login receives API response",
+          "pass": true,
+          "evidence": {
+            "requestFired": true,
+            "failed": null
+          }
+        },
+        {
+          "name": "admin login succeeds",
+          "pass": true,
+          "evidence": {
+            "status": 200,
+            "body": {
+              "success": true,
+              "message": "OK",
+              "data": {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYjJjZTljMy0xN2M5LTQ2N2EtOGUyMy02NjAwMGYyNzQxYzYiLCJlbWFpbCI6ImtpZGFiaXhzb25AZ21haWwuY29tIiwicm9sZSI6Im93bmVyIiwiaWF0IjoxNzc1NDEwODA5LCJleHAiOjE3NzYwMTU2MDl9.xHTzs44oDxpEEeg7wj_bg-22xUNGo41WxPQjbKcs1LY",
+                "admin": {
+                  "id": "cb2ce9c3-17c9-467a-8e23-66000f2741c6",
+                  "email": "kidabixson@gmail.com",
+                  "full_name": "Owner",
+                  "role": "owner",
+                  "is_active": true,
+                  "last_login_at": null,
+                  "created_at": "2026-04-03T15:43:29.826437+00:00",
+                  "updated_at": "2026-04-03T15:43:29.826437+00:00"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "product post receives API response",
+          "pass": true,
+          "evidence": {
+            "requestFired": true,
+            "failed": null
+          }
+        },
+        {
+          "name": "product post succeeds",
+          "pass": true,
+          "evidence": {
+            "status": 201,
+            "productIdPresent": true,
+            "code": null,
+            "message": null
+          }
+        },
+        {
+          "name": "upload progress appears",
+          "pass": true,
+          "evidence": {
+            "progressVisible": true
+          }
+        },
+        {
+          "name": "upload flow completes before navigation",
+          "pass": true,
+          "evidence": {
+            "completed": true
+          }
+        },
+        {
+          "name": "newly posted product is live on API",
+          "pass": true,
+          "evidence": {
+            "status": 200,
+            "slug": "runtime-smoke-product-1775410809943",
+            "mediaCount": 1
+          }
+        },
+        {
+          "name": "new product appears in shop list",
+          "pass": false,
+          "evidence": {
+            "title": "Runtime Smoke Product 1775410809943"
+          }
+        },
+        {
+          "name": "product detail shows correct uploaded image",
+          "pass": true,
+          "evidence": {
+            "detailImageSrc": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/products/968d8241-d8cc-4e36-8095-4f014cda2247/full/1775410815176-runtime-smoke-upload-1775410809943.png",
+            "mediaSample": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/products/968d8241-d8cc-4e36-8095-4f014cda2247/original/1775410813099-runtime-smoke-upload-1775410809943.png"
+          }
+        }
+      ],
+      "loginNetwork": {
+        "request": {
+          "url": "https://ys-store-h1ec.onrender.com/api/admin/login",
+          "origin": "https://ys-store-h1ec.onrender.com",
+          "routeKind": "live-backend-direct",
+          "method": "POST",
+          "resourceType": "fetch",
+          "headers": {
+            "sec-ch-ua-platform": "\"Windows\"",
+            "referer": "http://127.0.0.1:5173/",
+            "x-guest-session": "guest_live_98b4f445ab28437d9d8c",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36",
+            "sec-ch-ua": "\"HeadlessChrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0"
+          },
+          "cookies": "",
+          "bodyText": "{\"email\":\"kidabixson@gmail.com\",\"password\":\"12345678\"}",
+          "bodyJson": {
+            "email": "kidabixson@gmail.com",
+            "password": "12345678"
+          }
+        },
+        "response": {
+          "url": "https://ys-store-h1ec.onrender.com/api/admin/login",
+          "status": 200,
+          "ok": true,
+          "headers": {
+            "x-request-id": "d30eb3d4-8d62-4f0f-9966-6aa159e4b55a",
+            "ratelimit-policy": "8;w=60",
+            "content-encoding": "br",
+            "cf-cache-status": "DYNAMIC",
+            "etag": "W/\"22a-BZQW2+0F0ECwitGlqqP4IzMmVa0\"",
+            "x-content-type-options": "nosniff",
+            "alt-svc": "h3=\":443\"; ma=86400",
+            "rndr-id": "bc6673dd-0e03-452d",
+            "x-render-origin-server": "Render",
+            "server-timing": "cfExtPri",
+            "content-type": "application/json; charset=utf-8",
+            "priority": "u=1,i",
+            "referrer-policy": "no-referrer",
+            "content-length": "437",
+            "x-xss-protection": "0",
+            "origin-agent-cluster": "?1",
+            "server": "cloudflare",
+            "ratelimit-remaining": "7",
+            "ratelimit-reset": "60",
+            "x-permitted-cross-domain-policies": "none",
+            "date": "Sun, 05 Apr 2026 17:40:10 GMT",
+            "vary": "Origin, Accept-Encoding",
+            "x-frame-options": "SAMEORIGIN",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+            "x-dns-prefetch-control": "off",
+            "cross-origin-opener-policy": "same-origin",
+            "cross-origin-resource-policy": "same-origin",
+            "access-control-allow-credentials": "true",
+            "ratelimit-limit": "8",
+            "x-download-options": "noopen",
+            "cf-ray": "9e7a5617acb1dea2-DAR",
+            "access-control-allow-origin": "http://127.0.0.1:5173"
+          },
+          "bodyText": "{\"success\":true,\"message\":\"OK\",\"data\":{\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYjJjZTljMy0xN2M5LTQ2N2EtOGUyMy02NjAwMGYyNzQxYzYiLCJlbWFpbCI6ImtpZGFiaXhzb25AZ21haWwuY29tIiwicm9sZSI6Im93bmVyIiwiaWF0IjoxNzc1NDEwODA5LCJleHAiOjE3NzYwMTU2MDl9.xHTzs44oDxpEEeg7wj_bg-22xUNGo41WxPQjbKcs1LY\",\"admin\":{\"id\":\"cb2ce9c3-17c9-467a-8e23-66000f2741c6\",\"email\":\"kidabixson@gmail.com\",\"full_name\":\"Owner\",\"role\":\"owner\",\"is_active\":true,\"last_login_at\":null,\"created_at\":\"2026-04-03T15:43:29.826437+00:00\",\"updated_at\":\"2026-04-03T15:43:29.826437+00:00\"}}}",
+          "bodyJson": {
+            "success": true,
+            "message": "OK",
+            "data": {
+              "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYjJjZTljMy0xN2M5LTQ2N2EtOGUyMy02NjAwMGYyNzQxYzYiLCJlbWFpbCI6ImtpZGFiaXhzb25AZ21haWwuY29tIiwicm9sZSI6Im93bmVyIiwiaWF0IjoxNzc1NDEwODA5LCJleHAiOjE3NzYwMTU2MDl9.xHTzs44oDxpEEeg7wj_bg-22xUNGo41WxPQjbKcs1LY",
+              "admin": {
+                "id": "cb2ce9c3-17c9-467a-8e23-66000f2741c6",
+                "email": "kidabixson@gmail.com",
+                "full_name": "Owner",
+                "role": "owner",
+                "is_active": true,
+                "last_login_at": null,
+                "created_at": "2026-04-03T15:43:29.826437+00:00",
+                "updated_at": "2026-04-03T15:43:29.826437+00:00"
+              }
+            }
+          }
+        },
+        "contextCookies": [
+          {
+            "name": "ys_session",
+            "value": "guest_live_98b4f445ab28437d9d8c",
+            "domain": "ys-store-h1ec.onrender.com",
+            "path": "/",
+            "expires": 1778002809.573119,
+            "httpOnly": true,
+            "secure": true,
+            "sameSite": "None"
+          }
+        ]
+      },
+      "postNetwork": {
+        "request": {
+          "url": "https://ys-store-h1ec.onrender.com/api/admin/products",
+          "origin": "https://ys-store-h1ec.onrender.com",
+          "routeKind": "live-backend-direct",
+          "method": "POST",
+          "resourceType": "fetch",
+          "headers": {
+            "sec-ch-ua-platform": "\"Windows\"",
+            "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYjJjZTljMy0xN2M5LTQ2N2EtOGUyMy02NjAwMGYyNzQxYzYiLCJlbWFpbCI6ImtpZGFiaXhzb25AZ21haWwuY29tIiwicm9sZSI6Im93bmVyIiwiaWF0IjoxNzc1NDEwODA5LCJleHAiOjE3NzYwMTU2MDl9.xHTzs44oDxpEEeg7wj_bg-22xUNGo41WxPQjbKcs1LY",
+            "referer": "http://127.0.0.1:5173/",
+            "sec-ch-ua": "\"HeadlessChrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "sec-ch-ua-mobile": "?0",
+            "x-guest-session": "guest_live_98b4f445ab28437d9d8c",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36",
+            "content-type": "application/json"
+          },
+          "cookies": "",
+          "bodyText": "{\"sku\":\"YS-810130\",\"slug\":\"runtime-smoke-product-1775410809943\",\"title\":\"Runtime Smoke Product 1775410809943\",\"product_type\":\"desktop\",\"brand\":\"Unknown\",\"model_name\":\"Runtime Smoke Product 1775410809943\",\"condition\":\"new\",\"stock_status\":\"in_stock\",\"estimated_price_tzs\":1230000,\"short_description\":\"Core i7, 16GB RAM, 512GB SSD\",\"warranty_text\":null,\"is_visible\":true,\"is_featured\":false,\"featured_tag\":null,\"specs\":[]}",
+          "bodyJson": {
+            "sku": "YS-810130",
+            "slug": "runtime-smoke-product-1775410809943",
+            "title": "Runtime Smoke Product 1775410809943",
+            "product_type": "desktop",
+            "brand": "Unknown",
+            "model_name": "Runtime Smoke Product 1775410809943",
+            "condition": "new",
+            "stock_status": "in_stock",
+            "estimated_price_tzs": 1230000,
+            "short_description": "Core i7, 16GB RAM, 512GB SSD",
+            "warranty_text": null,
+            "is_visible": true,
+            "is_featured": false,
+            "featured_tag": null,
+            "specs": []
+          }
+        },
+        "response": {
+          "url": "https://ys-store-h1ec.onrender.com/api/admin/products",
+          "status": 201,
+          "ok": true,
+          "headers": {
+            "x-request-id": "e4c25696-c430-43e8-8536-a437e394b77f",
+            "content-encoding": "br",
+            "cf-cache-status": "DYNAMIC",
+            "etag": "W/\"2a5-Nam3VObl3AR4jNMy1/YeOQ7wtRw\"",
+            "x-permitted-cross-domain-policies": "none",
+            "x-content-type-options": "nosniff",
+            "alt-svc": "h3=\":443\"; ma=86400",
+            "rndr-id": "3ea5b0b4-edcc-4afc",
+            "x-render-origin-server": "Render",
+            "server-timing": "cfExtPri",
+            "date": "Sun, 05 Apr 2026 17:40:12 GMT",
+            "content-type": "application/json; charset=utf-8",
+            "vary": "Origin, Accept-Encoding",
+            "priority": "u=1,i",
+            "x-frame-options": "SAMEORIGIN",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+            "x-dns-prefetch-control": "off",
+            "cross-origin-opener-policy": "same-origin",
+            "cross-origin-resource-policy": "same-origin",
+            "access-control-allow-credentials": "true",
+            "referrer-policy": "no-referrer",
+            "x-download-options": "noopen",
+            "cf-ray": "9e7a561f0903dea2-DAR",
+            "access-control-allow-origin": "http://127.0.0.1:5173",
+            "content-length": "415",
+            "x-xss-protection": "0",
+            "origin-agent-cluster": "?1",
+            "server": "cloudflare"
+          },
+          "bodyText": "{\"success\":true,\"message\":\"Created\",\"data\":{\"id\":\"968d8241-d8cc-4e36-8095-4f014cda2247\",\"sku\":\"YS-810130\",\"slug\":\"runtime-smoke-product-1775410809943\",\"title\":\"Runtime Smoke Product 1775410809943\",\"product_type\":\"desktop\",\"brand\":\"Unknown\",\"model_name\":\"Runtime Smoke Product 1775410809943\",\"condition\":\"new\",\"stock_status\":\"in_stock\",\"estimated_price_tzs\":1230000,\"short_description\":\"Core i7, 16GB RAM, 512GB SSD\",\"long_description\":null,\"warranty_text\":null,\"is_visible\":true,\"is_featured\":false,\"featured_tag\":null,\"created_by_admin_id\":\"cb2ce9c3-17c9-467a-8e23-66000f2741c6\",\"created_at\":\"2026-04-05T17:40:11.234132+00:00\",\"updated_at\":\"2026-04-05T17:40:11.234132+00:00\"}}",
+          "bodyJson": {
+            "success": true,
+            "message": "Created",
+            "data": {
+              "id": "968d8241-d8cc-4e36-8095-4f014cda2247",
+              "sku": "YS-810130",
+              "slug": "runtime-smoke-product-1775410809943",
+              "title": "Runtime Smoke Product 1775410809943",
+              "product_type": "desktop",
+              "brand": "Unknown",
+              "model_name": "Runtime Smoke Product 1775410809943",
+              "condition": "new",
+              "stock_status": "in_stock",
+              "estimated_price_tzs": 1230000,
+              "short_description": "Core i7, 16GB RAM, 512GB SSD",
+              "long_description": null,
+              "warranty_text": null,
+              "is_visible": true,
+              "is_featured": false,
+              "featured_tag": null,
+              "created_by_admin_id": "cb2ce9c3-17c9-467a-8e23-66000f2741c6",
+              "created_at": "2026-04-05T17:40:11.234132+00:00",
+              "updated_at": "2026-04-05T17:40:11.234132+00:00"
+            }
+          }
+        },
+        "contextCookies": [
+          {
+            "name": "ys_session",
+            "value": "guest_live_98b4f445ab28437d9d8c",
+            "domain": "ys-store-h1ec.onrender.com",
+            "path": "/",
+            "expires": 1778002809.573119,
+            "httpOnly": true,
+            "secure": true,
+            "sameSite": "None"
+          }
+        ]
+      }
+    }
+  },
+  "completedAt": "2026-04-05T17:40:23.007Z",
+  "summary": {
+    "passedFlows": [],
+    "failedFlows": [
+      "auth",
+      "adminPosting"
+    ]
+  }
+}

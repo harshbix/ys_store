@@ -1,0 +1,455 @@
+{
+  "startedAt": "2026-04-05T17:33:53.700Z",
+  "baseUrl": "http://127.0.0.1:5173",
+  "apiUrl": "https://ys-store-h1ec.onrender.com/api",
+  "flows": {
+    "auth": {
+      "pass": false,
+      "failureCause": "environment/config issue",
+      "checks": [
+        {
+          "name": "redirected to login from cart intent",
+          "pass": true,
+          "evidence": {
+            "url": "http://127.0.0.1:5173/login"
+          }
+        },
+        {
+          "name": "return target stored as /cart",
+          "pass": true,
+          "evidence": {
+            "state": {
+              "from": "/shop",
+              "returnTo": "/cart"
+            }
+          }
+        },
+        {
+          "name": "OTP request receives API response",
+          "pass": true,
+          "evidence": {
+            "requestFired": true,
+            "failed": null
+          }
+        },
+        {
+          "name": "OTP request succeeds",
+          "pass": false,
+          "evidence": {
+            "status": 429,
+            "challengeIdPresent": false
+          }
+        }
+      ],
+      "network": {
+        "request": {
+          "url": "https://ys-store-h1ec.onrender.com/api/auth/request-otp",
+          "origin": "https://ys-store-h1ec.onrender.com",
+          "routeKind": "live-backend-direct",
+          "method": "POST",
+          "resourceType": "fetch",
+          "headers": {
+            "sec-ch-ua-platform": "\"Windows\"",
+            "referer": "http://127.0.0.1:5173/",
+            "x-guest-session": "guest_live_b7f854657c1b48c5b3ec",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36",
+            "sec-ch-ua": "\"HeadlessChrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0"
+          },
+          "cookies": "",
+          "bodyText": "{\"email\":\"smoke.test+1775410433958@gmail.com\"}",
+          "bodyJson": {
+            "email": "smoke.test+1775410433958@gmail.com"
+          }
+        },
+        "response": {
+          "url": "https://ys-store-h1ec.onrender.com/api/auth/request-otp",
+          "status": 429,
+          "ok": false,
+          "headers": {
+            "x-request-id": "0231c0e4-2b5b-43bb-ae68-23a33820826d",
+            "ratelimit-policy": "10;w=60",
+            "content-encoding": "br",
+            "cf-cache-status": "DYNAMIC",
+            "etag": "W/\"bd-6oUmJObaVe84q4IibU77+z5IbRM\"",
+            "x-content-type-options": "nosniff",
+            "alt-svc": "h3=\":443\"; ma=86400",
+            "rndr-id": "cff38e11-23a5-48ec",
+            "x-render-origin-server": "Render",
+            "server-timing": "cfExtPri",
+            "content-type": "application/json; charset=utf-8",
+            "priority": "u=1,i",
+            "referrer-policy": "no-referrer",
+            "content-length": "150",
+            "x-xss-protection": "0",
+            "origin-agent-cluster": "?1",
+            "server": "cloudflare",
+            "ratelimit-remaining": "9",
+            "ratelimit-reset": "60",
+            "x-permitted-cross-domain-policies": "none",
+            "date": "Sun, 05 Apr 2026 17:33:56 GMT",
+            "vary": "Origin, Accept-Encoding",
+            "x-frame-options": "SAMEORIGIN",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+            "x-dns-prefetch-control": "off",
+            "cross-origin-opener-policy": "same-origin",
+            "cross-origin-resource-policy": "same-origin",
+            "access-control-allow-credentials": "true",
+            "ratelimit-limit": "10",
+            "x-download-options": "noopen",
+            "cf-ray": "9e7a4cf57d8cde9f-DAR",
+            "access-control-allow-origin": "http://127.0.0.1:5173"
+          },
+          "bodyText": "{\"success\":false,\"error_code\":\"otp_request_failed\",\"message\":\"Too many OTP requests. Please try again later.\",\"details\":{\"details\":null,\"request_id\":\"0231c0e4-2b5b-43bb-ae68-23a33820826d\"}}",
+          "bodyJson": {
+            "success": false,
+            "error_code": "otp_request_failed",
+            "message": "Too many OTP requests. Please try again later.",
+            "details": {
+              "details": null,
+              "request_id": "0231c0e4-2b5b-43bb-ae68-23a33820826d"
+            }
+          }
+        },
+        "contextCookies": []
+      }
+    },
+    "adminPosting": {
+      "pass": false,
+      "failureCause": "frontend bug",
+      "checks": [
+        {
+          "name": "admin credentials available",
+          "pass": true,
+          "evidence": {
+            "hasEmail": true,
+            "hasPassword": true
+          }
+        },
+        {
+          "name": "admin login receives API response",
+          "pass": true,
+          "evidence": {
+            "requestFired": true,
+            "failed": null
+          }
+        },
+        {
+          "name": "admin login succeeds",
+          "pass": true,
+          "evidence": {
+            "status": 200,
+            "body": {
+              "success": true,
+              "message": "OK",
+              "data": {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYjJjZTljMy0xN2M5LTQ2N2EtOGUyMy02NjAwMGYyNzQxYzYiLCJlbWFpbCI6ImtpZGFiaXhzb25AZ21haWwuY29tIiwicm9sZSI6Im93bmVyIiwiaWF0IjoxNzc1NDEwNDM3LCJleHAiOjE3NzYwMTUyMzd9.2CGM_WwGyJ9QTF_uiHnxZmaYN6oRKJx8cjYwznBsO4o",
+                "admin": {
+                  "id": "cb2ce9c3-17c9-467a-8e23-66000f2741c6",
+                  "email": "kidabixson@gmail.com",
+                  "full_name": "Owner",
+                  "role": "owner",
+                  "is_active": true,
+                  "last_login_at": null,
+                  "created_at": "2026-04-03T15:43:29.826437+00:00",
+                  "updated_at": "2026-04-03T15:43:29.826437+00:00"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "product post receives API response",
+          "pass": true,
+          "evidence": {
+            "requestFired": true,
+            "failed": null
+          }
+        },
+        {
+          "name": "product post succeeds",
+          "pass": true,
+          "evidence": {
+            "status": 201,
+            "productIdPresent": true,
+            "code": null,
+            "message": null
+          }
+        },
+        {
+          "name": "upload retry recovers from one failed upload",
+          "pass": false,
+          "evidence": {
+            "interruptedPutCount": 0,
+            "postStatus": 201
+          }
+        },
+        {
+          "name": "upload progress appears",
+          "pass": true,
+          "evidence": {
+            "progressVisible": true
+          }
+        },
+        {
+          "name": "upload flow completes before navigation",
+          "pass": true,
+          "evidence": {
+            "completed": true
+          }
+        },
+        {
+          "name": "newly posted product is live on API",
+          "pass": true,
+          "evidence": {
+            "status": 200,
+            "slug": "runtime-smoke-product-1775410437078",
+            "mediaCount": 1
+          }
+        },
+        {
+          "name": "new product appears in shop list",
+          "pass": false,
+          "evidence": {
+            "title": "Runtime Smoke Product 1775410437078"
+          }
+        },
+        {
+          "name": "product detail shows correct uploaded image",
+          "pass": true,
+          "evidence": {
+            "detailImageSrc": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/products/d15419f1-221f-4ee7-aae4-4e4a25e8c0e7/full/1775410442460-runtime-smoke-upload-1775410437078.png",
+            "mediaSample": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/products/d15419f1-221f-4ee7-aae4-4e4a25e8c0e7/original/1775410440159-runtime-smoke-upload-1775410437078.png"
+          }
+        },
+        {
+          "name": "shop card uses uploaded image",
+          "pass": false,
+          "evidence": {
+            "cardImageSrc": null,
+            "mediaSample": "https://kzpknqwlecicildibiqt.supabase.co/storage/v1/object/public/media/products/d15419f1-221f-4ee7-aae4-4e4a25e8c0e7/original/1775410440159-runtime-smoke-upload-1775410437078.png"
+          }
+        }
+      ],
+      "loginNetwork": {
+        "request": {
+          "url": "https://ys-store-h1ec.onrender.com/api/admin/login",
+          "origin": "https://ys-store-h1ec.onrender.com",
+          "routeKind": "live-backend-direct",
+          "method": "POST",
+          "resourceType": "fetch",
+          "headers": {
+            "sec-ch-ua-platform": "\"Windows\"",
+            "referer": "http://127.0.0.1:5173/",
+            "x-guest-session": "guest_live_b7f854657c1b48c5b3ec",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36",
+            "sec-ch-ua": "\"HeadlessChrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0"
+          },
+          "cookies": "",
+          "bodyText": "{\"email\":\"kidabixson@gmail.com\",\"password\":\"12345678\"}",
+          "bodyJson": {
+            "email": "kidabixson@gmail.com",
+            "password": "12345678"
+          }
+        },
+        "response": {
+          "url": "https://ys-store-h1ec.onrender.com/api/admin/login",
+          "status": 200,
+          "ok": true,
+          "headers": {
+            "x-request-id": "4a1e2e2d-e0a8-4600-bda5-73f88665d193",
+            "ratelimit-policy": "8;w=60",
+            "content-encoding": "br",
+            "cf-cache-status": "DYNAMIC",
+            "etag": "W/\"22a-Og5OV7JxSVP1Refgx9eQ6N3T9yo\"",
+            "x-content-type-options": "nosniff",
+            "alt-svc": "h3=\":443\"; ma=86400",
+            "rndr-id": "88a2ec9c-8d05-4945",
+            "x-render-origin-server": "Render",
+            "server-timing": "cfExtPri",
+            "content-type": "application/json; charset=utf-8",
+            "priority": "u=1,i",
+            "referrer-policy": "no-referrer",
+            "content-length": "437",
+            "x-xss-protection": "0",
+            "origin-agent-cluster": "?1",
+            "server": "cloudflare",
+            "ratelimit-remaining": "7",
+            "ratelimit-reset": "60",
+            "x-permitted-cross-domain-policies": "none",
+            "date": "Sun, 05 Apr 2026 17:33:57 GMT",
+            "vary": "Origin, Accept-Encoding",
+            "x-frame-options": "SAMEORIGIN",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+            "x-dns-prefetch-control": "off",
+            "cross-origin-opener-policy": "same-origin",
+            "cross-origin-resource-policy": "same-origin",
+            "access-control-allow-credentials": "true",
+            "ratelimit-limit": "8",
+            "x-download-options": "noopen",
+            "cf-ray": "9e7a4cfdcbd2de9f-DAR",
+            "access-control-allow-origin": "http://127.0.0.1:5173"
+          },
+          "bodyText": "{\"success\":true,\"message\":\"OK\",\"data\":{\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYjJjZTljMy0xN2M5LTQ2N2EtOGUyMy02NjAwMGYyNzQxYzYiLCJlbWFpbCI6ImtpZGFiaXhzb25AZ21haWwuY29tIiwicm9sZSI6Im93bmVyIiwiaWF0IjoxNzc1NDEwNDM3LCJleHAiOjE3NzYwMTUyMzd9.2CGM_WwGyJ9QTF_uiHnxZmaYN6oRKJx8cjYwznBsO4o\",\"admin\":{\"id\":\"cb2ce9c3-17c9-467a-8e23-66000f2741c6\",\"email\":\"kidabixson@gmail.com\",\"full_name\":\"Owner\",\"role\":\"owner\",\"is_active\":true,\"last_login_at\":null,\"created_at\":\"2026-04-03T15:43:29.826437+00:00\",\"updated_at\":\"2026-04-03T15:43:29.826437+00:00\"}}}",
+          "bodyJson": {
+            "success": true,
+            "message": "OK",
+            "data": {
+              "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYjJjZTljMy0xN2M5LTQ2N2EtOGUyMy02NjAwMGYyNzQxYzYiLCJlbWFpbCI6ImtpZGFiaXhzb25AZ21haWwuY29tIiwicm9sZSI6Im93bmVyIiwiaWF0IjoxNzc1NDEwNDM3LCJleHAiOjE3NzYwMTUyMzd9.2CGM_WwGyJ9QTF_uiHnxZmaYN6oRKJx8cjYwznBsO4o",
+              "admin": {
+                "id": "cb2ce9c3-17c9-467a-8e23-66000f2741c6",
+                "email": "kidabixson@gmail.com",
+                "full_name": "Owner",
+                "role": "owner",
+                "is_active": true,
+                "last_login_at": null,
+                "created_at": "2026-04-03T15:43:29.826437+00:00",
+                "updated_at": "2026-04-03T15:43:29.826437+00:00"
+              }
+            }
+          }
+        },
+        "contextCookies": [
+          {
+            "name": "ys_session",
+            "value": "guest_live_b7f854657c1b48c5b3ec",
+            "domain": "ys-store-h1ec.onrender.com",
+            "path": "/",
+            "expires": 1778002436.866606,
+            "httpOnly": true,
+            "secure": true,
+            "sameSite": "None"
+          }
+        ]
+      },
+      "postNetwork": {
+        "request": {
+          "url": "https://ys-store-h1ec.onrender.com/api/admin/products",
+          "origin": "https://ys-store-h1ec.onrender.com",
+          "routeKind": "live-backend-direct",
+          "method": "POST",
+          "resourceType": "fetch",
+          "headers": {
+            "accept": "*/*",
+            "cookie": "ys_session=guest_live_b7f854657c1b48c5b3ec",
+            "origin": "http://127.0.0.1:5173",
+            "referer": "http://127.0.0.1:5173/",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36",
+            "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYjJjZTljMy0xN2M5LTQ2N2EtOGUyMy02NjAwMGYyNzQxYzYiLCJlbWFpbCI6ImtpZGFiaXhzb25AZ21haWwuY29tIiwicm9sZSI6Im93bmVyIiwiaWF0IjoxNzc1NDEwNDM3LCJleHAiOjE3NzYwMTUyMzd9.2CGM_WwGyJ9QTF_uiHnxZmaYN6oRKJx8cjYwznBsO4o",
+            "content-type": "application/json",
+            "sec-ch-ua": "\"HeadlessChrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "x-guest-session": "guest_live_b7f854657c1b48c5b3ec"
+          },
+          "cookies": "ys_session=guest_live_b7f854657c1b48c5b3ec",
+          "bodyText": "{\"sku\":\"YS-437185\",\"slug\":\"runtime-smoke-product-1775410437078\",\"title\":\"Runtime Smoke Product 1775410437078\",\"product_type\":\"desktop\",\"brand\":\"Unknown\",\"model_name\":\"Runtime Smoke Product 1775410437078\",\"condition\":\"new\",\"stock_status\":\"in_stock\",\"estimated_price_tzs\":1230000,\"short_description\":\"Core i7, 16GB RAM, 512GB SSD\",\"warranty_text\":null,\"is_visible\":true,\"is_featured\":false,\"featured_tag\":null,\"specs\":[]}",
+          "bodyJson": {
+            "sku": "YS-437185",
+            "slug": "runtime-smoke-product-1775410437078",
+            "title": "Runtime Smoke Product 1775410437078",
+            "product_type": "desktop",
+            "brand": "Unknown",
+            "model_name": "Runtime Smoke Product 1775410437078",
+            "condition": "new",
+            "stock_status": "in_stock",
+            "estimated_price_tzs": 1230000,
+            "short_description": "Core i7, 16GB RAM, 512GB SSD",
+            "warranty_text": null,
+            "is_visible": true,
+            "is_featured": false,
+            "featured_tag": null,
+            "specs": []
+          }
+        },
+        "response": {
+          "url": "https://ys-store-h1ec.onrender.com/api/admin/products",
+          "status": 201,
+          "ok": true,
+          "headers": {
+            "x-request-id": "967d348a-8d4d-4b93-9d4b-a4bc078a834f",
+            "content-encoding": "br",
+            "cf-cache-status": "DYNAMIC",
+            "etag": "W/\"2a5-hD+z5wNr24+6offZbXwpzaY1Us0\"",
+            "x-permitted-cross-domain-policies": "none",
+            "x-content-type-options": "nosniff",
+            "alt-svc": "h3=\":443\"; ma=86400",
+            "rndr-id": "41f4b313-fb48-44fa",
+            "x-render-origin-server": "Render",
+            "server-timing": "cfExtPri",
+            "date": "Sun, 05 Apr 2026 17:33:58 GMT",
+            "content-type": "application/json; charset=utf-8",
+            "vary": "Origin, Accept-Encoding",
+            "priority": "u=1,i",
+            "x-frame-options": "SAMEORIGIN",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+            "x-dns-prefetch-control": "off",
+            "cross-origin-opener-policy": "same-origin",
+            "cross-origin-resource-policy": "same-origin",
+            "access-control-allow-credentials": "true",
+            "referrer-policy": "no-referrer",
+            "x-download-options": "noopen",
+            "cf-ray": "9e7a4d020afede9f-DAR",
+            "access-control-allow-origin": "http://127.0.0.1:5173",
+            "content-length": "413",
+            "x-xss-protection": "0",
+            "origin-agent-cluster": "?1",
+            "server": "cloudflare"
+          },
+          "bodyText": "{\"success\":true,\"message\":\"Created\",\"data\":{\"id\":\"d15419f1-221f-4ee7-aae4-4e4a25e8c0e7\",\"sku\":\"YS-437185\",\"slug\":\"runtime-smoke-product-1775410437078\",\"title\":\"Runtime Smoke Product 1775410437078\",\"product_type\":\"desktop\",\"brand\":\"Unknown\",\"model_name\":\"Runtime Smoke Product 1775410437078\",\"condition\":\"new\",\"stock_status\":\"in_stock\",\"estimated_price_tzs\":1230000,\"short_description\":\"Core i7, 16GB RAM, 512GB SSD\",\"long_description\":null,\"warranty_text\":null,\"is_visible\":true,\"is_featured\":false,\"featured_tag\":null,\"created_by_admin_id\":\"cb2ce9c3-17c9-467a-8e23-66000f2741c6\",\"created_at\":\"2026-04-05T17:33:58.303146+00:00\",\"updated_at\":\"2026-04-05T17:33:58.303146+00:00\"}}",
+          "bodyJson": {
+            "success": true,
+            "message": "Created",
+            "data": {
+              "id": "d15419f1-221f-4ee7-aae4-4e4a25e8c0e7",
+              "sku": "YS-437185",
+              "slug": "runtime-smoke-product-1775410437078",
+              "title": "Runtime Smoke Product 1775410437078",
+              "product_type": "desktop",
+              "brand": "Unknown",
+              "model_name": "Runtime Smoke Product 1775410437078",
+              "condition": "new",
+              "stock_status": "in_stock",
+              "estimated_price_tzs": 1230000,
+              "short_description": "Core i7, 16GB RAM, 512GB SSD",
+              "long_description": null,
+              "warranty_text": null,
+              "is_visible": true,
+              "is_featured": false,
+              "featured_tag": null,
+              "created_by_admin_id": "cb2ce9c3-17c9-467a-8e23-66000f2741c6",
+              "created_at": "2026-04-05T17:33:58.303146+00:00",
+              "updated_at": "2026-04-05T17:33:58.303146+00:00"
+            }
+          }
+        },
+        "contextCookies": [
+          {
+            "name": "ys_session",
+            "value": "guest_live_b7f854657c1b48c5b3ec",
+            "domain": "ys-store-h1ec.onrender.com",
+            "path": "/",
+            "expires": 1778002436.866606,
+            "httpOnly": true,
+            "secure": true,
+            "sameSite": "None"
+          }
+        ]
+      }
+    }
+  },
+  "completedAt": "2026-04-05T17:34:10.662Z",
+  "summary": {
+    "passedFlows": [],
+    "failedFlows": [
+      "auth",
+      "adminPosting"
+    ]
+  }
+}

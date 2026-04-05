@@ -1,24 +1,50 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Heart, LogIn, ShoppingCart, Wrench, X } from 'lucide-react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useShowToast } from '../../hooks/useToast';
 import { useAdminAuthStore, useAuthStore } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
 import { ThemeToggle } from '../ui/ThemeToggle';
 
 const links = [
+  { to: '/', label: 'Home' },
   { to: '/shop', label: 'Shop' },
-  { to: '/shop?type=desktop', label: 'Desktops' },
-  { to: '/shop?type=laptop', label: 'Laptops' },
-  { to: '/shop?type=component', label: 'Parts' },
-  { to: '/builder', label: 'Builder' },
-  { to: '/shop?featured_tag=hot_deal', label: 'Sale' }
+  { to: '/shop?type=laptop', label: 'Gaming Laptops' },
+  { to: '/shop?type=desktop', label: 'Gaming Desktops' },
+  { to: '/shop?type=accessory', label: 'Accessories' },
+  { to: '/builder', label: 'Custom PC Build' },
+  { to: '/blog', label: 'Blog' },
+  { to: '/contact', label: 'Contact' }
 ];
 
 export function MobileNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const showToast = useShowToast();
   const isOpen = useUiStore((state) => state.mobileNavOpen);
   const close = useUiStore((state) => state.closeMobileNav);
   const customerAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
   const adminAuthenticated = useAdminAuthStore((state) => Boolean(state.token));
+
+  const handleCartClick = () => {
+    close();
+    if (customerAuthenticated) {
+      navigate('/cart');
+      return;
+    }
+
+    showToast({
+      title: 'Please log in first',
+      description: 'Sign in to open your cart.',
+      variant: 'info'
+    });
+    navigate('/login', {
+      state: {
+        from: location.pathname,
+        returnTo: '/cart'
+      }
+    });
+  };
 
   return (
     <AnimatePresence>
@@ -74,10 +100,10 @@ export function MobileNav() {
                 <Heart className="h-4 w-4" />
                 Wishlist
               </Link>
-              <Link to="/cart" onClick={close} className="flex min-h-10 items-center gap-2 px-1 text-[13px] text-secondary">
+              <button type="button" onClick={handleCartClick} className="flex min-h-10 w-full items-center gap-2 px-1 text-[13px] text-secondary">
                 <ShoppingCart className="h-4 w-4" />
                 Cart
-              </Link>
+              </button>
               <Link to="/builder" onClick={close} className="flex min-h-10 items-center gap-2 px-1 text-[13px] text-secondary">
                 <Wrench className="h-4 w-4" />
                 Build Your PC

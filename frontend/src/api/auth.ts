@@ -1,5 +1,11 @@
 import { apiClient } from './client';
-import type { ApiEnvelope, OtpRequestPayload, OtpVerifyPayload, WishlistPayload } from '../types/api';
+import type {
+  ApiEnvelope,
+  OtpRequestPayload,
+  OtpVerifyPayload,
+  PasswordAuthPayload,
+  WishlistPayload
+} from '../types/api';
 
 interface PersistentCartPayload {
   customer_auth_id: string;
@@ -20,6 +26,23 @@ interface PersistentCartPayload {
 
 export async function requestOtp(email: string): Promise<ApiEnvelope<OtpRequestPayload>> {
   const { data } = await apiClient.post<ApiEnvelope<OtpRequestPayload>>('/auth/request-otp', { email });
+  return data;
+}
+
+export async function registerWithPassword(full_name: string, email: string, password: string): Promise<ApiEnvelope<PasswordAuthPayload>> {
+  const { data } = await apiClient.post<ApiEnvelope<PasswordAuthPayload>>('/auth/register', {
+    full_name,
+    email,
+    password
+  });
+  return data;
+}
+
+export async function loginWithPassword(email: string, password: string): Promise<ApiEnvelope<PasswordAuthPayload>> {
+  const { data } = await apiClient.post<ApiEnvelope<PasswordAuthPayload>>('/auth/login', {
+    email,
+    password
+  });
   return data;
 }
 

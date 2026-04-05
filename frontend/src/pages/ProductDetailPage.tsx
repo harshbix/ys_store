@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronRight, Heart } from 'lucide-react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import { useProductDetail, useProducts } from '../hooks/useProducts';
 import { useWishlist } from '../hooks/useWishlist';
@@ -11,6 +11,7 @@ import { getProductImage, placeholderForProduct } from '../utils/imageFallback';
 import { ConditionBadge } from '../components/ui/ConditionBadge';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { ProductCard } from '../components/ui/ProductCard';
+import { Button } from '../components/ui/Button';
 import { SkeletonGrid } from '../components/feedback/SkeletonGrid';
 import { StockBadge } from '../components/ui/StockBadge';
 
@@ -29,6 +30,7 @@ function findSpecValue(specs: Array<{ spec_key: string; value_text: string | nul
 }
 
 export default function ProductDetailPage() {
+  const navigate = useNavigate();
   const { slug } = useParams();
   const detailQuery = useProductDetail(slug);
   const { addItem } = useCart();
@@ -116,6 +118,9 @@ export default function ProductDetailPage() {
 
   return (
     <div className="space-y-8 pb-24 md:space-y-10">
+      <Button size="sm" variant="secondary" onClick={() => navigate(-1)}>
+        Back
+      </Button>
       <section className="grid gap-8 lg:grid-cols-[58%_42%]">
         <div className="space-y-4">
           <div className="bg-surface p-3 md:p-4">

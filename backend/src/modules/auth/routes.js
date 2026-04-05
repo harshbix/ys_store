@@ -3,6 +3,8 @@ import { validateRequest } from '../../middleware/validateRequest.js';
 import { requireCustomerAuth } from '../../middleware/customerAuth.js';
 import { otpRequestLimiter } from '../../middleware/rateLimiters.js';
 import {
+  registerSchema,
+  passwordLoginSchema,
   requestOtpSchema,
   verifyOtpSchema,
   wishlistItemSchema,
@@ -10,6 +12,8 @@ import {
   syncPersistentCartSchema
 } from './validator.js';
 import {
+  registerController,
+  loginController,
   requestOtpController,
   verifyOtpController,
   getWishlistController,
@@ -20,6 +24,9 @@ import {
 } from './controller.js';
 
 const router = Router();
+
+router.post('/register', validateRequest(registerSchema), registerController);
+router.post('/login', validateRequest(passwordLoginSchema), loginController);
 
 router.post('/request-otp', otpRequestLimiter, validateRequest(requestOtpSchema), requestOtpController);
 router.post('/verify-otp', validateRequest(verifyOtpSchema), verifyOtpController);

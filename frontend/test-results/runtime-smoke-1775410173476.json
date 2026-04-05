@@ -1,0 +1,227 @@
+{
+  "startedAt": "2026-04-05T17:29:29.524Z",
+  "baseUrl": "http://127.0.0.1:5178",
+  "apiUrl": "https://ys-store-h1ec.onrender.com/api",
+  "flows": {
+    "auth": {
+      "pass": false,
+      "failureCause": "backend bug",
+      "checks": [
+        {
+          "name": "redirected to login from cart intent",
+          "pass": true,
+          "evidence": {
+            "url": "http://127.0.0.1:5178/login"
+          }
+        },
+        {
+          "name": "return target stored as /cart",
+          "pass": true,
+          "evidence": {
+            "state": {
+              "from": "/shop",
+              "returnTo": "/cart"
+            }
+          }
+        },
+        {
+          "name": "OTP request receives API response",
+          "pass": true,
+          "evidence": {
+            "requestFired": true,
+            "failed": null
+          }
+        },
+        {
+          "name": "OTP request succeeds",
+          "pass": false,
+          "evidence": {
+            "status": 500,
+            "challengeIdPresent": false
+          }
+        }
+      ],
+      "network": {
+        "request": {
+          "url": "http://127.0.0.1:5178/api/auth/request-otp",
+          "origin": "http://127.0.0.1:5178",
+          "routeKind": "same-origin-proxy-or-preview",
+          "method": "POST",
+          "resourceType": "fetch",
+          "headers": {
+            "sec-ch-ua-platform": "\"Windows\"",
+            "referer": "http://127.0.0.1:5178/login",
+            "x-guest-session": "guest_live_eb5f06dafe604b88b5d2",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36",
+            "sec-ch-ua": "\"HeadlessChrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0"
+          },
+          "cookies": "",
+          "bodyText": "{\"email\":\"smoke.test+1775410169891@gmail.com\"}",
+          "bodyJson": {
+            "email": "smoke.test+1775410169891@gmail.com"
+          }
+        },
+        "response": {
+          "url": "http://127.0.0.1:5178/api/auth/request-otp",
+          "status": 500,
+          "ok": false,
+          "headers": {
+            "content-encoding": "br",
+            "cf-cache-status": "DYNAMIC",
+            "etag": "W/\"80-hsYLYCc+jm0Fq0nL5+wZlZt9wgM\"",
+            "x-permitted-cross-domain-policies": "none",
+            "x-content-type-options": "nosniff",
+            "alt-svc": "h3=\":443\"; ma=86400",
+            "rndr-id": "fedbb8ef-2ce8-4a33",
+            "x-render-origin-server": "Render",
+            "date": "Sun, 05 Apr 2026 17:29:32 GMT",
+            "content-type": "application/json; charset=utf-8",
+            "vary": "Accept-Encoding",
+            "x-frame-options": "SAMEORIGIN",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+            "x-dns-prefetch-control": "off",
+            "cross-origin-opener-policy": "same-origin",
+            "connection": "close",
+            "cross-origin-resource-policy": "same-origin",
+            "referrer-policy": "no-referrer",
+            "x-download-options": "noopen",
+            "cf-ray": "9e7a46899821dea1-DAR",
+            "access-control-allow-origin": "http://127.0.0.1:5178",
+            "content-length": "98",
+            "x-xss-protection": "0",
+            "origin-agent-cluster": "?1",
+            "server": "cloudflare"
+          },
+          "bodyText": "{\"success\":false,\"error_code\":\"internal_error\",\"message\":\"Unexpected server error\",\"details\":{\"details\":null,\"request_id\":null}}",
+          "bodyJson": {
+            "success": false,
+            "error_code": "internal_error",
+            "message": "Unexpected server error",
+            "details": {
+              "details": null,
+              "request_id": null
+            }
+          }
+        },
+        "contextCookies": []
+      }
+    },
+    "adminPosting": {
+      "pass": false,
+      "failureCause": "backend bug",
+      "checks": [
+        {
+          "name": "admin credentials available",
+          "pass": true,
+          "evidence": {
+            "hasEmail": true,
+            "hasPassword": true
+          }
+        },
+        {
+          "name": "admin login receives API response",
+          "pass": true,
+          "evidence": {
+            "requestFired": true,
+            "failed": null
+          }
+        },
+        {
+          "name": "admin login succeeds",
+          "pass": false,
+          "evidence": {
+            "status": 500,
+            "body": {
+              "success": false,
+              "error_code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {
+                "details": null,
+                "request_id": null
+              }
+            }
+          }
+        }
+      ],
+      "loginNetwork": {
+        "request": {
+          "url": "http://127.0.0.1:5178/api/admin/login",
+          "origin": "http://127.0.0.1:5178",
+          "routeKind": "same-origin-proxy-or-preview",
+          "method": "POST",
+          "resourceType": "fetch",
+          "headers": {
+            "sec-ch-ua-platform": "\"Windows\"",
+            "referer": "http://127.0.0.1:5178/admin/login",
+            "x-guest-session": "guest_live_eb5f06dafe604b88b5d2",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36",
+            "sec-ch-ua": "\"HeadlessChrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0"
+          },
+          "cookies": "",
+          "bodyText": "{\"email\":\"kidabixson@gmail.com\",\"password\":\"12345678\"}",
+          "bodyJson": {
+            "email": "kidabixson@gmail.com",
+            "password": "12345678"
+          }
+        },
+        "response": {
+          "url": "http://127.0.0.1:5178/api/admin/login",
+          "status": 500,
+          "ok": false,
+          "headers": {
+            "content-encoding": "br",
+            "cf-cache-status": "DYNAMIC",
+            "etag": "W/\"80-hsYLYCc+jm0Fq0nL5+wZlZt9wgM\"",
+            "x-permitted-cross-domain-policies": "none",
+            "x-content-type-options": "nosniff",
+            "alt-svc": "h3=\":443\"; ma=86400",
+            "rndr-id": "4fab2bf2-63fc-4d8b",
+            "x-render-origin-server": "Render",
+            "date": "Sun, 05 Apr 2026 17:29:33 GMT",
+            "content-type": "application/json; charset=utf-8",
+            "vary": "Accept-Encoding",
+            "x-frame-options": "SAMEORIGIN",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+            "x-dns-prefetch-control": "off",
+            "cross-origin-opener-policy": "same-origin",
+            "connection": "close",
+            "cross-origin-resource-policy": "same-origin",
+            "referrer-policy": "no-referrer",
+            "x-download-options": "noopen",
+            "cf-ray": "9e7a468e8ba0de9e-DAR",
+            "access-control-allow-origin": "http://127.0.0.1:5178",
+            "content-length": "98",
+            "x-xss-protection": "0",
+            "origin-agent-cluster": "?1",
+            "server": "cloudflare"
+          },
+          "bodyText": "{\"success\":false,\"error_code\":\"internal_error\",\"message\":\"Unexpected server error\",\"details\":{\"details\":null,\"request_id\":null}}",
+          "bodyJson": {
+            "success": false,
+            "error_code": "internal_error",
+            "message": "Unexpected server error",
+            "details": {
+              "details": null,
+              "request_id": null
+            }
+          }
+        },
+        "contextCookies": []
+      }
+    }
+  },
+  "completedAt": "2026-04-05T17:29:33.476Z",
+  "summary": {
+    "passedFlows": [],
+    "failedFlows": [
+      "auth",
+      "adminPosting"
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "startedAt": "2026-04-05T17:08:50.320Z",
+  "baseUrl": "http://127.0.0.1:5174",
+  "apiUrl": "https://ys-store-h1ec.onrender.com/api",
+  "flows": {
+    "auth": {
+      "pass": true,
+      "failureCause": null,
+      "checks": [
+        {
+          "name": "redirected to login from cart intent",
+          "pass": true,
+          "evidence": {
+            "url": "http://127.0.0.1:5174/login"
+          }
+        },
+        {
+          "name": "return target stored as /cart",
+          "pass": true,
+          "evidence": {
+            "state": {
+              "from": "/shop",
+              "returnTo": "/cart"
+            }
+          }
+        },
+        {
+          "name": "OTP request is fired",
+          "pass": true,
+          "evidence": {
+            "requestFired": true,
+            "failed": "net::ERR_CONNECTION_REFUSED"
+          }
+        }
+      ]
+    },
+    "adminPosting": {
+      "pass": true,
+      "failureCause": null,
+      "checks": [
+        {
+          "name": "admin credentials available",
+          "pass": true,
+          "evidence": {
+            "hasEmail": true,
+            "hasPassword": true
+          }
+        },
+        {
+          "name": "admin login request is fired",
+          "pass": true,
+          "evidence": {
+            "requestFired": true,
+            "failed": "net::ERR_CONNECTION_REFUSED"
+          }
+        }
+      ]
+    }
+  },
+  "completedAt": "2026-04-05T17:08:55.535Z",
+  "summary": {
+    "passedFlows": [
+      "auth",
+      "adminPosting"
+    ],
+    "failedFlows": []
+  }
+}

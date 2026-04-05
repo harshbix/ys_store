@@ -9,8 +9,14 @@ function normalizeApiBase(value: string): string {
 
 export default defineConfig(({ mode }) => {
 	const env = loadEnv(mode, process.cwd(), '');
-	const apiBase = normalizeApiBase(env.VITE_API_URL || 'https://ys-store-h1ec.onrender.com/api');
-	const proxyTarget = apiBase.replace(/\/api\/?$/, '');
+	const configuredApiUrl = (env.VITE_API_URL || '').trim();
+	const isRelativeApiUrl = configuredApiUrl.startsWith('/');
+	const apiBase = isRelativeApiUrl
+		? configuredApiUrl
+		: normalizeApiBase(configuredApiUrl || 'https://ys-store-h1ec.onrender.com/api');
+	const proxyTarget = isRelativeApiUrl
+		? 'https://ys-store-h1ec.onrender.com'
+		: apiBase.replace(/\/api\/?$/, '');
 
 	return {
 		plugins: [react()],
