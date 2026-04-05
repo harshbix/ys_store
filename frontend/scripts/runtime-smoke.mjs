@@ -3,7 +3,7 @@ import path from 'node:path';
 import { chromium } from '@playwright/test';
 
 const BASE_URL = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:4173';
-const API_URL = process.env.SMOKE_API_URL || 'https://ys-store-h1ec.onrender.com/api';
+const API_URL = process.env.SMOKE_API_URL || 'http://localhost:3001/api';
 const OTP_BASE_EMAIL = process.env.SMOKE_OTP_EMAIL || 'smoke.test@gmail.com';
 const onePixelPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
 
@@ -143,7 +143,6 @@ function classifyRequestRoute(url) {
   if (!origin || !baseOrigin) return 'unknown';
   if (origin === baseOrigin) return 'same-origin-proxy-or-preview';
   if (/supabase\.co$/i.test(origin)) return 'live-supabase-direct';
-  if (/onrender\.com$/i.test(origin)) return 'live-backend-direct';
   return 'direct-external';
 }
 

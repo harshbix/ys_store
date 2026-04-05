@@ -11,23 +11,21 @@ Security note: do not store credentials in this repository. Use environment vari
 
 ## Frontend to Backend Connection
 
-Frontend is deployed on Vercel and backend is deployed on Render.
+Set the backend API URL in your frontend environment:
 
-Required Vercel environment variable:
-
-- `VITE_API_URL=https://ys-store-h1ec.onrender.com/api`
+- `VITE_API_URL=https://your-backend-domain.com/api`
 
 If your backend is exposed without an `/api` prefix, use:
 
-- `VITE_API_URL=https://ys-store-h1ec.onrender.com`
+- `VITE_API_URL=https://your-backend-domain.com`
 
-After changing Vercel environment variables, trigger a redeploy so the new value is applied at build time.
+After changing environment variables, trigger a redeploy so the new value is applied at build time.
 
 ## Backend CORS
 
 Set `FRONTEND_URL` in backend env as a comma-separated allowlist. Example:
 
-- `FRONTEND_URL=http://localhost:5173,https://your-vercel-domain.vercel.app`
+- `FRONTEND_URL=http://localhost:5173,https://your-frontend-domain.com`
 
 In production, guest-session cookies are configured for cross-domain usage (`SameSite=None` and `Secure=true`), so frontend and backend must both be served over HTTPS.
 

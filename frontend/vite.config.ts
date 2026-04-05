@@ -13,9 +13,9 @@ export default defineConfig(({ mode }) => {
 	const isRelativeApiUrl = configuredApiUrl.startsWith('/');
 	const apiBase = isRelativeApiUrl
 		? configuredApiUrl
-		: normalizeApiBase(configuredApiUrl || 'https://ys-store-h1ec.onrender.com/api');
+		: normalizeApiBase(configuredApiUrl || 'http://localhost:3001/api');
 	const proxyTarget = isRelativeApiUrl
-		? 'https://ys-store-h1ec.onrender.com'
+		? 'http://localhost:3001'
 		: apiBase.replace(/\/api\/?$/, '');
 
 	return {
