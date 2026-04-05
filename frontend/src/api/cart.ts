@@ -13,7 +13,7 @@ export interface UpdateCartItemBody {
 }
 
 // Get session context for current user/guest
-async function getSessionContext(): Promise<{ customerAuthId: string | null; sessionToken: string | null }> {
+export async function getSessionContext(): Promise<{ customerAuthId: string | null; sessionToken: string | null }> {
   const { data: { session } } = await supabase.auth.getSession();
   
   if (session?.user) {
