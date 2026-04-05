@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addCartItem, getCart, removeCartItem, updateCartItem, type AddCartItemBody } from '../api/cart';
 import { queryKeys } from '../lib/queryKeys';
-import type { ApiEnvelope, CartPayload } from '../types/api';
+import type { CartPayload } from '../types/api';
 import { useShowToast } from './useToast';
 
 export function useCart() {
@@ -34,10 +34,10 @@ export function useCart() {
     mutationFn: ({ itemId, quantity }: { itemId: string; quantity: number }) => updateCartItem(itemId, { quantity }),
     onMutate: async ({ itemId, quantity }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.cart.current });
-      const previousCart = queryClient.getQueryData<ApiEnvelope<CartPayload>>(queryKeys.cart.current);
+      const previousCart = queryClient.getQueryData<CartPayload>(queryKeys.cart.current);
 
-      if (previousCart?.data) {
-        const nextItems = previousCart.data.items.map((item) => (
+      if (previousCart) {
+        const nextItems = previousCart.items.map((item) => (
           item.id === itemId
             ? { ...item, quantity }
             : item
@@ -45,13 +45,10 @@ export function useCart() {
 
         const estimatedTotal = nextItems.reduce((sum, item) => sum + (item.unit_estimated_price_tzs * item.quantity), 0);
 
-        queryClient.setQueryData<ApiEnvelope<CartPayload>>(queryKeys.cart.current, {
+        queryClient.setQueryData<CartPayload>(queryKeys.cart.current, {
           ...previousCart,
-          data: {
-            ...previousCart.data,
-            items: nextItems,
-            estimated_total_tzs: estimatedTotal
-          }
+          items: nextItems,
+          estimated_total_tzs: estimatedTotal
         });
       }
 
@@ -72,19 +69,16 @@ export function useCart() {
     mutationFn: (itemId: string) => removeCartItem(itemId),
     onMutate: async (itemId) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.cart.current });
-      const previousCart = queryClient.getQueryData<ApiEnvelope<CartPayload>>(queryKeys.cart.current);
+      const previousCart = queryClient.getQueryData<CartPayload>(queryKeys.cart.current);
 
-      if (previousCart?.data) {
-        const nextItems = previousCart.data.items.filter((item) => item.id !== itemId);
+      if (previousCart) {
+        const nextItems = previousCart.items.filter((item) => item.id !== itemId);
         const estimatedTotal = nextItems.reduce((sum, item) => sum + (item.unit_estimated_price_tzs * item.quantity), 0);
 
-        queryClient.setQueryData<ApiEnvelope<CartPayload>>(queryKeys.cart.current, {
+        queryClient.setQueryData<CartPayload>(queryKeys.cart.current, {
           ...previousCart,
-          data: {
-            ...previousCart.data,
-            items: nextItems,
-            estimated_total_tzs: estimatedTotal
-          }
+          items: nextItems,
+          estimated_total_tzs: estimatedTotal
         });
       }
 

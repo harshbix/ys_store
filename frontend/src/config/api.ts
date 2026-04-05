@@ -4,7 +4,6 @@ const rawUrl = import.meta.env.VITE_API_URL as string | undefined;
 const isProd = import.meta.env.PROD;
 
 const DEV_API_FALLBACK = 'http://localhost:3001/api';
-const PROD_API_FALLBACK = 'https://ys-store-h1ec.onrender.com/api';
 
 function isLoopbackHost(value: string): boolean {
   try {
@@ -37,39 +36,23 @@ const hasConfiguredApiUrl = Boolean(normalizedRaw);
 const isInvalidProdLoopback = isProd && hasConfiguredApiUrl && isLoopbackHost(normalizedRaw);
 
 if (isInvalidProdLoopback) {
-  console.error('[ENV WARNING] VITE_API_URL points to localhost/loopback in production. Using safe production fallback.');
-  useUiStore.setState({
-    apiUnavailable: true,
-    apiIssueType: 'missing_env',
-    apiIssueMessage: 'Service temporarily unavailable due to invalid production API configuration.',
-    apiIssueStatus: null,
-    apiIssueEndpoint: null
-  });
+  console.error('[ENV WARNING] VITE_API_URL points to localhost/loopback in production. Using Supabase as primary backend.');
 }
 
 if (!hasConfiguredApiUrl) {
   if (isProd) {
-    console.error('[ENV WARNING] VITE_API_URL is missing in production. Frontend is running in degraded mode.');
-    useUiStore.setState({
-      apiUnavailable: true,
-      apiIssueType: 'missing_env',
-      apiIssueMessage: 'Service temporarily unavailable due to configuration issue.',
-      apiIssueStatus: null,
-      apiIssueEndpoint: null
-    });
+    console.error('[ENV WARNING] VITE_API_URL is missing in production. Using Supabase backend.');
   } else {
-    console.warn('[ENV WARNING] VITE_API_URL not set - using local fallback http://localhost:3001/api');
+    console.warn('[ENV WARNING] VITE_API_URL not set - frontend uses Supabase directly');
   }
 }
 
-const fallbackBase = isProd ? PROD_API_FALLBACK : DEV_API_FALLBACK;
-const resolvedBase = isInvalidProdLoopback
-  ? PROD_API_FALLBACK
-  : (hasConfiguredApiUrl ? normalizedRaw : fallbackBase);
+const fallbackBase = DEV_API_FALLBACK;
+const resolvedBase = isInvalidProdLoopback || !hasConfiguredApiUrl
+  ? fallbackBase
+  : normalizedRaw;
 
-export const API_BASE_URL = normalizeApiBaseUrl(
-  resolvedBase
-);
+export const API_BASE_URL = normalizeApiBaseUrl(resolvedBase);
 
 export const API_CONFIG = {
   mode: import.meta.env.MODE,

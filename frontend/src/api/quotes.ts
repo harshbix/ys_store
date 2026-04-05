@@ -1,6 +1,6 @@
-import { apiClient } from './client';
-import { getCart } from './cart';
-import type { ApiEnvelope, QuoteDetail, QuoteRecord, QuoteType } from '../types/api';
+import { supabase } from '../lib/supabase';
+import { getCart, getSessionContext } from './cart';
+import type { QuoteDetail, QuoteRecord, QuoteType } from '../types/api';
 import { env } from '../utils/env';
 import { logError } from '../utils/errors';
 
@@ -54,20 +54,39 @@ function saveFixtureQuotes(quotes: QuoteDetail[]): void {
   window.localStorage.setItem(fixtureQuoteStorageKey, JSON.stringify(quotes));
 }
 
-export async function createQuote(body: CreateQuoteBody, idempotencyKey?: string): Promise<ApiEnvelope<QuoteRecord>> {
+export async function createQuote(body: CreateQuoteBody, idempotencyKey?: string): Promise<any> {
   try {
-    const { data } = await apiClient.post<ApiEnvelope<QuoteRecord>>('/quotes', body, {
-      headers: idempotencyKey
-        ? {
-            'Idempotency-Key': idempotencyKey,
-            'x-idempotency-key': idempotencyKey
-          }
-        : undefined
+    const context = await getSessionContext();
+    const idempotency = idempotencyKey || body.idempotency_key || crypto.randomUUID();
+    
+    const { data, error } = await supabase.rpc('create_quote_from_cart', {
+      p_customer_name: body.customer_name,
+      p_notes: body.notes || null,
+      p_source_type: body.source_type,
+      p_source_id: body.source_id,
+      p_idempotency_key: idempotency
     });
 
-    return data;
+    if (error) throw error;
+    const result = data[0] || data;
+    
+    return {
+      success: true,
+      message: 'Quote created',
+      data: {
+        id: result.id,
+        quote_code: result.quote_code,
+        status: result.status,
+        customer_name: result.customer_name,
+        notes: result.notes,
+        estimated_total_tzs: result.estimated_total_tzs,
+        idempotency_key: result.idempotency_key,
+        created_at: result.created_at
+      }
+    };
   } catch (error) {
     if (!env.enableDevFixtures) {
+      console.error('[QUOTE ERROR] Failed to create quote:', error);
       throw error;
     }
 
@@ -122,12 +141,26 @@ export async function createQuote(body: CreateQuoteBody, idempotencyKey?: string
   }
 }
 
-export async function getQuoteByCode(quoteCode: string): Promise<ApiEnvelope<QuoteDetail>> {
+export async function getQuoteByCode(quoteCode: string): Promise<any> {
   try {
-    const { data } = await apiClient.get<ApiEnvelope<QuoteDetail>>(`/quotes/${quoteCode}`);
-    return data;
+    const { data, error } = await supabase.rpc('get_quote_with_items', {
+      p_quote_code: quoteCode
+    });
+
+    if (error) throw error;
+    const result = data[0] || data;
+    
+    return {
+      success: true,
+      message: 'Quote retrieved',
+      data: {
+        ...result,
+        items: Array.isArray(result.items) ? result.items : JSON.parse(result.items || '[]')
+      }
+    };
   } catch (error) {
     if (!env.enableDevFixtures) {
+      console.error('[QUOTE ERROR] Failed to get quote:', error);
       throw error;
     }
 
@@ -143,12 +176,27 @@ export async function getQuoteByCode(quoteCode: string): Promise<ApiEnvelope<Quo
   }
 }
 
-export async function trackQuoteWhatsappClick(quoteCode: string): Promise<ApiEnvelope<QuoteRecord>> {
+export async function trackQuoteWhatsappClick(quoteCode: string): Promise<any> {
   try {
-    const { data } = await apiClient.post<ApiEnvelope<QuoteRecord>>(`/quotes/${quoteCode}/whatsapp-click`, {});
-    return data;
+    const { data, error } = await supabase.rpc('track_quote_whatsapp_click', {
+      p_quote_code: quoteCode
+    });
+
+    if (error) throw error;
+    const result = data[0] || data;
+    
+    return {
+      success: true,
+      message: 'Click tracked',
+      data: {
+        id: result.id,
+        quote_code: result.quote_code,
+        whatsapp_clicked_at: result.whatsapp_clicked_at
+      }
+    };
   } catch (error) {
     if (!env.enableDevFixtures) {
+      console.error('[QUOTE ERROR] Failed to track WhatsApp click:', error);
       throw error;
     }
 
@@ -172,12 +220,27 @@ export async function trackQuoteWhatsappClick(quoteCode: string): Promise<ApiEnv
   }
 }
 
-export async function getQuoteWhatsappUrl(quoteCode: string): Promise<ApiEnvelope<{ quote_code: string; whatsapp_url: string }>> {
+export async function getQuoteWhatsappUrl(quoteCode: string): Promise<any> {
   try {
-    const { data } = await apiClient.get<ApiEnvelope<{ quote_code: string; whatsapp_url: string }>>(`/quotes/${quoteCode}/whatsapp-url`);
-    return data;
+    const { data, error } = await supabase.rpc('get_quote_with_items', {
+      p_quote_code: quoteCode
+    });
+
+    if (error) throw error;
+    const result = data[0] || data;
+    const whatsappUrl = `https://wa.me/255700000000?text=${encodeURIComponent(`Hello, I am following up on quote ${result.quote_code}.`)}`;
+    
+    return {
+      success: true,
+      message: 'URL retrieved',
+      data: {
+        quote_code: result.quote_code,
+        whatsapp_url: whatsappUrl
+      }
+    };
   } catch (error) {
     if (!env.enableDevFixtures) {
+      console.error('[QUOTE ERROR] Failed to get WhatsApp URL:', error);
       throw error;
     }
 

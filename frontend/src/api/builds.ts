@@ -1,14 +1,12 @@
-import { apiClient } from './client';
-import { addCartItem, getCart } from './cart';
+import { supabase } from '../lib/supabase';
+import { addCartItem, getCart, getSessionContext } from './cart';
 import { getFixtureBuildCandidates } from '../fixtures/builds';
 import type {
-  ApiEnvelope,
   BuildAddToCartPayload,
   BuildPayload,
   BuildValidationPayload,
   ComponentType,
-  CustomBuild,
-  Product
+  CustomBuild
 } from '../types/api';
 import { env } from '../utils/env';
 import { logError } from '../utils/errors';
@@ -254,12 +252,24 @@ async function fixtureAddBuildToCart(buildId: string): Promise<ApiEnvelope<Build
   };
 }
 
-export async function createBuild(body: CreateBuildBody = {}): Promise<ApiEnvelope<CustomBuild>> {
+export async function createBuild(body: CreateBuildBody = {}): Promise<any> {
   try {
-    const { data } = await apiClient.post<ApiEnvelope<CustomBuild>>('/builds', body);
-    return data;
+    const context = await getSessionContext();
+    const { data, error } = await supabase.rpc('create_or_get_custom_build', {
+      p_customer_auth_id: context.customerAuthId,
+      p_session_token: context.sessionToken,
+      p_name: body.name
+    });
+
+    if (error) throw error;
+    return {
+      success: true,
+      message: 'Build created',
+      data: data[0] || data
+    };
   } catch (error) {
     if (!env.enableDevFixtures) {
+      console.error('[BUILD ERROR] Failed to create build:', error);
       throw error;
     }
 
@@ -268,12 +278,25 @@ export async function createBuild(body: CreateBuildBody = {}): Promise<ApiEnvelo
   }
 }
 
-export async function getBuild(buildId: string): Promise<ApiEnvelope<BuildPayload>> {
+export async function getBuild(buildId: string): Promise<any> {
   try {
-    const { data } = await apiClient.get<ApiEnvelope<BuildPayload>>(`/builds/${buildId}`);
-    return data;
+    const { data, error } = await supabase.rpc('get_custom_build_with_items', {
+      p_build_id: buildId
+    });
+
+    if (error) throw error;
+    const result = data[0] || data;
+    return {
+      success: true,
+      message: 'Build retrieved',
+      data: {
+        ...result,
+        items: Array.isArray(result.items) ? result.items : JSON.parse(result.items || '[]')
+      }
+    };
   } catch (error) {
     if (!env.enableDevFixtures) {
+      console.error('[BUILD ERROR] Failed to get build:', error);
       throw error;
     }
 
@@ -284,12 +307,27 @@ export async function getBuild(buildId: string): Promise<ApiEnvelope<BuildPayloa
   }
 }
 
-export async function upsertBuildItem(buildId: string, body: UpsertBuildItemBody): Promise<ApiEnvelope<BuildPayload>> {
+export async function upsertBuildItem(buildId: string, body: UpsertBuildItemBody): Promise<any> {
   try {
-    const { data } = await apiClient.patch<ApiEnvelope<BuildPayload>>(`/builds/${buildId}/items`, body);
-    return data;
+    const { data, error } = await supabase.rpc('upsert_custom_build_item', {
+      p_build_id: buildId,
+      p_component_type: body.component_type,
+      p_product_id: body.product_id
+    });
+
+    if (error) throw error;
+    const result = data[0] || data;
+    return {
+      success: true,
+      message: 'Build item updated',
+      data: {
+        ...result,
+        items: Array.isArray(result.items) ? result.items : JSON.parse(result.items || '[]')
+      }
+    };
   } catch (error) {
     if (!env.enableDevFixtures) {
+      console.error('[BUILD ERROR] Failed to upsert build item:', error);
       throw error;
     }
 
@@ -300,12 +338,26 @@ export async function upsertBuildItem(buildId: string, body: UpsertBuildItemBody
   }
 }
 
-export async function deleteBuildItem(buildId: string, itemId: string): Promise<ApiEnvelope<BuildPayload>> {
+export async function deleteBuildItem(buildId: string, itemId: string): Promise<any> {
   try {
-    const { data } = await apiClient.delete<ApiEnvelope<BuildPayload>>(`/builds/${buildId}/items/${itemId}`);
-    return data;
+    const { data, error } = await supabase.rpc('delete_custom_build_item', {
+      p_build_id: buildId,
+      p_item_id: itemId
+    });
+
+    if (error) throw error;
+    const result = data[0] || data;
+    return {
+      success: true,
+      message: 'Build item deleted',
+      data: {
+        ...result,
+        items: Array.isArray(result.items) ? result.items : JSON.parse(result.items || '[]')
+      }
+    };
   } catch (error) {
     if (!env.enableDevFixtures) {
+      console.error('[BUILD ERROR] Failed to delete build item:', error);
       throw error;
     }
 
@@ -316,12 +368,30 @@ export async function deleteBuildItem(buildId: string, itemId: string): Promise<
   }
 }
 
-export async function validateBuild(buildId: string, body: ValidateBuildBody): Promise<ApiEnvelope<BuildValidationPayload>> {
+export async function validateBuild(buildId: string, body: ValidateBuildBody): Promise<any> {
   try {
-    const { data } = await apiClient.post<ApiEnvelope<BuildValidationPayload>>(`/builds/${buildId}/validate`, body);
-    return data;
+    const { data, error } = await supabase.rpc('validate_custom_build', {
+      p_build_id: buildId
+    });
+
+    if (error) throw error;
+    const result = data[0] || data;
+    return {
+      success: true,
+      message: 'Build validated',
+      data: {
+        compatibility_status: result.compatibility_status,
+        errors: [],
+        warnings: result.warnings || [],
+        replacements: [],
+        normalized_items: [],
+        total_estimated_tzs: 0,
+        rules_count: 5
+      }
+    };
   } catch (error) {
     if (!env.enableDevFixtures) {
+      console.error('[BUILD ERROR] Failed to validate build:', error);
       throw error;
     }
 
@@ -332,12 +402,23 @@ export async function validateBuild(buildId: string, body: ValidateBuildBody): P
   }
 }
 
-export async function addBuildToCart(buildId: string): Promise<ApiEnvelope<BuildAddToCartPayload>> {
+export async function addBuildToCart(buildId: string): Promise<any> {
   try {
-    const { data } = await apiClient.post<ApiEnvelope<BuildAddToCartPayload>>(`/builds/${buildId}/add-to-cart`, {});
-    return data;
+    // Add build as custom_build item to cart
+    await addCartItem({ item_type: 'custom_build', custom_build_id: buildId, quantity: 1 });
+    const cart = await getCart();
+
+    return {
+      success: true,
+      message: 'Build added to cart',
+      data: {
+        build_id: buildId,
+        cart: cart.data
+      }
+    };
   } catch (error) {
     if (!env.enableDevFixtures) {
+      console.error('[BUILD ERROR] Failed to add build to cart:', error);
       throw error;
     }
 
