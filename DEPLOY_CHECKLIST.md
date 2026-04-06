@@ -15,6 +15,7 @@ All code is complete. Use this checklist to deploy and validate.
 2. Migration 013 (Product RPC)      → backend/supabase/migrations/013_*.sql
 3. Migration 014 (Build RPC)        → backend/supabase/migrations/014_*.sql
 4. Migration 015 (Quote RPC)        → backend/supabase/migrations/015_*.sql
+5. Migration 016 (Cart RPC ambiguity fix) → backend/supabase/migrations/016_*.sql
 ```
 
 **Expected Result**: 15 RPC functions created (verify in Supabase Dashboard → Functions)
@@ -55,6 +56,12 @@ Set these in your hosting platform before building frontend:
 - `VITE_SUPABASE_URL=https://<project-ref>.supabase.co`
 - `VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>`
 - `VITE_API_URL=https://<backend-domain>/api`
+
+Format rules:
+- Use full URL with protocol (`https://...`) for `VITE_SUPABASE_URL`.
+- Use the project host only (`https://<project-ref>.supabase.co`), not `https://db.<project-ref>.supabase.co`.
+- Do not include quotes around values.
+- Do not include angle brackets in real values.
 
 Do not leave template values such as `your-supabase-url.supabase.co` or `your-supabase-anon-key`.
 If template values are deployed, browser requests fail with `ERR_NAME_NOT_RESOLVED` and storefront/auth/cart calls will break.
@@ -114,8 +121,10 @@ npx vitest run RPC_RUNTIME_TESTS.ts
 | Problem | Solution |
 |---------|----------|
 | "Function not found" | Redeploy migrations in order |
+| add_item_to_cart fails with "column reference cart_id is ambiguous" | Apply migration 016 to replace cart RPC functions with qualified column references |
 | SQL test fails | Check product exists in database |
 | Frontend test fails | Verify migrations deployed first |
+| 401 "Invalid API key" from Supabase REST/RPC | Use the anon public key (not service role), and ensure key/project URL are from the same Supabase project |
 | 500 errors in browser | Check Supabase logs → Functions |
 | Total calculates wrong | Verify product prices in DB |
 | Idempotency broken | Check quote_idempotency_key constraint |
