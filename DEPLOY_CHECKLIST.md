@@ -16,6 +16,7 @@ All code is complete. Use this checklist to deploy and validate.
 3. Migration 014 (Build RPC)        → backend/supabase/migrations/014_*.sql
 4. Migration 015 (Quote RPC)        → backend/supabase/migrations/015_*.sql
 5. Migration 016 (Cart RPC ambiguity fix) → backend/supabase/migrations/016_*.sql
+6. Migration 017 (Cart item_type enum cast fix) → backend/supabase/migrations/017_*.sql
 ```
 
 **Expected Result**: 15 RPC functions created (verify in Supabase Dashboard → Functions)
@@ -122,6 +123,7 @@ npx vitest run RPC_RUNTIME_TESTS.ts
 |---------|----------|
 | "Function not found" | Redeploy migrations in order |
 | add_item_to_cart fails with "column reference cart_id is ambiguous" | Apply migration 016 to replace cart RPC functions with qualified column references |
+| add_item_to_cart fails with "operator does not exist: cart_item_type = text" | Apply migration 017 to cast incoming item type to cart_item_type enum before comparisons |
 | SQL test fails | Check product exists in database |
 | Frontend test fails | Verify migrations deployed first |
 | 401 "Invalid API key" from Supabase REST/RPC | Use the anon public key (not service role), and ensure key/project URL are from the same Supabase project |
