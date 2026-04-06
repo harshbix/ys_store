@@ -13,9 +13,9 @@ export default defineConfig(({ mode }) => {
 	const isRelativeApiUrl = configuredApiUrl.startsWith('/');
 	const apiBase = isRelativeApiUrl
 		? configuredApiUrl
-		: normalizeApiBase(configuredApiUrl || 'http://localhost:3001/api');
+		: normalizeApiBase(configuredApiUrl || 'http://localhost:4000/api');
 	const proxyTarget = isRelativeApiUrl
-		? 'http://localhost:3001'
+		? 'http://localhost:4000'
 		: apiBase.replace(/\/api\/?$/, '');
 
 	return {

@@ -25,7 +25,7 @@ After changing environment variables, trigger a redeploy so the new value is app
 
 Set `FRONTEND_URL` in backend env as a comma-separated allowlist. Example:
 
-- `FRONTEND_URL=http://localhost:5173,https://your-frontend-domain.com`
+- `FRONTEND_URL=http://localhost:5173,http://localhost:5174,https://your-frontend-domain.com`
 
 In production, guest-session cookies are configured for cross-domain usage (`SameSite=None` and `Secure=true`), so frontend and backend must both be served over HTTPS.
 
@@ -47,4 +47,6 @@ The demo catalog includes desktops, laptops, components, and accessories with pr
 
 ## Customer Authentication
 
-Customer login now uses email OTP (`/auth/request-otp` and `/auth/verify-otp`) instead of phone OTP.
+Customer login is password-first (`/auth/login`) with registration via `/auth/register`.
+
+OTP endpoints (`/auth/request-otp`, `/auth/verify-otp`) remain available for compatibility and operational fallback paths.

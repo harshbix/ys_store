@@ -36,7 +36,7 @@ export function useAdmin() {
   const loginMutation = useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) => adminLogin(email, password),
     onSuccess: async (response) => {
-      setSession(response.data.token, response.data.admin);
+      setSession(response.token, response.admin);
       showToast({ title: 'Admin access granted', variant: 'success' });
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.me });
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
@@ -90,7 +90,7 @@ export function useAdmin() {
     mutationFn: ({ productId, payload }: { productId: string; payload: AdminProductPayload }) =>
       updateAdminProduct(productId, payload, token || ''),
     onSuccess: async (response, variables) => {
-      showToast({ title: 'Product updated', description: `${response.data.title} has been updated.`, variant: 'success' });
+      showToast({ title: 'Product updated', description: `${response.title} has been updated.`, variant: 'success' });
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.productDetail(variables.productId) });
     },
@@ -108,7 +108,7 @@ export function useAdmin() {
     onSuccess: async (response) => {
       showToast({
         title: 'Product duplicated',
-        description: `${response.data.title} copy has been created.`,
+        description: `${response.title} copy has been created.`,
         variant: 'success'
       });
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
@@ -123,7 +123,7 @@ export function useAdmin() {
   });
 
   const archiveProductMutation = useMutation({
-    mutationFn: (productId: string) => archiveProduct(productId),
+    mutationFn: (productId: string) => archiveProduct(productId, token || ''),
     onSuccess: async (response, productId) => {
       showToast({ title: 'Product archived', description: `${response.title} is now hidden from customers.`, variant: 'info' });
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
@@ -139,7 +139,7 @@ export function useAdmin() {
   });
 
   const publishProductMutation = useMutation({
-    mutationFn: (productId: string) => publishProduct(productId),
+    mutationFn: (productId: string) => publishProduct(productId, token || ''),
     onSuccess: async (response, productId) => {
       showToast({ title: 'Product published', description: `${response.title} is now visible to customers.`, variant: 'success' });
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
@@ -155,30 +155,31 @@ export function useAdmin() {
   });
 
   const createUploadUrlMutation = useMutation({
-    mutationFn: (payload: AdminSignedUploadPayload) => getAdminUploadUrl(payload)
+    mutationFn: (payload: AdminSignedUploadPayload) => getAdminUploadUrl(payload, token || '')
   });
 
   const finalizeUploadMutation = useMutation({
-    mutationFn: (payload: AdminFinalizeUploadPayload) => finalizeAdminUpload(payload)
+    mutationFn: (payload: AdminFinalizeUploadPayload) => finalizeAdminUpload(payload, token || '')
   });
 
   useEffect(() => {
-    if (meQuery.data?.data.admin && token) {
-      setSession(token, meQuery.data.data.admin);
+    if (meQuery.data?.admin && token) {
+      setSession(token, meQuery.data.admin);
     }
-  }, [meQuery.data?.data.admin, setSession, token]);
+  }, [meQuery.data?.admin, setSession, token]);
 
   useEffect(() => {
     if (!token) return;
     if (meQuery.isError) {
+      showToast({ title: 'Admin session expired', description: 'Please sign in again.', variant: 'error' });
       clearSession();
     }
-  }, [clearSession, meQuery.isError, token]);
+  }, [clearSession, meQuery.isError, showToast, token]);
 
   const logout = async () => {
     try {
       if (token) {
-        await adminLogout();
+        await adminLogout(token);
       }
     } catch {
       // Ignore logout network errors and clear local session regardless.

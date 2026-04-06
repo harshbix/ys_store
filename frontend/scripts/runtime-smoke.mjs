@@ -3,7 +3,7 @@ import path from 'node:path';
 import { chromium } from '@playwright/test';
 
 const BASE_URL = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:4173';
-const API_URL = process.env.SMOKE_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.SMOKE_API_URL || 'http://localhost:4000/api';
 const OTP_BASE_EMAIL = process.env.SMOKE_OTP_EMAIL || 'smoke.test@gmail.com';
 const onePixelPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
 

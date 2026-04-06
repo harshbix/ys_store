@@ -254,7 +254,7 @@ export default function AdminDashboardPage() {
     logout
   } = useAdmin();
 
-  const products = productsQuery.data?.data || [];
+  const products = productsQuery.data || [];
 
   const [form, setForm] = useState<ProductPostForm>(defaultForm);
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
@@ -401,15 +401,15 @@ export default function AdminDashboardPage() {
       const thumb = await createUploadUrlMutation.mutateAsync(createPayload('thumb'));
       const full = await createUploadUrlMutation.mutateAsync(createPayload('full'));
 
-      await uploadToSignedUrlWithRetry(original.data.signed_url, file, (percent) => {
+      await uploadToSignedUrlWithRetry(original.signed_url, file, (percent) => {
         variantProgress.original = percent;
         pushProgress();
       });
-      await uploadToSignedUrlWithRetry(thumb.data.signed_url, file, (percent) => {
+      await uploadToSignedUrlWithRetry(thumb.signed_url, file, (percent) => {
         variantProgress.thumb = percent;
         pushProgress();
       });
-      await uploadToSignedUrlWithRetry(full.data.signed_url, file, (percent) => {
+      await uploadToSignedUrlWithRetry(full.signed_url, file, (percent) => {
         variantProgress.full = percent;
         pushProgress();
       });
@@ -417,9 +417,9 @@ export default function AdminDashboardPage() {
       const finalizePayload: AdminFinalizeUploadPayload = {
         owner_type: 'product',
         owner_id: productId,
-        original_path: original.data.path,
-        thumb_path: thumb.data.path,
-        full_path: full.data.path,
+        original_path: original.path,
+        thumb_path: thumb.path,
+        full_path: full.path,
         width: dimensions?.width,
         height: dimensions?.height,
         size_bytes: file.size,
@@ -455,11 +455,6 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    if (!editingProductId && photos.length === 0) {
-      showToast({ title: 'Please add at least one photo', variant: 'error' });
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const payload = buildPayload(form, editingProductId || undefined);
@@ -469,11 +464,23 @@ export default function AdminDashboardPage() {
         await updateProductMutation.mutateAsync({ productId: editingProductId, payload });
       } else {
         const created = await createProductMutation.mutateAsync(payload);
-        productId = created.data.id;
+        productId = created.id;
       }
 
       if (productId && photos.length > 0) {
-        await uploadPhotosForProduct(productId, form.title.trim());
+        try {
+          await uploadPhotosForProduct(productId, form.title.trim());
+        } catch (uploadError) {
+          await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
+          await queryClient.invalidateQueries({ queryKey: queryKeys.products.list({ page: 1, limit: 16, sort: 'newest' }) });
+          showToast({
+            title: 'Product posted, but image upload failed',
+            description: toUserMessage(uploadError, 'You can edit this product and retry image upload.'),
+            variant: 'error'
+          });
+          setUploadProgress(null);
+          return;
+        }
       }
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
@@ -504,7 +511,7 @@ export default function AdminDashboardPage() {
     setIsLoadingEdit(true);
     try {
       const detail = await getAdminProductById(productId, token);
-      const product = detail.data;
+      const product = detail;
 
       setForm({
         title: product.title,

@@ -5,6 +5,8 @@ import { InlineAlert } from '../components/feedback/InlineAlert';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { useAuth } from '../hooks/useAuth';
+import { normalizeApiError } from '../lib/errors';
+import { toUserMessage } from '../utils/errors';
 
 function normalizeOptionalUrl(value: string | undefined): string | null {
   const normalized = (value || '').trim();
@@ -21,6 +23,8 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [nowTs, setNowTs] = useState(Date.now());
 
   const googleAuthUrl = normalizeOptionalUrl(import.meta.env.VITE_GOOGLE_AUTH_URL);
 
@@ -28,6 +32,21 @@ export default function RegisterPage() {
     if (!isAuthenticated) return;
     navigate('/shop', { replace: true });
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (!registerMutation.isError) return;
+    const normalized = normalizeApiError(registerMutation.error);
+    const rateLimited = normalized.status === 429
+      && (normalized.code === 'over_email_send_rate_limit' || normalized.code === 'register_failed');
+    if (!rateLimited) return;
+    setCooldownUntil(Date.now() + 15000);
+  }, [registerMutation.error, registerMutation.isError]);
+
+  useEffect(() => {
+    if (!cooldownUntil) return;
+    const timer = window.setInterval(() => setNowTs(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [cooldownUntil]);
 
   const emailValid = /.+@.+\..+/.test(email.trim());
   const passwordValid = password.trim().length >= 6;
@@ -37,9 +56,12 @@ export default function RegisterPage() {
     return fullName.trim().length >= 2 && emailValid && passwordValid && passwordsMatch;
   }, [fullName, emailValid, passwordValid, passwordsMatch]);
 
+  const cooldownRemaining = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - nowTs) / 1000)) : 0;
+  const isCoolingDown = cooldownRemaining > 0;
+
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canSubmit || registerMutation.isPending) return;
+    if (!canSubmit || registerMutation.isPending || isCoolingDown) return;
 
     registerMutation.mutate({
       fullName: fullName.trim(),
@@ -128,10 +150,19 @@ export default function RegisterPage() {
           </label>
 
           {registerMutation.isError ? (
-            <InlineAlert tone="error" message="Could not create account. Please try another email." />
+            <InlineAlert
+              tone="error"
+              message={toUserMessage(registerMutation.error, 'Could not create account. Please try another email.')}
+            />
           ) : null}
 
-          <Button type="submit" size="lg" fullWidth loading={registerMutation.isPending} disabled={!canSubmit || registerMutation.isPending}>
+          {isCoolingDown ? (
+            <p className="text-[12px] text-secondary">
+              Please wait {cooldownRemaining}s before trying again, or sign in if your account already exists.
+            </p>
+          ) : null}
+
+          <Button type="submit" size="lg" fullWidth loading={registerMutation.isPending} disabled={!canSubmit || registerMutation.isPending || isCoolingDown}>
             Create Account
           </Button>
         </form>

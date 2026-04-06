@@ -3,7 +3,8 @@ import { useUiStore } from '../store/ui';
 const rawUrl = import.meta.env.VITE_API_URL as string | undefined;
 const isProd = import.meta.env.PROD;
 
-const DEV_API_FALLBACK = 'http://localhost:3001/api';
+const DEV_API_FALLBACK = 'http://localhost:4000/api';
+const PROD_API_FALLBACK = '/api';
 
 function isLoopbackHost(value: string): boolean {
   try {
@@ -36,18 +37,18 @@ const hasConfiguredApiUrl = Boolean(normalizedRaw);
 const isInvalidProdLoopback = isProd && hasConfiguredApiUrl && isLoopbackHost(normalizedRaw);
 
 if (isInvalidProdLoopback) {
-  console.error('[ENV WARNING] VITE_API_URL points to localhost/loopback in production. Using Supabase as primary backend.');
+  console.error('[ENV WARNING] VITE_API_URL points to localhost/loopback in production. Falling back to relative /api.');
 }
 
 if (!hasConfiguredApiUrl) {
   if (isProd) {
-    console.error('[ENV WARNING] VITE_API_URL is missing in production. Using Supabase backend.');
+    console.error('[ENV WARNING] VITE_API_URL is missing in production. Falling back to relative /api.');
   } else {
-    console.warn('[ENV WARNING] VITE_API_URL not set - frontend uses Supabase directly');
+    console.warn('[ENV WARNING] VITE_API_URL not set - using local backend fallback.');
   }
 }
 
-const fallbackBase = DEV_API_FALLBACK;
+const fallbackBase = isProd ? PROD_API_FALLBACK : DEV_API_FALLBACK;
 const resolvedBase = isInvalidProdLoopback || !hasConfiguredApiUrl
   ? fallbackBase
   : normalizedRaw;

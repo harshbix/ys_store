@@ -29,6 +29,7 @@ export function Header() {
   const openSearchOverlay = useUiStore((state) => state.openSearchOverlay);
   const closeSearchOverlay = useUiStore((state) => state.closeSearchOverlay);
   const customerAuthenticated = useAuthStore((state) => Boolean(state.accessToken));
+  const customerLogout = useAuthStore((state) => state.logout);
   const adminAuthenticated = useAdminAuthStore((state) => Boolean(state.token));
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -42,6 +43,12 @@ export function Header() {
   const cartItems = cartQuery.data?.items ?? cartQuery.data?.data?.items ?? [];
   const cartCount = cartItems.length;
   const accountHref = adminAuthenticated ? '/admin' : '/login';
+
+  const handleCustomerLogout = () => {
+    customerLogout();
+    showToast({ title: 'Signed out', variant: 'info' });
+    navigate('/login', { replace: true });
+  };
 
   const handleCartIntent = () => {
     if (customerAuthenticated) {
@@ -163,6 +170,17 @@ export function Header() {
             >
               <UserCircle2 className="h-[18px] w-[18px]" />
             </Link>
+
+            {customerAuthenticated && !adminAuthenticated ? (
+              <button
+                type="button"
+                onClick={handleCustomerLogout}
+                className="inline-flex min-h-9 items-center rounded-full border border-border px-3 text-[11px] font-semibold tracking-[0.08em] text-foreground transition hover:border-foreground"
+                aria-label="Sign out"
+              >
+                Sign out
+              </button>
+            ) : null}
           </div>
         </div>
       </div>

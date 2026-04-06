@@ -10,5 +10,13 @@ export function logError(error: unknown, context: string): void {
 
 export function toUserMessage(error: unknown, fallback = 'Request failed'): string {
   const normalized = normalizeApiError(error);
+
+  if (
+    normalized.status === 429
+    && (normalized.code === 'over_email_send_rate_limit' || normalized.code === 'register_failed')
+  ) {
+    return 'Too many signup attempts right now. Please wait and try again.';
+  }
+
   return normalized.message || fallback;
 }
