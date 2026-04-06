@@ -12,8 +12,8 @@ export function CartDrawer() {
   const close = useUiStore((state) => state.closeCartDrawer);
   const { cartQuery, updateItem, removeItem } = useCart();
 
-  const items = cartQuery.data?.items ?? cartQuery.data?.data?.items ?? [];
-  const estimatedTotal = cartQuery.data?.estimated_total_tzs ?? cartQuery.data?.data?.estimated_total_tzs ?? 0;
+  const items = cartQuery.isSuccess ? (cartQuery.data?.items ?? []) : [];
+  const estimatedTotal = cartQuery.isSuccess ? (cartQuery.data?.estimated_total_tzs ?? 0) : 0;
 
   return (
     <AnimatePresence>

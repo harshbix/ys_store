@@ -40,7 +40,7 @@ export function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const cartItems = cartQuery.data?.items ?? cartQuery.data?.data?.items ?? [];
+  const cartItems = cartQuery.isSuccess ? (cartQuery.data?.items ?? []) : [];
   const cartCount = cartItems.length;
   const accountHref = adminAuthenticated ? '/admin' : '/login';
 
