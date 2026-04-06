@@ -6,6 +6,23 @@ import type {
   WishlistPayload
 } from '../types/api';
 
+interface AuthErrorLike {
+  status?: number;
+  code?: string;
+  message?: string;
+}
+
+function normalizeAuthError(error: unknown, fallbackCode: string, fallbackMessage: string): Error {
+  const candidate = (error && typeof error === 'object') ? (error as AuthErrorLike) : null;
+  const authError = new Error(candidate?.message || fallbackMessage) as Error & {
+    status?: number;
+    code?: string;
+  };
+  authError.status = typeof candidate?.status === 'number' ? candidate.status : 500;
+  authError.code = typeof candidate?.code === 'string' ? candidate.code : fallbackCode;
+  return authError;
+}
+
 interface PersistentCartPayload {
   customer_auth_id: string;
   cart: {
@@ -47,7 +64,7 @@ export async function registerWithPassword(
   });
 
   if (error) {
-    throw error;
+    throw normalizeAuthError(error, 'register_failed', 'Could not create account');
   }
 
   if (!data.user) {
@@ -55,8 +72,23 @@ export async function registerWithPassword(
   }
 
   const session = data.session || (await supabase.auth.getSession()).data.session;
+
   if (!session) {
-    throw new Error('Account created but session could not start');
+    // Some projects require email confirmation before session issuance.
+    const loginAttempt = await supabase.auth.signInWithPassword({ email, password });
+    if (loginAttempt.error || !loginAttempt.data.session || !loginAttempt.data.user) {
+      throw normalizeAuthError(
+        loginAttempt.error,
+        'email_verification_required',
+        'Account created. Check your email to verify your account, then sign in.'
+      );
+    }
+
+    return {
+      access_token: loginAttempt.data.session.access_token,
+      customer_id: loginAttempt.data.user.id,
+      challenge_id: null
+    };
   }
 
   return {
@@ -73,7 +105,7 @@ export async function loginWithPassword(email: string, password: string): Promis
   });
 
   if (error) {
-    throw error;
+    throw normalizeAuthError(error, 'login_failed', 'Invalid email or password');
   }
 
   if (!data.user || !data.session) {

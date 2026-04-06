@@ -48,6 +48,17 @@ Expected: All 10 tests pass
 
 ## PHASE 3: FRONTEND TESTS (3 min)
 
+### REQUIRED: Frontend Environment Variables
+
+Set these in your hosting platform before building frontend:
+
+- `VITE_SUPABASE_URL=https://<project-ref>.supabase.co`
+- `VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>`
+- `VITE_API_URL=https://<backend-domain>/api`
+
+Do not leave template values such as `your-supabase-url.supabase.co` or `your-supabase-anon-key`.
+If template values are deployed, browser requests fail with `ERR_NAME_NOT_RESOLVED` and storefront/auth/cart calls will break.
+
 ### ✅ TypeScript Integration Tests
 ```bash
 cd frontend

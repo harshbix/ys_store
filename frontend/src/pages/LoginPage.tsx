@@ -5,6 +5,7 @@ import { InlineAlert } from '../components/feedback/InlineAlert';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { useAuth } from '../hooks/useAuth';
+import { toUserMessage } from '../utils/errors';
 
 type LocationState = {
   returnTo?: string;
@@ -88,7 +89,7 @@ export default function LoginPage() {
           </label>
 
           {loginMutation.isError ? (
-            <InlineAlert tone="error" message="Login failed. Check your email or password." />
+            <InlineAlert tone="error" message={toUserMessage(loginMutation.error, 'Login failed. Check your email or password.')} />
           ) : null}
 
           <Button type="submit" size="lg" fullWidth loading={loginMutation.isPending} disabled={!canSubmit || loginMutation.isPending}>

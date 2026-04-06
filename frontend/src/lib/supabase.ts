@@ -1,9 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
-import { env } from '../utils/env';
+import { env, supabaseEnvState } from '../utils/env';
 
-if (!env.supabaseUrl || !env.supabaseAnonKey) {
+if (!supabaseEnvState.isConfigured) {
+  const reasons = [
+    !supabaseEnvState.hasUrl ? 'VITE_SUPABASE_URL is missing' : null,
+    !supabaseEnvState.hasAnonKey ? 'VITE_SUPABASE_ANON_KEY is missing' : null,
+    supabaseEnvState.hasPlaceholderUrl ? 'VITE_SUPABASE_URL is still set to template value' : null,
+    supabaseEnvState.hasPlaceholderAnonKey ? 'VITE_SUPABASE_ANON_KEY is still set to template value' : null
+  ].filter(Boolean).join('; ');
+
   throw new Error(
-    'Supabase configuration missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.'
+    `Supabase configuration invalid. ${reasons}. Set real VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY values.`
   );
 }
 
