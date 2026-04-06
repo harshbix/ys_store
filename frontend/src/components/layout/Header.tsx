@@ -39,7 +39,8 @@ export function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const cartCount = cartQuery.data?.data.items.length || 0;
+  const cartItems = cartQuery.data?.items ?? cartQuery.data?.data?.items ?? [];
+  const cartCount = cartItems.length;
   const accountHref = adminAuthenticated ? '/admin' : '/login';
 
   const handleCartIntent = () => {

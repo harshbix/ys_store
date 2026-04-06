@@ -5,7 +5,8 @@ import { useUiStore } from '../../store/ui';
 
 export function MobileBottomNav() {
   const openSearchOverlay = useUiStore((state) => state.openSearchOverlay);
-  const itemCount = useCart().cartQuery.data?.data.items.length || 0;
+  const cartData = useCart().cartQuery.data;
+  const itemCount = (cartData?.items ?? cartData?.data?.items ?? []).length;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface md:hidden" aria-label="Mobile bottom navigation">

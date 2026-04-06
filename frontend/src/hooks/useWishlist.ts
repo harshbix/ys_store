@@ -41,7 +41,11 @@ export function useWishlist() {
       .filter((value): value is NonNullable<typeof value> => Boolean(value));
   }, [productQueries]);
 
-  const remoteItems = remoteWishlistQuery.data?.data.items || [];
+  const remotePayload = (remoteWishlistQuery.data as { items?: unknown[]; data?: { items?: unknown[] } } | undefined);
+  const remoteItems = (remotePayload?.items ?? remotePayload?.data?.items ?? []) as Array<{
+    product_id: string;
+    products?: Product;
+  }>;
 
   const remoteProducts = useMemo<Product[]>(() => {
     return remoteItems

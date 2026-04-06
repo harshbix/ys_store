@@ -21,7 +21,7 @@ export function SearchResultsOverlay({ open, onClose }: SearchResultsOverlayProp
     sort: 'newest'
   });
 
-  const items = useMemo(() => productsQuery.data?.data.items || [], [productsQuery.data?.data.items]);
+  const items = useMemo(() => productsQuery.data?.data?.items ?? [], [productsQuery.data?.data?.items]);
 
   return (
     <AnimatePresence>

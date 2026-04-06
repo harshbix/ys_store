@@ -3,15 +3,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   adminLogin,
   adminLogout,
-  archiveAdminProduct,
+  archiveProduct,
   createAdminProduct,
-  createAdminUploadUrl,
+  getAdminUploadUrl,
   duplicateAdminProduct,
   finalizeAdminUpload,
   getAdminMe,
   getAdminProducts,
   getAdminQuotes,
-  publishAdminProduct,
+  publishProduct,
   updateAdminProduct
 } from '../api/admin';
 import { queryKeys } from '../lib/queryKeys';
@@ -123,9 +123,9 @@ export function useAdmin() {
   });
 
   const archiveProductMutation = useMutation({
-    mutationFn: (productId: string) => archiveAdminProduct(productId, token || ''),
+    mutationFn: (productId: string) => archiveProduct(productId),
     onSuccess: async (response, productId) => {
-      showToast({ title: 'Product archived', description: `${response.data.title} is now hidden from customers.`, variant: 'info' });
+      showToast({ title: 'Product archived', description: `${response.title} is now hidden from customers.`, variant: 'info' });
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.productDetail(productId) });
     },
@@ -139,9 +139,9 @@ export function useAdmin() {
   });
 
   const publishProductMutation = useMutation({
-    mutationFn: (productId: string) => publishAdminProduct(productId, token || ''),
+    mutationFn: (productId: string) => publishProduct(productId),
     onSuccess: async (response, productId) => {
-      showToast({ title: 'Product published', description: `${response.data.title} is now visible to customers.`, variant: 'success' });
+      showToast({ title: 'Product published', description: `${response.title} is now visible to customers.`, variant: 'success' });
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.productDetail(productId) });
     },
@@ -155,11 +155,11 @@ export function useAdmin() {
   });
 
   const createUploadUrlMutation = useMutation({
-    mutationFn: (payload: AdminSignedUploadPayload) => createAdminUploadUrl(payload, token || '')
+    mutationFn: (payload: AdminSignedUploadPayload) => getAdminUploadUrl(payload)
   });
 
   const finalizeUploadMutation = useMutation({
-    mutationFn: (payload: AdminFinalizeUploadPayload) => finalizeAdminUpload(payload, token || '')
+    mutationFn: (payload: AdminFinalizeUploadPayload) => finalizeAdminUpload(payload)
   });
 
   useEffect(() => {
@@ -178,7 +178,7 @@ export function useAdmin() {
   const logout = async () => {
     try {
       if (token) {
-        await adminLogout(token);
+        await adminLogout();
       }
     } catch {
       // Ignore logout network errors and clear local session regardless.

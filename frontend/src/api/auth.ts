@@ -117,10 +117,17 @@ export async function getRemoteWishlist(token: string): Promise<WishlistPayload>
   const { data, error } = await supabase
     .from('wishlists')
     .select('*, wishlist_items(*, products(*))')
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw error;
+  }
+
+  if (!data) {
+    return {
+      wishlist_id: '',
+      items: []
+    };
   }
 
   return {

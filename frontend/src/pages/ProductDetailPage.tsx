@@ -50,8 +50,8 @@ export default function ProductDetailPage() {
 
   const relatedProducts = useMemo(() => {
     if (!product) return [];
-    return (relatedQuery.data?.data.items || []).filter((item) => item.id !== product.id).slice(0, 4);
-  }, [product, relatedQuery.data?.data.items]);
+    return (relatedQuery.data?.data?.items ?? []).filter((item) => item.id !== product.id).slice(0, 4);
+  }, [product, relatedQuery.data?.data?.items]);
 
   const galleryImages = useMemo(() => {
     if (!product) return [];

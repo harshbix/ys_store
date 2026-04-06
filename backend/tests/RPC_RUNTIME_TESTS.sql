@@ -63,6 +63,10 @@ BEGIN
     RAISE EXCEPTION 'TEST FAILED: total should be > 0';
   END IF;
   
+  IF v_result.items IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: items is NULL';
+  END IF;
+  
   IF jsonb_array_length(v_result.items::jsonb) != 1 THEN
     RAISE EXCEPTION 'TEST FAILED: Should have 1 item in cart';
   END IF;
@@ -109,6 +113,10 @@ BEGIN
   );
   
   -- Should still have only 1 item (not 2)
+  IF v_result_2.items IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: items is NULL after duplicate add';
+  END IF;
+  
   IF jsonb_array_length(v_result_2.items::jsonb) != 1 THEN
     RAISE EXCEPTION 'TEST FAILED: Should have 1 item after duplicate add';
   END IF;
@@ -181,6 +189,10 @@ BEGIN
     RAISE EXCEPTION 'TEST FAILED: total should be > 0 after adding item';
   END IF;
   
+  IF v_result.items IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: items is NULL after adding component';
+  END IF;
+  
   IF jsonb_array_length(v_result.items::jsonb) != 1 THEN
     RAISE EXCEPTION 'TEST FAILED: Should have 1 component';
   END IF;
@@ -250,7 +262,7 @@ BEGIN
     p_quantity => 1
   );
   
-  -- Create quote first time
+  -- Create quote first time - SELECT * INTO to capture full result packet
   SELECT * INTO v_result_1 FROM create_quote_from_cart(
     p_customer_name => 'Test Customer',
     p_notes => 'Test quote',
@@ -258,6 +270,10 @@ BEGIN
     p_source_id => v_cart_id,
     p_idempotency_key => v_idempotency_key
   );
+  
+  IF v_result_1 IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: First create_quote_from_cart returned NULL';
+  END IF;
   
   -- Create quote second time with same key
   SELECT * INTO v_result_2 FROM create_quote_from_cart(
@@ -267,6 +283,10 @@ BEGIN
     p_source_id => v_cart_id,
     p_idempotency_key => v_idempotency_key
   );
+  
+  IF v_result_2 IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: Second create_quote_from_cart returned NULL';
+  END IF;
   
   -- Should be the SAME quote
   IF v_result_1.id != v_result_2.id THEN
@@ -290,6 +310,7 @@ DECLARE
   v_cart_id uuid;
   v_product_id uuid;
   v_quote_code text;
+  v_quote_result RECORD;
   v_result RECORD;
 BEGIN
   SELECT id INTO v_product_id FROM products LIMIT 1;
@@ -311,12 +332,22 @@ BEGIN
     p_quantity => 2
   );
   
-  -- Create quote
-  SELECT quote_code INTO v_quote_code FROM create_quote_from_cart(
+  -- Create quote - SELECT * INTO to safely extract quote_code
+  SELECT * INTO v_quote_result FROM create_quote_from_cart(
     p_customer_name => 'Test Customer',
     p_source_type => 'cart',
     p_source_id => v_cart_id
   );
+  
+  IF v_quote_result IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: create_quote_from_cart returned NULL';
+  END IF;
+  
+  v_quote_code := v_quote_result.quote_code;
+  
+  IF v_quote_code IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: quote_code is NULL';
+  END IF;
   
   -- Retrieve quote
   SELECT * INTO v_result FROM get_quote_with_items(v_quote_code);
@@ -342,6 +373,7 @@ DECLARE
   v_cart_id uuid;
   v_product_id uuid;
   v_quote_code text;
+  v_quote_result RECORD;
   v_result_before RECORD;
   v_result_after RECORD;
 BEGIN
@@ -364,12 +396,22 @@ BEGIN
     p_quantity => 1
   );
   
-  -- Create quote
-  SELECT quote_code INTO v_quote_code FROM create_quote_from_cart(
+  -- Create quote - SELECT * INTO to safely extract quote_code
+  SELECT * INTO v_quote_result FROM create_quote_from_cart(
     p_customer_name => 'Test Customer',
     p_source_type => 'cart',
     p_source_id => v_cart_id
   );
+  
+  IF v_quote_result IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: create_quote_from_cart returned NULL';
+  END IF;
+  
+  v_quote_code := v_quote_result.quote_code;
+  
+  IF v_quote_code IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: quote_code is NULL';
+  END IF;
   
   -- Check before
   SELECT * INTO v_result_before FROM get_quote_with_items(v_quote_code);
@@ -430,12 +472,22 @@ BEGIN
     p_quantity => 1
   );
   
+  -- Verify items before extraction
+  IF v_result_2.items IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: items is NULL before quantity update';
+  END IF;
+  
+  -- Extract item id using correct JSON path: ->0 gets first array element, ->>'id' extracts id as text
   -- Update quantity to 3
   SELECT * INTO v_result_3 FROM update_cart_item_quantity(
     p_cart_id => v_cart_id,
-    p_item_id => (v_result_2.items::jsonb->>0)::uuid,
+    p_item_id => (v_result_2.items::jsonb->0->>'id')::uuid,
     p_quantity => 3
   );
+  
+  IF v_result_3 IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: update_cart_item_quantity returned NULL';
+  END IF;
   
   -- Verify totals
   IF v_result_1.estimated_total_tzs != v_product_price THEN

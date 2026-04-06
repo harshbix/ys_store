@@ -29,8 +29,8 @@ export default function CartPage() {
     return <SkeletonGrid count={2} />;
   }
 
-  const items = cartQuery.data?.data.items || [];
-  const total = cartQuery.data?.data.estimated_total_tzs || 0;
+  const items = cartQuery.data?.items ?? cartQuery.data?.data?.items ?? [];
+  const total = cartQuery.data?.estimated_total_tzs ?? cartQuery.data?.data?.estimated_total_tzs ?? 0;
 
   return (
     <div className="space-y-6 pb-8">

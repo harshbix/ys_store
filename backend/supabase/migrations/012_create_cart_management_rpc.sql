@@ -40,7 +40,7 @@ BEGIN
   -- If cart exists, return it
   IF v_cart_id IS NOT NULL THEN
     RETURN QUERY
-    SELECT c.id, c.session_token, c.customer_auth_id, c.status, c.created_at, c.updated_at, c.expires_at
+    SELECT c.id, c.session_token, c.customer_auth_id, c.status::text, c.created_at, c.updated_at, c.expires_at
     FROM carts c
     WHERE c.id = v_cart_id;
     RETURN;
@@ -53,7 +53,7 @@ BEGIN
 
   -- Return newly created cart
   RETURN QUERY
-  SELECT c.id, c.session_token, c.customer_auth_id, c.status, c.created_at, c.updated_at, c.expires_at
+  SELECT c.id, c.session_token, c.customer_auth_id, c.status::text, c.created_at, c.updated_at, c.expires_at
   FROM carts c
   WHERE c.id = v_cart_id;
 END;
@@ -79,7 +79,7 @@ BEGIN
     c.id,
     c.session_token,
     c.customer_auth_id,
-    c.status,
+    c.status::text,
     COALESCE(
       json_agg(
         json_build_object(
