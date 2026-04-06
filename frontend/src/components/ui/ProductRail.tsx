@@ -22,7 +22,7 @@ export function ProductRail({ title, subtitle, type, viewAllTo }: ProductRailPro
   const { isInWishlist, toggle } = useWishlist();
   const addingProductId = addItem.isPending ? (addItem.variables?.product_id ?? null) : null;
 
-  const products = useMemo(() => query.data?.data.items || [], [query.data?.data.items]);
+  const products = useMemo(() => query.data?.items ?? [], [query.data?.items]);
 
   return (
     <section className="space-y-5">

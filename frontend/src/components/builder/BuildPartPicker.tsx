@@ -16,7 +16,7 @@ type BuildPartPickerProps = {
 export function BuildPartPicker({ componentType, open, onClose, onSelect }: BuildPartPickerProps) {
   const productsQuery = useProducts({ type: 'component', page: 1, limit: 24, sort: 'newest', stock_status: 'in_stock' });
 
-  const products = useMemo(() => productsQuery.data?.data?.items ?? [], [productsQuery.data?.data?.items]);
+  const products = useMemo(() => productsQuery.data?.items ?? [], [productsQuery.data?.items]);
 
   return (
     <AnimatePresence>

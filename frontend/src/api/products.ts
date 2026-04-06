@@ -1,8 +1,11 @@
 import { supabase } from '../lib/supabase';
 import type {
   ProductCondition,
+  Product,
   ProductDetail,
   ProductListPayload,
+  ProductMedia,
+  ProductSpec,
   ProductType,
   StockStatus
 } from '../types/api';
@@ -25,32 +28,48 @@ export interface GetProductsParams {
   sort?: 'price_asc' | 'price_desc' | 'newest';
 }
 
-// Convert storage media URLs to public URLs
-function transformProductMedia(product: any) {
-  if (!product.product_media) return product;
+type DbProductRow = Product & {
+  product_media?: ProductMedia[] | null;
+  product_specs?: ProductSpec[] | null;
+};
 
+function toPublicMediaUrl(url: string | null): string {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  const { data } = supabase.storage.from('product-media').getPublicUrl(url);
+  return data?.publicUrl || url;
+}
+
+function normalizeMedia(mediaRows?: ProductMedia[] | null): ProductMedia[] {
+  if (!Array.isArray(mediaRows)) return [];
+
+  return mediaRows.map((media) => ({
+    ...media,
+    original_url: toPublicMediaUrl(media.original_url),
+    thumb_url: toPublicMediaUrl(media.thumb_url),
+    full_url: toPublicMediaUrl(media.full_url)
+  }));
+}
+
+function normalizeProduct(row: DbProductRow): Product {
   return {
-    ...product,
-    product_media: product.product_media.map((media: any) => {
-      // If media_url is a storage path, convert to public URL
-      if (media.media_url && !media.media_url.startsWith('http')) {
-        const { data } = supabase.storage
-          .from('product-media')
-          .getPublicUrl(media.media_url);
-        return {
-          ...media,
-          media_url: data?.publicUrl || media.media_url
-        };
-      }
-      return media;
-    })
+    ...row,
+    media: normalizeMedia(row.product_media)
+  };
+}
+
+function normalizeProductDetail(row: DbProductRow): ProductDetail {
+  return {
+    ...normalizeProduct(row),
+    specs: Array.isArray(row.product_specs) ? row.product_specs : [],
+    media: normalizeMedia(row.product_media)
   };
 }
 
 export async function getProducts(params?: GetProductsParams): Promise<ProductListPayload> {
   let query = supabase
     .from('products')
-    .select('*, product_media(*), product_specs(*)')
+    .select('*, product_media(*), product_specs(*)', { count: 'exact' })
     .eq('is_visible', true);
 
   if (params?.type) query = query.eq('product_type', params.type);
@@ -80,13 +99,11 @@ export async function getProducts(params?: GetProductsParams): Promise<ProductLi
   if (error) throw error;
 
   // Transform all product media URLs
-  const productsWithMedia = (data || []).map(transformProductMedia);
+  const items = (data || []).map((row) => normalizeProduct(row as DbProductRow));
 
   return {
-    products: productsWithMedia,
-    total: count || 0,
-    page,
-    limit
+    items,
+    total: count || 0
   };
 }
 
@@ -101,8 +118,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail> {
   if (error) throw error;
   if (!data) throw new Error('Product not found');
 
-  // Transform media URLs
-  return transformProductMedia(data) as ProductDetail;
+  return normalizeProductDetail(data as DbProductRow);
 }
 
 export async function getFeaturedProducts(type?: ProductType, limit = 8): Promise<ProductListPayload> {

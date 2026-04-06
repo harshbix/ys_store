@@ -35,7 +35,7 @@ export default function HomePage() {
   const { addItem } = useCart();
   const { isInWishlist, toggle } = useWishlist();
 
-  const products = productsQuery.data?.data?.items ?? [];
+  const products = productsQuery.data?.items ?? [];
   const addingProductId = addItem.isPending ? (addItem.variables?.product_id ?? null) : null;
 
   return (

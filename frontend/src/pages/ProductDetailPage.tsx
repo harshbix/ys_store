@@ -39,7 +39,7 @@ export default function ProductDetailPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeImage, setActiveImage] = useState<string>('');
 
-  const product = detailQuery.data?.data;
+  const product = detailQuery.data;
 
   const relatedQuery = useProducts({
     type: product?.product_type,
@@ -50,8 +50,8 @@ export default function ProductDetailPage() {
 
   const relatedProducts = useMemo(() => {
     if (!product) return [];
-    return (relatedQuery.data?.data?.items ?? []).filter((item) => item.id !== product.id).slice(0, 4);
-  }, [product, relatedQuery.data?.data?.items]);
+    return (relatedQuery.data?.items ?? []).filter((item) => item.id !== product.id).slice(0, 4);
+  }, [product, relatedQuery.data?.items]);
 
   const galleryImages = useMemo(() => {
     if (!product) return [];
