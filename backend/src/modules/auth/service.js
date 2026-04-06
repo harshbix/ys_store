@@ -38,15 +38,29 @@ export async function registerCustomer(fullName, email, password) {
   if (created.error) {
     const providerStatus = Number(created.error.status);
     const providerCode = String(created.error.code || '').toLowerCase();
+    const providerMessage = String(created.error.message || '').toLowerCase();
 
     let status = providerStatus === 422 ? 409 : 400;
     if (providerStatus === 429 || providerCode === 'over_email_send_rate_limit') {
       status = 429;
+    } else if (
+      providerCode === 'user_already_exists'
+      || providerCode === 'user_already_registered'
+      || providerMessage.includes('already registered')
+      || providerMessage.includes('already exists')
+    ) {
+      status = 409;
+    } else if (providerCode === 'email_address_invalid' || providerMessage.includes('email address') && providerMessage.includes('invalid')) {
+      status = 400;
     }
 
     const message = status === 429
       ? 'Too many account requests right now. Please try again later.'
-      : 'Could not create account with this email.';
+      : status === 409
+        ? 'An account with this email already exists.'
+        : status === 400
+          ? 'This email address is not valid.'
+          : 'Could not create account with this email.';
 
     throw {
       status,
