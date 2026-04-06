@@ -57,7 +57,7 @@ BEGIN
   FROM carts c
   WHERE c.id = v_cart_id;
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Get cart with items
 CREATE OR REPLACE FUNCTION get_cart_with_items(
@@ -105,7 +105,7 @@ BEGIN
   WHERE c.id = p_cart_id
   GROUP BY c.id, c.session_token, c.customer_auth_id, c.status, c.created_at, c.updated_at;
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Add product to cart with validation
 CREATE OR REPLACE FUNCTION add_item_to_cart(
@@ -198,7 +198,7 @@ BEGIN
   -- Return updated cart
   RETURN QUERY SELECT * FROM get_cart_with_items(p_cart_id);
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Remove item from cart
 CREATE OR REPLACE FUNCTION remove_item_from_cart(
@@ -221,7 +221,7 @@ BEGIN
 
   RETURN QUERY SELECT * FROM get_cart_with_items(p_cart_id);
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Update cart item quantity
 CREATE OR REPLACE FUNCTION update_cart_item_quantity(
@@ -250,4 +250,4 @@ BEGIN
 
   RETURN QUERY SELECT * FROM get_cart_with_items(p_cart_id);
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

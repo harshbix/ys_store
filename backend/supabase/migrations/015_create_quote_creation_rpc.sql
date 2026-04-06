@@ -124,7 +124,7 @@ BEGIN
   FROM quotes q
   WHERE q.id = v_quote_id;
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Track quote WhatsApp click
 CREATE OR REPLACE FUNCTION track_quote_whatsapp_click(
@@ -145,7 +145,7 @@ BEGIN
   FROM quotes q
   WHERE q.quote_code = p_quote_code;
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Get quote by code with items
 CREATE OR REPLACE FUNCTION get_quote_with_items(
@@ -197,4 +197,4 @@ BEGIN
   WHERE q.quote_code = p_quote_code
   GROUP BY q.id, q.quote_code, q.status, q.customer_name, q.notes, q.estimated_total_tzs, q.idempotency_key, q.whatsapp_clicked_at, q.created_at;
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

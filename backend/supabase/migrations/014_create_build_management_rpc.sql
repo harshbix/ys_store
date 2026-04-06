@@ -75,7 +75,7 @@ BEGIN
   FROM custom_builds b
   WHERE b.id = v_build_id;
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Get custom build with items
 CREATE OR REPLACE FUNCTION get_custom_build_with_items(
@@ -126,7 +126,7 @@ BEGIN
   WHERE b.id = p_build_id
   GROUP BY b.id, b.build_code, b.owner_type, b.name, b.build_status, b.compatibility_status, b.total_estimated_price_tzs, b.created_at, b.updated_at;
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Upsert build item (add or update component)
 CREATE OR REPLACE FUNCTION upsert_custom_build_item(
@@ -194,7 +194,7 @@ BEGIN
   -- Return updated build
   RETURN QUERY SELECT * FROM get_custom_build_with_items(p_build_id);
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Delete build item
 CREATE OR REPLACE FUNCTION delete_custom_build_item(
@@ -228,7 +228,7 @@ BEGIN
 
   RETURN QUERY SELECT * FROM get_custom_build_with_items(p_build_id);
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Validate build (check required components)
 CREATE OR REPLACE FUNCTION validate_custom_build(
@@ -286,4 +286,4 @@ BEGIN
     v_warnings,
     v_is_valid;
 END;
-$$ LANGUAGE plpgsql SECURITY REPLICATE;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
