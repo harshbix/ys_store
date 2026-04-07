@@ -15,6 +15,7 @@ export interface CreateQuoteBody {
 
 const fixtureQuoteStorageKey = 'ys-dev-fixture-quotes';
 const WHATSAPP_PHONE_E164 = '255628662932';
+const UUID_V4_LIKE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -58,15 +59,45 @@ function saveFixtureQuotes(quotes: QuoteDetail[]): void {
 export async function createQuote(body: CreateQuoteBody, idempotencyKey?: string): Promise<any> {
   try {
     const idempotency = idempotencyKey || body.idempotency_key || crypto.randomUUID();
-    const { data, error } = await supabase.rpc('create_quote_from_cart', {
-      p_customer_name: body.customer_name,
-      p_notes: body.notes || null,
-      p_source_type: body.source_type,
-      p_source_id: body.source_id,
-      p_idempotency_key: idempotency
-    });
+    const customerName = body.customer_name?.trim() || '';
+    const sourceType = body.source_type;
+    const sourceId = body.source_id?.trim() || '';
+    const notes = body.notes?.trim() ? body.notes.trim() : null;
 
-    if (error) throw error;
+    if (!customerName) {
+      throw new Error('customer_name is empty before create_quote_from_cart call');
+    }
+
+    if (sourceType !== 'cart') {
+      throw new Error(`create_quote_from_cart supports only cart source_type; received: ${sourceType}`);
+    }
+
+    if (!UUID_V4_LIKE.test(sourceId)) {
+      throw new Error(`source_id is not a valid uuid for create_quote_from_cart: ${sourceId || '<empty>'}`);
+    }
+
+    const rpcPayload = {
+      p_customer_name: customerName,
+      p_notes: notes,
+      p_source_type: sourceType,
+      p_source_id: sourceId,
+      p_idempotency_key: idempotency
+    };
+
+    console.info('[QUOTE RPC] create_quote_from_cart payload', rpcPayload);
+
+    const { data, error } = await supabase.rpc('create_quote_from_cart', rpcPayload);
+
+    if (error) {
+      console.error('[QUOTE RPC ERROR] create_quote_from_cart failed', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        payload: rpcPayload
+      });
+      throw error;
+    }
 
     const result = data?.[0] || data;
     return {
