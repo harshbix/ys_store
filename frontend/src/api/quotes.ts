@@ -1,3 +1,6 @@
+import { buildWhatsAppUrl as generateWhatsAppUrl } from '../utils/whatsapp';
+
+// Correct the import path for generateWhatsAppMessage
 import { generateWhatsAppMessage } from '../utils/generateWhatsAppMessage';
 import { getCart } from './cart';
 import { supabase } from '../lib/supabase';
@@ -5,8 +8,6 @@ import { supabase } from '../lib/supabase';
 import type { QuoteDetail, QuoteType } from '../types/api';
 import { env } from '../utils/env';
 import { logError } from '../utils/errors';
-
-import { buildWhatsAppUrl as generateWhatsAppUrl } from '../utils/whatsapp';
 
 export interface CreateQuoteBody {
   customer_name: string;
@@ -34,11 +35,6 @@ function randomId(): string {
 
 function buildFixtureQuoteCode(): string {
   return `QF-${String(Date.now()).slice(-6)}`;
-}
-
-function buildWhatsappUrl(quoteCode: string): string {
-  const message = `Hello, I am following up on quote ${quoteCode}.`;
-  return generateWhatsAppUrl(message);
 }
 
 function loadFixtureQuotes(): QuoteDetail[] {
@@ -104,6 +100,7 @@ export async function createQuote(body: CreateQuoteBody, idempotencyKey?: string
 
     const result = data?.[0] || data;
     const cart = await getCart();
+    // Ensure generatedMessage is defined before use
     const generatedMessage = generateWhatsAppMessage(cart, customerName);
     const customUrl = generateWhatsAppUrl(generatedMessage);
 
@@ -126,7 +123,7 @@ export async function createQuote(body: CreateQuoteBody, idempotencyKey?: string
     const cart = await getCart();
     const quoteId = randomId();
     const quoteCode = buildFixtureQuoteCode();
-    const whatsappUrl = buildWhatsappUrl(quoteCode);
+    const whatsappUrl = generateWhatsAppUrl(generatedMessage);
     const record: QuoteDetail = {
       id: quoteId,
       quote_code: quoteCode,
@@ -256,7 +253,7 @@ export async function getQuoteWhatsappUrl(quoteCode: string): Promise<any> {
     if (error) throw error;
 
     const result = data?.[0] || data;
-    const whatsappUrl = result?.whatsapp_url || buildWhatsappUrl(result?.quote_code || quoteCode);
+    const whatsappUrl = result?.whatsapp_url || generateWhatsAppUrl(result?.quote_code || quoteCode);
 
     return {
       success: true,
@@ -281,7 +278,7 @@ export async function getQuoteWhatsappUrl(quoteCode: string): Promise<any> {
       message: 'OK (dev fixture fallback)',
       data: {
         quote_code: quote.quote_code,
-        whatsapp_url: quote.whatsapp_url || buildWhatsappUrl(quote.quote_code)
+        whatsapp_url: quote.whatsapp_url || generateWhatsAppUrl(quote.quote_code)
       }
     };
   }
