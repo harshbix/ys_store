@@ -121,7 +121,7 @@ export async function loginWithPassword(email: string, password: string): Promis
 export async function signInWithGoogle(returnTo = '/shop'): Promise<void> {
   const redirectPath = returnTo.startsWith('/') ? returnTo : `/${returnTo}`;
   const redirectTo = typeof window !== 'undefined'
-    ? `${window.location.origin}${redirectPath}`
+    ? `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(redirectPath)}`
     : undefined;
 
   const { error } = await supabase.auth.signInWithOAuth({

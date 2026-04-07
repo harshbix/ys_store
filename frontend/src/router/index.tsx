@@ -15,6 +15,7 @@ const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
 const WishlistPage = lazy(() => import('../pages/WishlistPage'));
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const RegisterPage = lazy(() => import('../pages/RegisterPage'));
+const AuthCallbackPage = lazy(() => import('../pages/AuthCallbackPage'));
 const BlogPage = lazy(() => import('../pages/BlogPage'));
 const ContactPage = lazy(() => import('../pages/ContactPage'));
 const AdminLoginPage = lazy(() => import('../pages/AdminLoginPage'));
@@ -118,6 +119,7 @@ export const router = createBrowserRouter([
       },
       { path: 'login', element: <PageBoundary><LoginPage /></PageBoundary> },
       { path: 'register', element: <PageBoundary><RegisterPage /></PageBoundary> },
+      { path: 'auth/callback', element: <PageBoundary><AuthCallbackPage /></PageBoundary> },
       { path: 'blog', element: <PageBoundary><BlogPage /></PageBoundary> },
       { path: 'contact', element: <PageBoundary><ContactPage /></PageBoundary> },
       { path: 'admin/login', element: <PageBoundary><AdminLoginPage /></PageBoundary> },
