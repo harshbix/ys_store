@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { buildWhatsAppUrl } from '../../utils/whatsapp';
 
 export function Footer() {
   return (
@@ -40,7 +41,7 @@ export function Footer() {
             YS STORE curates premium PC hardware with quote-first support for buyers across Tanzania and international requests.
           </p>
           <a
-            href="https://wa.me/255700000000"
+            href={buildWhatsAppUrl()}
             target="_blank"
             rel="noreferrer"
             className="mt-5 inline-flex min-h-11 items-center border border-border px-4 text-[13px] font-medium text-success transition hover:border-success"

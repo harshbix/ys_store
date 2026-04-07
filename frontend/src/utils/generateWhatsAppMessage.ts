@@ -3,11 +3,8 @@ import type { CartPayload } from '../types/api';
 /**
  * Format a number as TZS currency.
  */
-function formatTzs(amount: number): string {
-  return new Intl.NumberFormat('en-TZ', {
-    style: 'decimal',
-    maximumFractionDigits: 0
-  }).format(amount);
+function formatPrice(value: number) {
+  return new Intl.NumberFormat("en-TZ").format(value);
 }
 
 /**
@@ -17,17 +14,17 @@ function extractBuildParts(specs: Record<string, unknown> | null): Record<string
   if (!specs) return {};
 
   const parts: Record<string, string> = {};
-  
+
   // Extract parts robustly checking standard structures or flat keys
   const mapPart = (key: string, label: string) => {
     let value = specs[key] || specs[key.toLowerCase()] || specs[key.toUpperCase()];
-    
+
     // If it's nested (e.g. { title: '...', price: ... })
     if (value && typeof value === 'object') {
       const v = value as Record<string, any>;
       value = v.title || v.name || v.title_snapshot || v.product_name;
     }
-    
+
     if (value && typeof value === 'string') {
       parts[label] = value;
     }
@@ -38,29 +35,17 @@ function extractBuildParts(specs: Record<string, unknown> | null): Record<string
   mapPart('motherboard', 'Motherboard');
   mapPart('ram', 'RAM');
   mapPart('storage', 'Storage');
+  
+  // Power supply
   mapPart('psu', 'Power Supply');
   mapPart('power_supply', 'Power Supply');
+  
+  // Case
   mapPart('case', 'Case');
+  
+  // Cooling
   mapPart('cooler', 'Cooling');
   mapPart('cooling', 'Cooling');
-  mapPart('monitor', 'Monitor');
-  mapPart('keyboard_mouse', 'Accessories');
-  mapPart('accessories', 'Accessories');
-  mapPart('windows_license', 'OS');
-
-  // Fallback for flat structure if they don't match the specific keys above
-  for (const [k, v] of Object.entries(specs)) {
-    if (typeof v === 'string' && !Object.values(parts).includes(v)) {
-      // Ignore keys that are obviously not parts
-      if (!k.includes('price') && !k.includes('id') && !k.includes('type')) {
-        const prettyKey = k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, ' ');
-        // only add if not already mapped
-        if (!parts[prettyKey]) {
-           parts[prettyKey] = v;
-        }
-      }
-    }
-  }
 
   return parts;
 }
@@ -78,27 +63,65 @@ export function generateWhatsAppMessage(cartPayload: CartPayload, customerName: 
     return `Hello, my name is ${name}.\n\nI would like to place an order, please assist me.`;
   }
 
+  const isCustomBuild = items.length === 1 && items[0].item_type === 'custom_build';
+
   // 2. Custom build
-  if (items.length === 1 && items[0].item_type === 'custom_build') {
+  if (isCustomBuild) {
     const build = items[0];
     const parts = extractBuildParts(build.specs_snapshot);
-    const partsText = Object.entries(parts)
-      .map(([label, value]) => `${label}: ${value}`)
-      .join('\n');
+    
+    const lines: string[] = [];
+    lines.push(`Hello, my name is ${name}.`);
+    lines.push('');
+    lines.push('I would like to order a custom PC build with the following specifications:');
+    lines.push('');
+    
+    // Ordered as specified
+    const orderedLabels = ['CPU', 'GPU', 'Motherboard', 'RAM', 'Storage', 'Power Supply', 'Case', 'Cooling'];
+    for (const label of orderedLabels) {
+      if (parts[label]) {
+        lines.push(`${label}: ${parts[label]}`);
+      }
+    }
+    
+    lines.push('');
+    lines.push(`Estimated Total: TZS ${formatPrice(total)}`);
+    lines.push('');
+    lines.push('Please assist me with confirmation and availability.');
 
-    return `Hello, my name is ${name}.\n\nI would like to order this custom PC build:\n\n${partsText}\n\nEstimated Total: TZS ${formatTzs(total)}\n\nPlease assist me with confirmation, availability, and next steps.`;
+    return lines.join('\n');
   }
 
-  // 3. Single simple product
-  if (items.length === 1) {
+  // 3. Single normal product
+  if (items.length === 1 && !isCustomBuild) {
     const item = items[0];
-    return `Hello, my name is ${name}.\n\nI would like to order:\n\n${item.title_snapshot} (x${item.quantity})\nPrice: TZS ${formatTzs(item.unit_estimated_price_tzs * item.quantity)}\n\nPlease assist me with availability and next steps.`;
+    const lines: string[] = [];
+    lines.push(`Hello, my name is ${name}.`);
+    lines.push('');
+    lines.push('I would like to order:');
+    lines.push('');
+    lines.push(`${item.title_snapshot} — TZS ${formatPrice(item.unit_estimated_price_tzs * item.quantity)}`);
+    lines.push('');
+    lines.push('Please assist me with availability and delivery.');
+
+    return lines.join('\n');
   }
 
-  // 4. Multiple cart items
-  const itemsList = items.map((item, index) => {
-    return `${index + 1}. ${item.title_snapshot} (x${item.quantity}) — TZS ${formatTzs(item.unit_estimated_price_tzs * item.quantity)}`;
-  }).join('\n');
+  // 4. Multi-item cart
+  const lines: string[] = [];
+  lines.push(`Hello, my name is ${name}.`);
+  lines.push('');
+  lines.push('I would like to order the following items:');
+  lines.push('');
+  
+  items.forEach((item, index) => {
+    lines.push(`${index + 1}. ${item.title_snapshot} — TZS ${formatPrice(item.unit_estimated_price_tzs * item.quantity)}`);
+  });
+  
+  lines.push('');
+  lines.push(`Total: TZS ${formatPrice(total)}`);
+  lines.push('');
+  lines.push('Please assist me with availability and delivery.');
 
-  return `Hello, my name is ${name}.\n\nI would like to order the following items:\n\n${itemsList}\n\nTotal: TZS ${formatTzs(total)}\n\nPlease assist me with availability and delivery.`;
+  return lines.join('\n');
 }

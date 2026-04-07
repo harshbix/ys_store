@@ -23,6 +23,12 @@ export function WhatsAppButton({ href, label = 'Continue to WhatsApp', className
             // Navigation should continue even if tracking fails.
           }
         }
+        
+        console.log('[WHATSAPP REDIRECT SOURCE]', {
+          source: 'WhatsAppButton component (prop)',
+          url: href
+        });
+        
         window.location.href = href;
       }}
       className={className || 'inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primaryForeground disabled:opacity-40'}

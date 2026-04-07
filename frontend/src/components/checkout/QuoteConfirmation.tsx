@@ -5,10 +5,11 @@ import { WhatsAppButton } from '../ui/WhatsAppButton';
 
 type QuoteConfirmationProps = {
   quote: QuoteRecord;
+  whatsappUrl: string;
   onTrackAndOpen: () => Promise<void>;
 };
 
-export function QuoteConfirmation({ quote, onTrackAndOpen }: QuoteConfirmationProps) {
+export function QuoteConfirmation({ quote, whatsappUrl, onTrackAndOpen }: QuoteConfirmationProps) {
   return (
     <section className="rounded-2xl border border-success/40 bg-success/10 p-5 text-foreground">
       <div className="flex items-start gap-3">
@@ -33,7 +34,7 @@ export function QuoteConfirmation({ quote, onTrackAndOpen }: QuoteConfirmationPr
           <Copy className="h-4 w-4" />
           Copy Quote Code
         </button>
-        <WhatsAppButton href={quote.whatsapp_url} onBeforeNavigate={onTrackAndOpen} />
+        <WhatsAppButton href={whatsappUrl} onBeforeNavigate={onTrackAndOpen} />
       </div>
     </section>
   );

@@ -11,6 +11,8 @@ import { clearCart } from '../api/cart';
 import { useQuote } from '../hooks/useQuote';
 import { queryKeys } from '../lib/queryKeys';
 import type { QuoteFormInput } from '../types/ui';
+import { generateWhatsAppMessage } from '../utils/generateWhatsAppMessage';
+import { buildWhatsAppUrl } from '../utils/whatsapp';
 
 export default function CheckoutPage() {
   const queryClient = useQueryClient();
@@ -18,6 +20,7 @@ export default function CheckoutPage() {
   const { createQuoteMutation, trackWhatsappMutation } = useQuote();
   const [quoteCodeTracked, setQuoteCodeTracked] = useState<string | null>(null);
   const [isRedirectingToWhatsapp, setIsRedirectingToWhatsapp] = useState(false);
+  const [generatedWhatsappUrl, setGeneratedWhatsappUrl] = useState<string | null>(null);
 
   const cartPayload = cartQuery.data;
   const quote = createQuoteMutation.data?.data;
@@ -35,7 +38,7 @@ export default function CheckoutPage() {
       });
 
       const createdQuote = created?.data;
-      if (!createdQuote?.quote_code || !createdQuote?.whatsapp_url) {
+      if (!createdQuote?.quote_code) {
         return;
       }
 
@@ -53,7 +56,18 @@ export default function CheckoutPage() {
           estimated_total_tzs: 0
         });
         void queryClient.invalidateQueries({ queryKey: queryKeys.cart.current });
-        window.location.assign(createdQuote.whatsapp_url);
+        
+        // Use frontend-generated WhatsApp message instead of backend's generated URL.
+        const message = generateWhatsAppMessage(cartPayload, values.customer_name);
+        const urlToOpen = buildWhatsAppUrl(message);
+        
+        console.log('[WHATSAPP REDIRECT SOURCE]', {
+          source: 'frontend-generated',
+          url: urlToOpen
+        });
+
+        setGeneratedWhatsappUrl(urlToOpen);
+        window.location.assign(urlToOpen);
       }
     } catch {
       // Error state and toast are handled by the quote mutation hooks.
@@ -79,7 +93,7 @@ export default function CheckoutPage() {
     return <ErrorState title="Could not load checkout" description="Retry in a moment." onRetry={() => cartQuery.refetch()} />;
   }
 
-  if (cartPayload.items.length === 0) {
+  if (cartPayload.items.length === 0 && !isRedirectingToWhatsapp) {
     return (
       <EmptyState
         title="No items available for checkout"
@@ -114,9 +128,11 @@ export default function CheckoutPage() {
         </section>
 
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          {quote ? <QuoteConfirmation quote={quote} onTrackAndOpen={handleTrackAndOpen} /> : null}
+          {quote && generatedWhatsappUrl ? <QuoteConfirmation quote={quote} whatsappUrl={generatedWhatsappUrl} onTrackAndOpen={handleTrackAndOpen} /> : null}
         </aside>
       </div>
     </div>
   );
 }
+
+
