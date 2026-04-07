@@ -1,3 +1,5 @@
+import { buildWhatsAppUrl } from '../utils/whatsapp';
+
 export default function ContactPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-10">
@@ -9,7 +11,7 @@ export default function ContactPage() {
 
       <section className="rounded-2xl border border-border bg-surface p-5">
         <a
-          href="https://wa.me/255700000000"
+          href={buildWhatsAppUrl("Hello, I need some help regarding YS Store products.")}
           target="_blank"
           rel="noreferrer"
           className="inline-flex min-h-11 items-center rounded-[2px] bg-success px-5 text-sm font-semibold text-primaryForeground"

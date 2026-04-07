@@ -29,6 +29,8 @@ function findSpecValue(specs: Array<{ spec_key: string; value_text: string | nul
   return matched ? specText(matched) : '-';
 }
 
+import { buildWhatsAppUrl } from '../utils/whatsapp';
+
 export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { slug } = useParams();
@@ -238,7 +240,7 @@ export default function ProductDetailPage() {
                 Wishlist
               </button>
 
-              <a href="https://wa.me/255700000000" target="_blank" rel="noreferrer" className="text-success transition hover:opacity-90">
+              <a href={buildWhatsAppUrl('Hello, I have a question about this product.')} target="_blank" rel="noreferrer" className="text-success transition hover:opacity-90">
                 WhatsApp
               </a>
             </div>
@@ -314,3 +316,4 @@ export default function ProductDetailPage() {
     </div>
   );
 }
+

@@ -25,6 +25,8 @@ const trustSignals = [
   { title: 'WhatsApp Support', icon: MessageCircle }
 ] as const;
 
+import { buildWhatsAppUrl } from '../utils/whatsapp';
+
 export default function HomePage() {
   const navigate = useNavigate();
   const productsQuery = useProducts({
@@ -200,7 +202,7 @@ export default function HomePage() {
               Products
             </Button>
             <a
-              href="https://wa.me/255700000000"
+              href={buildWhatsAppUrl()}
               target="_blank"
               rel="noreferrer"
               className="inline-flex min-h-12 items-center rounded-lg bg-success px-6 text-[14px] font-medium text-primaryForeground transition hover:opacity-90"
@@ -213,3 +215,4 @@ export default function HomePage() {
     </div>
   );
 }
+

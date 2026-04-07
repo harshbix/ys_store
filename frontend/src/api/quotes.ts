@@ -1,8 +1,12 @@
-import { supabase } from '../lib/supabase';
+import { generateWhatsAppMessage } from '../utils/generateWhatsAppMessage';
 import { getCart } from './cart';
+import { supabase } from '../lib/supabase';
+
 import type { QuoteDetail, QuoteType } from '../types/api';
 import { env } from '../utils/env';
 import { logError } from '../utils/errors';
+
+import { buildWhatsAppUrl as generateWhatsAppUrl } from '../utils/whatsapp';
 
 export interface CreateQuoteBody {
   customer_name: string;
@@ -14,7 +18,6 @@ export interface CreateQuoteBody {
 }
 
 const fixtureQuoteStorageKey = 'ys-dev-fixture-quotes';
-const WHATSAPP_PHONE_E164 = '255628662932';
 const UUID_V4_LIKE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function nowIso(): string {
@@ -35,7 +38,7 @@ function buildFixtureQuoteCode(): string {
 
 function buildWhatsappUrl(quoteCode: string): string {
   const message = `Hello, I am following up on quote ${quoteCode}.`;
-  return `https://wa.me/${WHATSAPP_PHONE_E164}?text=${encodeURIComponent(message)}`;
+  return generateWhatsAppUrl(message);
 }
 
 function loadFixtureQuotes(): QuoteDetail[] {
@@ -100,12 +103,16 @@ export async function createQuote(body: CreateQuoteBody, idempotencyKey?: string
     }
 
     const result = data?.[0] || data;
+    const cart = await getCart();
+    const generatedMessage = generateWhatsAppMessage(cart, customerName);
+    const customUrl = generateWhatsAppUrl(generatedMessage);
+
     return {
       success: true,
       message: 'Quote created',
       data: {
         ...result,
-        whatsapp_url: result?.whatsapp_url || buildWhatsappUrl(result?.quote_code || buildFixtureQuoteCode())
+        whatsapp_url: customUrl
       }
     };
   } catch (error) {
@@ -279,3 +286,10 @@ export async function getQuoteWhatsappUrl(quoteCode: string): Promise<any> {
     };
   }
 }
+
+
+
+
+
+
+

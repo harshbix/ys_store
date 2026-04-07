@@ -7,6 +7,7 @@ import { EmptyState } from '../components/feedback/EmptyState';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { PageLoader } from '../components/feedback/PageLoader';
 import { useCart } from '../hooks/useCart';
+import { clearCart } from '../api/cart';
 import { useQuote } from '../hooks/useQuote';
 import { queryKeys } from '../lib/queryKeys';
 import type { QuoteFormInput } from '../types/ui';
@@ -45,6 +46,7 @@ export default function CheckoutPage() {
         // Continue navigation even if tracking fails.
       } finally {
         setQuoteCodeTracked(createdQuote.quote_code);
+        await clearCart();
         queryClient.setQueryData(queryKeys.cart.current, {
           ...cartPayload,
           items: [],

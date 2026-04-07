@@ -75,19 +75,25 @@ export async function getCart(): Promise<CartPayload> {
     if (!data || data.length === 0) {
       // Fallback: return empty cart
       return {
-        cart: { id: cartId, status: 'active' },
+        cart: { id: cartId, session_token: null, customer_auth_id: null, status: 'active', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), expires_at: null },
         items: [],
         estimated_total_tzs: 0
       };
     }
 
     const cart = data[0];
-    const items = Array.isArray(cart.items) ? cart.items : JSON.parse(cart.items || '[]');
+    const rawItems = Array.isArray(cart.items) ? cart.items : JSON.parse(cart.items || '[]');
+    const items = rawItems.filter((i: any) => i && typeof i === 'object' && i.id && i.item_type);
 
-    return {
+        return {
       cart: {
-        id: cart.cart_id,
-        status: cart.status
+        id: cart.cart_id || cartId,
+        session_token: cart.session_token || null,
+        customer_auth_id: cart.customer_auth_id || null,
+        status: cart.status || 'active',
+        created_at: cart.created_at || new Date().toISOString(),
+        updated_at: cart.updated_at || new Date().toISOString(),
+        expires_at: null
       },
       items,
       estimated_total_tzs: cart.estimated_total_tzs || 0
@@ -120,12 +126,18 @@ export async function addCartItem(body: AddCartItemBody): Promise<CartPayload> {
     }
 
     const cart = data[0];
-    const items = Array.isArray(cart.items) ? cart.items : JSON.parse(cart.items || '[]');
+    const rawItems = Array.isArray(cart.items) ? cart.items : JSON.parse(cart.items || '[]');
+    const items = rawItems.filter((i: any) => i && typeof i === 'object' && i.id && i.item_type);
 
-    return {
+        return {
       cart: {
-        id: cart.cart_id,
-        status: cart.status
+        id: cart.cart_id || cartId,
+        session_token: cart.session_token || null,
+        customer_auth_id: cart.customer_auth_id || null,
+        status: cart.status || 'active',
+        created_at: cart.created_at || new Date().toISOString(),
+        updated_at: cart.updated_at || new Date().toISOString(),
+        expires_at: null
       },
       items,
       estimated_total_tzs: cart.estimated_total_tzs || 0
@@ -156,12 +168,18 @@ export async function updateCartItem(itemId: string, body: UpdateCartItemBody): 
     }
 
     const cart = data[0];
-    const items = Array.isArray(cart.items) ? cart.items : JSON.parse(cart.items || '[]');
+    const rawItems = Array.isArray(cart.items) ? cart.items : JSON.parse(cart.items || '[]');
+    const items = rawItems.filter((i: any) => i && typeof i === 'object' && i.id && i.item_type);
 
-    return {
+        return {
       cart: {
-        id: cart.cart_id,
-        status: cart.status
+        id: cart.cart_id || cartId,
+        session_token: cart.session_token || null,
+        customer_auth_id: cart.customer_auth_id || null,
+        status: cart.status || 'active',
+        created_at: cart.created_at || new Date().toISOString(),
+        updated_at: cart.updated_at || new Date().toISOString(),
+        expires_at: null
       },
       items,
       estimated_total_tzs: cart.estimated_total_tzs || 0
@@ -191,12 +209,18 @@ export async function removeCartItem(itemId: string): Promise<CartPayload> {
     }
 
     const cart = data[0];
-    const items = Array.isArray(cart.items) ? cart.items : JSON.parse(cart.items || '[]');
+    const rawItems = Array.isArray(cart.items) ? cart.items : JSON.parse(cart.items || '[]');
+    const items = rawItems.filter((i: any) => i && typeof i === 'object' && i.id && i.item_type);
 
-    return {
+        return {
       cart: {
-        id: cart.cart_id,
-        status: cart.status
+        id: cart.cart_id || cartId,
+        session_token: cart.session_token || null,
+        customer_auth_id: cart.customer_auth_id || null,
+        status: cart.status || 'active',
+        created_at: cart.created_at || new Date().toISOString(),
+        updated_at: cart.updated_at || new Date().toISOString(),
+        expires_at: null
       },
       items,
       estimated_total_tzs: cart.estimated_total_tzs || 0
@@ -206,3 +230,22 @@ export async function removeCartItem(itemId: string): Promise<CartPayload> {
     throw err;
   }
 }
+
+
+export async function clearCart(): Promise<void> {
+  
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session?.user) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('ys-guest-session');
+    }
+  } else {
+    const cartId = await getOrCreateCart();
+    const { error } = await supabase.from('cart_items').delete().eq('cart_id', cartId);
+    if (error) {
+      console.error('[CART ERROR] Failed to clear cart items:', error);
+    }
+  }
+}
+
