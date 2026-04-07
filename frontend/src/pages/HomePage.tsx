@@ -57,22 +57,25 @@ export default function HomePage() {
 
         <div className="relative grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-center">
           <motion.div variants={fadeInUp} initial="hidden" animate="visible" className="relative">
-            <div className="relative overflow-hidden rounded-[1.75rem] bg-black/20 p-3">
-              <div className="absolute -left-6 bottom-4 h-28 w-28 rounded-full bg-cyan-400/30 blur-2xl" />
-              <div className="absolute -right-8 top-8 h-24 w-24 rounded-full bg-fuchsia-400/28 blur-2xl" />
-              <div className="absolute inset-3 rounded-[1.25rem] bg-gradient-to-br from-sky-300/10 via-transparent to-fuchsia-300/10" />
+            <div className="relative h-[420px] overflow-hidden rounded-[1.75rem] bg-black/20 sm:h-[500px]">
+              <img
+                src="/hero/desktop3.jpeg"
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-55 blur-2xl"
+              />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_22%,rgba(125,211,252,0.18),transparent_38%),radial-gradient(circle_at_80%_74%,rgba(236,72,153,0.16),transparent_36%)]" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/45" />
+
+              <div className="absolute inset-3 rounded-[1.3rem] border border-white/15 bg-white/[0.04] backdrop-blur-[1.5px]" />
+              <div className="pointer-events-none absolute left-8 top-8 z-10 h-[44%] w-[34%] rounded-[1.2rem] border border-white/20 bg-white/10 opacity-50 backdrop-blur-xl" />
+              <div className="pointer-events-none absolute left-10 top-10 z-10 h-[1px] w-[25%] bg-white/70 blur-[0.6px]" />
+
               <img
                 src="/hero/desktop3.jpeg"
                 alt="Gaming desktop"
-                className="relative z-10 h-[420px] w-full rounded-[1.25rem] object-contain object-center sm:h-[500px]"
-                style={{
-                  maskImage: 'radial-gradient(ellipse at center, black 62%, transparent 100%)',
-                  WebkitMaskImage: 'radial-gradient(ellipse at center, black 62%, transparent 100%)'
-                }}
+                className="relative z-20 h-full w-full object-contain object-center p-4 sm:p-5"
               />
-              <div className="pointer-events-none absolute inset-3 rounded-[1.25rem] bg-[radial-gradient(circle_at_22%_24%,rgba(125,211,252,0.18),transparent_42%),radial-gradient(circle_at_78%_76%,rgba(236,72,153,0.16),transparent_38%)]" />
-              <div className="pointer-events-none absolute left-7 top-7 h-[42%] w-[36%] rounded-[1.3rem] border border-white/20 bg-white/10 opacity-55 backdrop-blur-xl" />
-              <div className="pointer-events-none absolute left-10 top-9 h-[1px] w-[26%] bg-white/60 blur-[0.5px]" />
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] text-secondary sm:gap-3 sm:text-[12px]">
