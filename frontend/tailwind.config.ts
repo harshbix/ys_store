@@ -27,8 +27,8 @@ const config: Config = {
         overlay: 'rgb(var(--color-overlay) / <alpha-value>)'
       },
       fontFamily: {
-        sans: ['Inter', 'Segoe UI', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'Segoe UI', 'system-ui', 'sans-serif'],
+        sans: ['SF Pro Text', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        display: ['SF Pro Display', 'SF Pro Text', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
         mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'monospace']
       },
       boxShadow: {

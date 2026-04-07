@@ -43,57 +43,106 @@ export default function HomePage() {
   return (
     <div className="space-y-20 pb-24 md:space-y-28">
       {/* HERO SECTION */}
-      <section className="grid gap-8 md:grid-cols-2 md:items-center md:gap-12">
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="space-y-6"
-        >
-          <motion.h1
-            variants={fadeInUp}
-            className="text-[44px] font-light leading-[1.1] tracking-[-0.02em] text-foreground sm:text-[56px] lg:text-[72px]"
-          >
-            Serious tech,
-            <br />
-            done right.
-          </motion.h1>
-
-          <motion.p
-            variants={fadeInUp}
-            className="max-w-xl text-[15px] leading-7 text-secondary sm:text-[16px]"
-          >
-            Premium gaming systems curated and ready to ship.
-          </motion.p>
-
-          <motion.div variants={fadeInUp} className="flex flex-wrap gap-3">
-            <Button size="lg" onClick={() => navigate('/shop')}>
-              Products
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-            <Button size="lg" variant="secondary" onClick={() => navigate('/builder')}>
-              Build your PC
-            </Button>
-          </motion.div>
-        </motion.div>
-
-        <motion.div
-          variants={fadeInUp}
-          className="relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-slate-900/30 to-black/30 h-80"
-        >
-          <img
-            src="/hero/gaming-pc-minimal.jpg"
-            alt="Gaming setup"
-            className="h-full w-full object-cover"
+      <section className="relative overflow-hidden rounded-[2.25rem] border border-white/10 bg-[#06090f] px-5 py-10 shadow-[0_24px_90px_rgba(0,0,0,0.45)] sm:px-8 md:px-10 md:py-12 lg:px-12 lg:py-14">
+        <div className="pointer-events-none absolute inset-0">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 14% 18%, rgba(59,130,246,0.26), transparent 34%), radial-gradient(circle at 74% 20%, rgba(236,72,153,0.16), transparent 32%), radial-gradient(circle at 65% 78%, rgba(56,189,248,0.15), transparent 34%)'
+            }}
           />
-        </motion.div>
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.07),rgba(255,255,255,0)_24%,rgba(0,0,0,0.58))]" />
+        </div>
+
+        <div className="relative grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-center">
+          <motion.div variants={fadeInUp} initial="hidden" animate="visible" className="relative">
+            <div className="relative overflow-hidden rounded-[1.75rem] bg-black/20 p-3">
+              <div className="absolute -left-6 bottom-4 h-28 w-28 rounded-full bg-cyan-400/30 blur-2xl" />
+              <div className="absolute -right-8 top-8 h-24 w-24 rounded-full bg-fuchsia-400/28 blur-2xl" />
+              <div className="absolute inset-3 rounded-[1.25rem] bg-gradient-to-br from-sky-300/10 via-transparent to-fuchsia-300/10" />
+              <img
+                src="/hero/desktop3.jpeg"
+                alt="Gaming desktop"
+                className="relative z-10 h-[420px] w-full rounded-[1.25rem] object-contain object-center sm:h-[500px]"
+                style={{
+                  maskImage: 'radial-gradient(ellipse at center, black 62%, transparent 100%)',
+                  WebkitMaskImage: 'radial-gradient(ellipse at center, black 62%, transparent 100%)'
+                }}
+              />
+              <div className="pointer-events-none absolute inset-3 rounded-[1.25rem] bg-[radial-gradient(circle_at_22%_24%,rgba(125,211,252,0.18),transparent_42%),radial-gradient(circle_at_78%_76%,rgba(236,72,153,0.16),transparent_38%)]" />
+              <div className="pointer-events-none absolute left-7 top-7 h-[42%] w-[36%] rounded-[1.3rem] border border-white/20 bg-white/10 opacity-55 backdrop-blur-xl" />
+              <div className="pointer-events-none absolute left-10 top-9 h-[1px] w-[26%] bg-white/60 blur-[0.5px]" />
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] text-secondary sm:gap-3 sm:text-[12px]">
+              <div className="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2.5 backdrop-blur">
+                <p className="uppercase tracking-[0.15em] text-muted">GPU</p>
+                <p className="mt-1 text-[13px] text-foreground">RTX Class</p>
+              </div>
+              <div className="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2.5 backdrop-blur">
+                <p className="uppercase tracking-[0.15em] text-muted">Build</p>
+                <p className="mt-1 text-[13px] text-foreground">Custom Tuned</p>
+              </div>
+              <div className="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2.5 backdrop-blur">
+                <p className="uppercase tracking-[0.15em] text-muted">Support</p>
+                <p className="mt-1 text-[13px] text-foreground">WhatsApp Fast</p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="space-y-5 lg:pl-4"
+          >
+            <motion.p
+              variants={fadeInUp}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-200 backdrop-blur"
+            >
+              <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(125,211,252,0.8)]" />
+              New arrivals in stock
+            </motion.p>
+
+            <motion.h1
+              variants={fadeInUp}
+              className="max-w-[13ch] text-[38px] font-medium leading-[1.05] tracking-[-0.03em] text-foreground sm:text-[52px] lg:text-[62px]"
+            >
+              Beautiful machines for serious play.
+            </motion.h1>
+
+            <motion.p variants={fadeInUp} className="max-w-xl text-[15px] leading-7 text-secondary sm:text-[16px]">
+              A minimal collection of gaming desktops, laptops, and accessories built for performance and designed to elevate your setup.
+            </motion.p>
+
+            <motion.div variants={fadeInUp} className="flex flex-wrap gap-3 pt-1">
+              <Button
+                size="lg"
+                onClick={() => navigate('/shop')}
+                className="rounded-full bg-white px-6 text-black shadow-[0_12px_30px_rgba(255,255,255,0.24)] hover:bg-slate-200"
+              >
+                Explore Products
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button
+                size="lg"
+                variant="secondary"
+                onClick={() => navigate('/builder')}
+                className="rounded-full border border-white/30 bg-white/[0.03] px-6 text-foreground backdrop-blur hover:bg-white/10"
+              >
+                Build Your PC
+              </Button>
+            </motion.div>
+          </motion.div>
+        </div>
       </section>
 
       {/* FEATURED PRODUCTS */}
       <section className="space-y-8">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center">
-          <p className="text-[12px] font-medium tracking-[0.1em] text-secondary uppercase">Featured</p>
-          <h2 className="mt-2 text-[32px] font-light text-foreground">Latest listings</h2>
+          <p className="text-[12px] font-medium tracking-[0.12em] text-secondary uppercase">Featured</p>
+          <h2 className="mt-2 text-[32px] font-light tracking-[-0.02em] text-foreground">Latest listings</h2>
         </motion.div>
 
         {productsQuery.isLoading ? <SkeletonGrid count={8} /> : null}
@@ -125,8 +174,8 @@ export default function HomePage() {
       {/* CATEGORY SHORTCUTS */}
       <section className="space-y-8">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center">
-          <p className="text-[12px] font-medium tracking-[0.1em] text-secondary uppercase">Shop by</p>
-          <h2 className="mt-2 text-[32px] font-light text-foreground">Category</h2>
+          <p className="text-[12px] font-medium tracking-[0.12em] text-secondary uppercase">Shop by</p>
+          <h2 className="mt-2 text-[32px] font-light tracking-[-0.015em] text-foreground">Category</h2>
         </motion.div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -139,12 +188,12 @@ export default function HomePage() {
             >
               <Link
                 to={item.href}
-                className="group relative flex h-32 items-end justify-start overflow-hidden rounded-xl border border-border/20 bg-gradient-to-tr from-slate-900/40 to-slate-900/10 p-6 transition duration-300 hover:border-border/40 hover:bg-gradient-to-tr hover:from-slate-850 hover:to-slate-900/20"
+                className="group relative flex h-32 items-end justify-start overflow-hidden rounded-xl border border-white/10 bg-gradient-to-tr from-slate-900/45 to-slate-900/10 p-6 transition duration-300 hover:border-white/20 hover:from-slate-800/50 hover:to-slate-900/25"
               >
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 pointer-events-none" />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/25" />
                 <div className="relative">
                   <h3 className="text-[16px] font-medium text-foreground">{item.label}</h3>
-                  <div className="mt-2 flex items-center gap-1.5 text-[12px] text-accent opacity-0 transition group-hover:opacity-100">
+                  <div className="mt-2 flex items-center gap-1.5 text-[12px] text-sky-300 opacity-0 transition group-hover:opacity-100">
                     Explore
                     <ArrowRight className="h-3 w-3" />
                   </div>
@@ -161,7 +210,7 @@ export default function HomePage() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="border-t border-b border-border/20 py-12"
+          className="rounded-2xl border border-border/30 bg-surface/35 px-6 py-10 backdrop-blur-lg md:px-8"
         >
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {trustSignals.map((signal, idx) => {
@@ -175,7 +224,7 @@ export default function HomePage() {
                   className="space-y-2"
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className="h-5 w-5 text-accent" />
+                    <Icon className="h-5 w-5 text-sky-300" />
                     <h3 className="text-[14px] font-medium text-foreground">{signal.title}</h3>
                   </div>
                 </motion.div>
@@ -194,18 +243,22 @@ export default function HomePage() {
           className="flex flex-col items-center gap-6 text-center"
         >
           <div className="space-y-3">
-            <h2 className="text-[40px] font-light text-foreground">Ready?</h2>
+            <h2 className="text-[40px] font-light tracking-[-0.02em] text-foreground">Ready?</h2>
           </div>
 
           <div className="flex flex-wrap justify-center gap-3">
-            <Button size="lg" onClick={() => navigate('/shop')}>
+            <Button
+              size="lg"
+              onClick={() => navigate('/shop')}
+              className="bg-white text-black shadow-[0_10px_24px_rgba(255,255,255,0.22)] hover:bg-slate-200"
+            >
               Products
             </Button>
             <a
               href={buildWhatsAppUrl()}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-12 items-center rounded-lg bg-success px-6 text-[14px] font-medium text-primaryForeground transition hover:opacity-90"
+              className="inline-flex min-h-12 items-center rounded-lg border border-white/30 bg-white/5 px-6 text-[14px] font-medium text-foreground backdrop-blur transition hover:bg-white/10"
             >
               Chat on WhatsApp
             </a>
