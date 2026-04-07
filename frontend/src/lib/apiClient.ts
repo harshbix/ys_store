@@ -130,6 +130,13 @@ function mergeHeaders(body: BodyInit | null | undefined, customHeaders?: Headers
   return headers;
 }
 
+function readGuestSessionToken(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  const token = window.localStorage.getItem('ys-guest-session');
+  return token && token.trim() ? token.trim() : null;
+}
+
 function canRetry(error: ApiClientError): boolean {
   return error.type === 'network' || error.type === 'timeout';
 }
@@ -265,7 +272,14 @@ export async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {
     try {
       const response = await fetch(url, {
         ...requestOptions,
-        headers: mergeHeaders(requestOptions.body as BodyInit | null | undefined, headers),
+        headers: (() => {
+          const mergedHeaders = mergeHeaders(requestOptions.body as BodyInit | null | undefined, headers);
+          const guestToken = readGuestSessionToken();
+          if (guestToken) {
+            mergedHeaders.set('X-Guest-Session', guestToken);
+          }
+          return mergedHeaders;
+        })(),
         credentials: requestOptions.credentials ?? (SHOULD_INCLUDE_CREDENTIALS ? 'include' : 'same-origin'),
         signal: controller.signal
       });

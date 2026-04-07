@@ -14,23 +14,22 @@ export interface UpdateCartItemBody {
 
 // Get session context for current user/guest
 export async function getSessionContext(): Promise<{ customerAuthId: string | null; sessionToken: string | null }> {
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (session?.user) {
-    return {
-      customerAuthId: session.user.id,
-      sessionToken: null
-    };
-  }
-
-  // For guest: use a persistent session token
-  // In real implementation, this comes from middleware or cookie
   const guestToken = typeof window !== 'undefined'
     ? localStorage.getItem('ys-guest-session') || crypto.randomUUID()
     : null;
 
   if (guestToken && typeof window !== 'undefined') {
     localStorage.setItem('ys-guest-session', guestToken);
+  }
+
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (session?.user) {
+    return {
+      customerAuthId: session.user.id,
+      // Keep a stable guest token even for signed-in users so backend quote/cart ownership checks can correlate requests.
+      sessionToken: guestToken
+    };
   }
 
   return {

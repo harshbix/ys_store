@@ -34,12 +34,11 @@ export function ensureGuestSession(req, res, next) {
   const cookieName = env.sessionCookieName;
   const isProduction = env.nodeEnv === 'production';
   const useCrossSiteCookie = isProduction || isCrossOriginRequest(req);
-  let token = req.cookies?.[cookieName];
-
   const headerToken = normalizeHeaderSessionToken(req.headers['x-guest-session']);
+  let token = headerToken || req.cookies?.[cookieName];
 
   if (!token) {
-    token = headerToken || newSessionToken();
+    token = newSessionToken();
     const maxAgeMs = env.sessionCookieMaxAgeDays * 24 * 60 * 60 * 1000;
 
     res.cookie(cookieName, token, {
