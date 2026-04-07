@@ -34,6 +34,18 @@ export default function RegisterPage() {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
+    if (!registerMutation.isSuccess) return;
+    if (!registerMutation.data?.requires_email_verification) return;
+
+    navigate('/login', {
+      replace: true,
+      state: {
+        returnTo: '/shop'
+      }
+    });
+  }, [navigate, registerMutation.data, registerMutation.isSuccess]);
+
+  useEffect(() => {
     if (!registerMutation.isError) return;
     const normalized = normalizeApiError(registerMutation.error);
     const rateLimited = normalized.status === 429

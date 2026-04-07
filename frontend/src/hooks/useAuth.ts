@@ -5,6 +5,7 @@ import {
   syncPersistentCustomerCart
 } from '../api/auth';
 import { getCart } from '../api/cart';
+import { supabase } from '../lib/supabase';
 import { queryKeys } from '../lib/queryKeys';
 import { useAuthStore } from '../store/auth';
 import { logError, toUserMessage } from '../utils/errors';
@@ -53,6 +54,15 @@ export function useAuth() {
     mutationFn: ({ fullName, inputEmail, password }: { fullName: string; inputEmail: string; password: string }) =>
       registerWithPassword(fullName, inputEmail, password),
     onSuccess: async (response, variables) => {
+      if (response.requires_email_verification || !response.access_token) {
+        showToast({
+          title: 'Account created',
+          description: 'Check your email to verify your account, then sign in.',
+          variant: 'info'
+        });
+        return;
+      }
+
       const { access_token, customer_id } = response;
       completeLogin(access_token, customer_id, variables.inputEmail.trim());
       showToast({ title: 'Account created', description: 'Your account is ready.', variant: 'success' });
@@ -64,10 +74,18 @@ export function useAuth() {
   });
 
   const logout = () => {
-    logoutStore();
-    void queryClient.invalidateQueries({ queryKey: queryKeys.auth.wishlist });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.cart.current });
-    showToast({ title: 'Signed out', variant: 'info' });
+    void (async () => {
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        logError(error, 'auth.logout.signOut');
+      }
+
+      logoutStore();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.wishlist });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.cart.current });
+      showToast({ title: 'Signed out', variant: 'info' });
+    })();
   };
 
   return {

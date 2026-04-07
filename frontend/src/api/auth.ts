@@ -6,6 +6,13 @@ import type {
   WishlistPayload
 } from '../types/api';
 
+export interface RegisterWithPasswordResult {
+  access_token: string | null;
+  customer_id: string;
+  challenge_id: null;
+  requires_email_verification: boolean;
+}
+
 interface AuthErrorLike {
   status?: number;
   code?: string;
@@ -52,7 +59,7 @@ export async function registerWithPassword(
   full_name: string,
   email: string,
   password: string
-): Promise<PasswordAuthPayload> {
+): Promise<RegisterWithPasswordResult> {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -74,27 +81,19 @@ export async function registerWithPassword(
   const session = data.session || (await supabase.auth.getSession()).data.session;
 
   if (!session) {
-    // Some projects require email confirmation before session issuance.
-    const loginAttempt = await supabase.auth.signInWithPassword({ email, password });
-    if (loginAttempt.error || !loginAttempt.data.session || !loginAttempt.data.user) {
-      throw normalizeAuthError(
-        loginAttempt.error,
-        'email_verification_required',
-        'Account created. Check your email to verify your account, then sign in.'
-      );
-    }
-
     return {
-      access_token: loginAttempt.data.session.access_token,
-      customer_id: loginAttempt.data.user.id,
-      challenge_id: null
+      access_token: null,
+      customer_id: data.user.id,
+      challenge_id: null,
+      requires_email_verification: true
     };
   }
 
   return {
     access_token: session.access_token,
     customer_id: data.user.id,
-    challenge_id: null
+    challenge_id: null,
+    requires_email_verification: false
   };
 }
 

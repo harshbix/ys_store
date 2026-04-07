@@ -1,10 +1,10 @@
-import { lazy, Suspense, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { createBrowserRouter, Navigate, Outlet, useLocation, useRouteError } from 'react-router-dom';
 import { CartDrawer } from '../components/cart/CartDrawer';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { PageLoader } from '../components/feedback/PageLoader';
 import { Layout } from '../components/layout/Layout';
-import { useAdminAuthStore } from '../store/auth';
+import { useAdminAuthStore, useAuthStore } from '../store/auth';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const ShopPage = lazy(() => import('../pages/ShopPage'));
@@ -36,7 +36,24 @@ function RequireAdmin({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function RequireCustomer({ children }: { children: ReactNode }) {
+  const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname, returnTo: location.pathname }} />;
+  }
+
+  return <>{children}</>;
+}
+
 function RootLayout() {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname, location.search]);
+
   return (
     <Layout>
       <Outlet />
@@ -70,9 +87,30 @@ export const router = createBrowserRouter([
       { path: 'shop', element: <PageBoundary><ShopPage /></PageBoundary> },
       { path: 'products/:slug', element: <PageBoundary><ProductDetailPage /></PageBoundary> },
       { path: 'builder', element: <PageBoundary><BuilderPage /></PageBoundary> },
-      { path: 'cart', element: <PageBoundary><CartPage /></PageBoundary> },
-      { path: 'checkout', element: <PageBoundary><CheckoutPage /></PageBoundary> },
-      { path: 'wishlist', element: <PageBoundary><WishlistPage /></PageBoundary> },
+      {
+        path: 'cart',
+        element: (
+          <RequireCustomer>
+            <PageBoundary><CartPage /></PageBoundary>
+          </RequireCustomer>
+        )
+      },
+      {
+        path: 'checkout',
+        element: (
+          <RequireCustomer>
+            <PageBoundary><CheckoutPage /></PageBoundary>
+          </RequireCustomer>
+        )
+      },
+      {
+        path: 'wishlist',
+        element: (
+          <RequireCustomer>
+            <PageBoundary><WishlistPage /></PageBoundary>
+          </RequireCustomer>
+        )
+      },
       { path: 'login', element: <PageBoundary><LoginPage /></PageBoundary> },
       { path: 'register', element: <PageBoundary><RegisterPage /></PageBoundary> },
       { path: 'blog', element: <PageBoundary><BlogPage /></PageBoundary> },

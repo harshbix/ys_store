@@ -15,6 +15,7 @@ export function toUserMessage(error: unknown, fallback = 'Request failed'): stri
 
   if (
     code === 'invalid_login_credentials'
+    || code === 'invalid_credentials'
     || code === 'login_failed'
     || message.includes('invalid login credentials')
     || message.includes('invalid email or password')

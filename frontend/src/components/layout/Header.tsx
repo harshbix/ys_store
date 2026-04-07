@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
 import { useShowToast } from '../../hooks/useToast';
+import { supabase } from '../../lib/supabase';
 import { useAdminAuthStore, useAuthStore } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
 import { SearchResultsOverlay } from '../ui/SearchResultsOverlay.tsx';
@@ -44,7 +45,13 @@ export function Header() {
   const cartCount = cartItems.length;
   const accountHref = adminAuthenticated ? '/admin' : '/login';
 
-  const handleCustomerLogout = () => {
+  const handleCustomerLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Continue local logout even if remote signOut call fails.
+    }
+
     customerLogout();
     showToast({ title: 'Signed out', variant: 'info' });
     navigate('/login', { replace: true });
