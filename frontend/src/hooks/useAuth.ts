@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   loginWithPassword,
   registerWithPassword,
+  signInWithGoogle,
   syncPersistentCustomerCart
 } from '../api/auth';
 import { getCart } from '../api/cart';
@@ -73,6 +74,13 @@ export function useAuth() {
     }
   });
 
+  const googleLoginMutation = useMutation({
+    mutationFn: ({ returnTo }: { returnTo?: string }) => signInWithGoogle(returnTo || '/shop'),
+    onError: (error) => {
+      showToast({ title: 'Google login failed', description: toUserMessage(error, 'Try again in a moment.'), variant: 'error' });
+    }
+  });
+
   const logout = () => {
     void (async () => {
       try {
@@ -95,6 +103,7 @@ export function useAuth() {
     isAuthenticated: Boolean(accessToken && customerId),
     loginMutation,
     registerMutation,
+    googleLoginMutation,
     logout
   };
 }

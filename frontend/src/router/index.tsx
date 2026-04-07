@@ -37,8 +37,13 @@ function RequireAdmin({ children }: { children: ReactNode }) {
 }
 
 function RequireCustomer({ children }: { children: ReactNode }) {
+  const authBootstrapReady = useAuthStore((state) => state.authBootstrapReady);
   const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
   const location = useLocation();
+
+  if (!authBootstrapReady) {
+    return <PageLoader />;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname, returnTo: location.pathname }} />;

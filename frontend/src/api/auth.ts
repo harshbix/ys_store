@@ -118,6 +118,24 @@ export async function loginWithPassword(email: string, password: string): Promis
   };
 }
 
+export async function signInWithGoogle(returnTo = '/shop'): Promise<void> {
+  const redirectPath = returnTo.startsWith('/') ? returnTo : `/${returnTo}`;
+  const redirectTo = typeof window !== 'undefined'
+    ? `${window.location.origin}${redirectPath}`
+    : undefined;
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo
+    }
+  });
+
+  if (error) {
+    throw normalizeAuthError(error, 'google_oauth_failed', 'Google sign-in could not start');
+  }
+}
+
 export async function verifyOtp(
   email: string,
   challenge_id: string,

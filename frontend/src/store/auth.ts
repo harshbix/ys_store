@@ -6,7 +6,9 @@ interface CustomerAuthStore {
   accessToken: string | null;
   customerId: string | null;
   email: string | null;
+  authBootstrapReady: boolean;
   completeLogin: (accessToken: string, customerId: string, email?: string | null) => void;
+  setAuthBootstrapReady: (ready: boolean) => void;
   logout: () => void;
 }
 
@@ -23,7 +25,9 @@ export const useAuthStore = create<CustomerAuthStore>()(
       accessToken: null,
       customerId: null,
       email: null,
+      authBootstrapReady: false,
       completeLogin: (accessToken, customerId, email = null) => set({ accessToken, customerId, email }),
+      setAuthBootstrapReady: (ready) => set({ authBootstrapReady: ready }),
       logout: () => set({ accessToken: null, customerId: null, email: null })
     }),
     {
