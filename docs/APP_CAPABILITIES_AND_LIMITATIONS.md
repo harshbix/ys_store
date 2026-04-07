@@ -11,13 +11,12 @@ Last updated: 2026-04-05
 - Add products to cart and preserve guest cart session behavior.
 
 ### Auth and Sessions
-- Sign in with email + password as the primary login flow.
-- Register with full name, email, and password.
-- Persist authenticated customer session across reloads after successful verification.
+- Sign in with Google as the primary customer login flow.
+- Persist authenticated customer session across reloads after OAuth return.
 - Keep guest session continuity for cart and browsing flows.
 
 Current note:
-- OTP endpoints remain in backend for compatibility, but login UX is now password-first.
+- Password and OTP endpoints remain in backend for compatibility, but customer login UX is now Google-first.
 
 ### Admin Operations
 - Admin login with protected admin routes.

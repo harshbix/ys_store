@@ -30,8 +30,8 @@ Customer authentication is Google-only in the frontend experience. Email/passwor
 ## Required Supabase Config
 - Google provider enabled in Supabase Auth.
 - Redirect URL(s) configured in Supabase Auth provider settings:
+  - production example: `https://ysstore.vercel.app/shop`
   - local example: `http://localhost:5173/shop`
-  - production example: `https://<frontend-domain>/shop`
 - Site URL configured to the frontend origin.
 
 ## Caveats
