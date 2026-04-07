@@ -13,20 +13,36 @@ export default function CheckoutPage() {
   const { cartQuery } = useCart();
   const { createQuoteMutation, trackWhatsappMutation } = useQuote();
   const [quoteCodeTracked, setQuoteCodeTracked] = useState<string | null>(null);
+  const [isRedirectingToWhatsapp, setIsRedirectingToWhatsapp] = useState(false);
 
   const cartPayload = cartQuery.data?.data;
   const quote = createQuoteMutation.data?.data;
 
-  const submitQuote = (values: QuoteFormInput) => {
+  const submitQuote = async (values: QuoteFormInput) => {
     if (!cartPayload?.cart.id) return;
 
-    createQuoteMutation.mutate({
+    const created = await createQuoteMutation.mutateAsync({
       customer_name: values.customer_name,
       notes: values.notes,
       quote_type: values.quote_type,
       source_type: 'cart',
       source_id: cartPayload.cart.id
     });
+
+    const createdQuote = created?.data;
+    if (!createdQuote?.quote_code || !createdQuote?.whatsapp_url) {
+      return;
+    }
+
+    setIsRedirectingToWhatsapp(true);
+    try {
+      await trackWhatsappMutation.mutateAsync(createdQuote.quote_code);
+    } catch {
+      // Continue navigation even if tracking fails.
+    } finally {
+      setQuoteCodeTracked(createdQuote.quote_code);
+      window.location.assign(createdQuote.whatsapp_url);
+    }
   };
 
   const handleTrackAndOpen = async () => {
@@ -69,7 +85,10 @@ export default function CheckoutPage() {
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <section className="space-y-4">
           <QuoteSummary cart={cartPayload} />
-          <CustomerInfoForm disabled={createQuoteMutation.isPending} onSubmit={submitQuote} />
+          <CustomerInfoForm disabled={createQuoteMutation.isPending || isRedirectingToWhatsapp} onSubmit={submitQuote} />
+          {isRedirectingToWhatsapp ? (
+            <p className="text-sm text-secondary">Quote saved. Redirecting to WhatsApp...</p>
+          ) : null}
           {createQuoteMutation.isError ? (
             <ErrorState
               title="Unable to create quote"
