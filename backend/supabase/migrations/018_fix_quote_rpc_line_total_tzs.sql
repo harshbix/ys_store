@@ -44,29 +44,48 @@ BEGIN
   END IF;
 
   IF p_source_type = 'cart' AND p_source_id IS NOT NULL THEN
-    SELECT c.total_estimated_price_tzs,
-           COALESCE(
-             json_agg(
-               json_build_object(
-                 'item_type', ci.item_type::text,
-                 'product_id', ci.product_id,
-                 'custom_build_id', ci.custom_build_id,
-                 'title_snapshot', ci.title_snapshot,
-                 'specs_snapshot', ci.specs_snapshot,
-                 'quantity', ci.quantity,
-                 'unit_estimated_price_tzs', ci.unit_estimated_price_tzs,
-                 'line_total_tzs', COALESCE(ci.quantity, 0) * COALESCE(ci.unit_estimated_price_tzs, 0)
-               ) ORDER BY ci.created_at
-             ),
-             '[]'::json
-           )
+    SELECT
+      COALESCE(
+        (
+          SELECT SUM(COALESCE(ci.quantity, 0) * COALESCE(ci.unit_estimated_price_tzs, 0))
+          FROM cart_items ci
+          WHERE ci.cart_id = c.id
+        ),
+        0
+      )::bigint,
+      COALESCE(
+        (
+          SELECT json_agg(
+            json_build_object(
+              'item_type', ci.item_type::text,
+              'product_id', ci.product_id,
+              'custom_build_id', ci.custom_build_id,
+              'title_snapshot', ci.title_snapshot,
+              'specs_snapshot', ci.specs_snapshot,
+              'quantity', ci.quantity,
+              'unit_estimated_price_tzs', ci.unit_estimated_price_tzs,
+              'line_total_tzs', COALESCE(ci.quantity, 0) * COALESCE(ci.unit_estimated_price_tzs, 0)
+            ) ORDER BY ci.created_at
+          )
+          FROM cart_items ci
+          WHERE ci.cart_id = c.id
+        ),
+        '[]'::json
+      )
     INTO v_total_tzs, v_items_json
     FROM carts c
-    LEFT JOIN cart_items ci ON c.id = ci.cart_id
-    WHERE c.id = p_source_id;
+    WHERE c.id = p_source_id
+    LIMIT 1;
 
     IF v_total_tzs IS NULL THEN
       RAISE EXCEPTION 'Cart not found';
+    END IF;
+
+    IF v_items_json IS NULL OR v_items_json = '[]'::json THEN
+      RAISE EXCEPTION USING
+        MESSAGE = 'Cart is empty',
+        DETAIL = 'create_quote_from_cart requires at least one cart item',
+        HINT = 'Add items to the cart before creating a quote';
     END IF;
   ELSE
     RAISE EXCEPTION 'Only cart source is currently supported';
