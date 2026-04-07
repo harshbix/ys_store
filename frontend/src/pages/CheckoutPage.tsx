@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { CustomerInfoForm } from '../components/checkout/CustomerInfoForm';
 import { QuoteConfirmation } from '../components/checkout/QuoteConfirmation';
 import { QuoteSummary } from '../components/checkout/QuoteSummary';
@@ -7,41 +8,53 @@ import { ErrorState } from '../components/feedback/ErrorState';
 import { PageLoader } from '../components/feedback/PageLoader';
 import { useCart } from '../hooks/useCart';
 import { useQuote } from '../hooks/useQuote';
+import { queryKeys } from '../lib/queryKeys';
 import type { QuoteFormInput } from '../types/ui';
 
 export default function CheckoutPage() {
+  const queryClient = useQueryClient();
   const { cartQuery } = useCart();
   const { createQuoteMutation, trackWhatsappMutation } = useQuote();
   const [quoteCodeTracked, setQuoteCodeTracked] = useState<string | null>(null);
   const [isRedirectingToWhatsapp, setIsRedirectingToWhatsapp] = useState(false);
 
-  const cartPayload = cartQuery.data?.data;
+  const cartPayload = cartQuery.data;
   const quote = createQuoteMutation.data?.data;
 
   const submitQuote = async (values: QuoteFormInput) => {
     if (!cartPayload?.cart.id) return;
 
-    const created = await createQuoteMutation.mutateAsync({
-      customer_name: values.customer_name,
-      notes: values.notes,
-      quote_type: values.quote_type,
-      source_type: 'cart',
-      source_id: cartPayload.cart.id
-    });
-
-    const createdQuote = created?.data;
-    if (!createdQuote?.quote_code || !createdQuote?.whatsapp_url) {
-      return;
-    }
-
-    setIsRedirectingToWhatsapp(true);
     try {
-      await trackWhatsappMutation.mutateAsync(createdQuote.quote_code);
+      const created = await createQuoteMutation.mutateAsync({
+        customer_name: values.customer_name,
+        notes: values.notes,
+        quote_type: values.quote_type,
+        source_type: 'cart',
+        source_id: cartPayload.cart.id
+      });
+
+      const createdQuote = created?.data;
+      if (!createdQuote?.quote_code || !createdQuote?.whatsapp_url) {
+        return;
+      }
+
+      setIsRedirectingToWhatsapp(true);
+      try {
+        await trackWhatsappMutation.mutateAsync(createdQuote.quote_code);
+      } catch {
+        // Continue navigation even if tracking fails.
+      } finally {
+        setQuoteCodeTracked(createdQuote.quote_code);
+        queryClient.setQueryData(queryKeys.cart.current, {
+          ...cartPayload,
+          items: [],
+          estimated_total_tzs: 0
+        });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.cart.current });
+        window.location.assign(createdQuote.whatsapp_url);
+      }
     } catch {
-      // Continue navigation even if tracking fails.
-    } finally {
-      setQuoteCodeTracked(createdQuote.quote_code);
-      window.location.assign(createdQuote.whatsapp_url);
+      // Error state and toast are handled by the quote mutation hooks.
     }
   };
 
