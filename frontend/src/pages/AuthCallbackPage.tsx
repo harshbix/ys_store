@@ -32,17 +32,6 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     if (!authBootstrapReady) return;
 
-    if (!isAuthenticated) {
-      navigate('/login', {
-        replace: true,
-        state: {
-          from: location.pathname,
-          returnTo
-        }
-      });
-      return;
-    }
-
     if (checkingAdminRef.current) return;
     checkingAdminRef.current = true;
 
@@ -105,6 +94,27 @@ export default function AuthCallbackPage() {
         logError(err, 'AuthCallback.verifyAdminAndReroute');
         navigate('/', { replace: true });
       }
+    }
+
+    // If this looks like an admin login attempt (returnTo starts with /admin),
+    // skip the customer auth check and go straight to the Supabase session check.
+    const isAdminFlow = returnTo.startsWith('/admin');
+
+    if (isAdminFlow) {
+      verifyAdminAndReroute();
+      return;
+    }
+
+    // For customer flows, require a customer session before proceeding.
+    if (!isAuthenticated) {
+      navigate('/login', {
+        replace: true,
+        state: {
+          from: location.pathname,
+          returnTo
+        }
+      });
+      return;
     }
 
     verifyAdminAndReroute();
