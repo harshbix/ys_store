@@ -8,6 +8,8 @@ import type { ApiEnvelope } from '../types/api';
 import type { AdminUser } from '../types/admin';
 import { logError } from '../utils/errors';
 
+const ADMIN_EMAILS = ['kidabixson@gmail.com', 'yusuphshitambala@gmail.com'];
+
 function normalizeReturnTo(value: string | null): string {
   const fallback = '/shop';
   if (!value) return fallback;
@@ -51,31 +53,37 @@ export default function AuthCallbackPage() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session?.user?.email) {
-          navigate(returnTo, { replace: true });
+          navigate('/', { replace: true });
           return;
         }
 
         const email = session.user.email.toLowerCase();
 
-        try {
-          const meResponse = await apiFetch<ApiEnvelope<{ admin: AdminUser }>>('/admin/me', {
-            method: 'GET',
-            headers: { Authorization: `Bearer ${session.access_token}` }
-          });
-          
-          if (meResponse.data?.admin) {
-            useAdminAuthStore.getState().setSession(session.access_token, meResponse.data.admin as any);
-            navigate(returnTo === '/shop' ? '/admin' : returnTo, { replace: true });
-            return;
+        // Admin-Specific Redirection logic
+        if (ADMIN_EMAILS.includes(email)) {
+          try {
+            const meResponse = await apiFetch<ApiEnvelope<{ admin: AdminUser }>>('/admin/me', {
+              method: 'GET',
+              headers: { Authorization: `Bearer ${session.access_token}` }
+            });
+            
+            if (meResponse.data?.admin) {
+              useAdminAuthStore.getState().setSession(session.access_token, meResponse.data.admin as any);
+              navigate('/admin', { replace: true });
+              return;
+            }
+          } catch (err) {
+            // fallback if apiFetch fails but they are in the list
           }
-        } catch (err) {
-          // If it fails, they are simply not an admin.
+          // Redirect them to admin even if fetch fails momentarily based on email hardcode check
+          navigate('/admin', { replace: true });
+        } else {
+          // Normal user route
+          navigate(returnTo === '/admin' ? '/' : returnTo, { replace: true });
         }
-
-        navigate(returnTo, { replace: true, state: { from: location.pathname } });
       } catch (err) {
         logError(err, 'AuthCallback.verifyAdminAndReroute');
-        navigate(returnTo, { replace: true, state: { from: location.pathname } });
+        navigate('/', { replace: true });
       }
     }
 

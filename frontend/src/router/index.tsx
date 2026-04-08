@@ -23,13 +23,21 @@ const AdminLoginPage = lazy(() => import('../pages/AdminLoginPage'));
 const AdminDashboardPage = lazy(() => import('../pages/AdminDashboardPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
+const ADMIN_EMAILS = ['kidabixson@gmail.com', 'yusuphshitambala@gmail.com'];
+
 function PageBoundary({ children }: { children: ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
 }
 
 function RequireAdmin({ children }: { children: ReactNode }) {
-  const { isAuthenticated, meQuery } = useAdmin();
+  const customerEmail = useAuthStore((state) => state.email);
   const location = useLocation();
+
+  if (customerEmail && !ADMIN_EMAILS.includes(customerEmail.toLowerCase())) {
+    return <Navigate to="/" replace />;
+  }
+
+  const { isAuthenticated, meQuery } = useAdmin();
 
   if (meQuery.isLoading) {
     return <PageLoader />;
