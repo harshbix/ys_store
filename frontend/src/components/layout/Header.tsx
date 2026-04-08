@@ -138,7 +138,6 @@ export function Header() {
                 className={({ isActive }) =>
                   `text-[12px] font-medium tracking-[0.04em] transition ${isActive ? 'text-foreground' : 'text-secondary hover:text-foreground'}`
                 }
-                aria-current={isActive => (isActive ? 'page' : undefined)}
               >
                 {link.label}
               </NavLink>

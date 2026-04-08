@@ -1,7 +1,7 @@
 import { m as motion } from 'framer-motion';
 import type { Product } from '../../types/api';
 import { ProductCard } from './ProductCard';
-import { gridStagger, fadeInUp } from '../../lib/motion';
+import { fadeInUp } from '../../lib/motion';
 
 type ProductGridProps = {
   products: Product[];

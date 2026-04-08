@@ -124,7 +124,7 @@ export default function ProductDetailPage() {
       <SEO 
         title={product.title} 
         description={product.short_description || `Buy ${product.title} in Dar es Salaam, Tanzania.`}
-        image={imageSrc === fallbackImage ? undefined : imageSrc}
+        image={(product as any).images && (product as any).images.length > 0 ? (product as any).images[0] : undefined}
         type="product"
       />
       <Button size="sm" variant="secondary" onClick={() => navigate(-1)}>

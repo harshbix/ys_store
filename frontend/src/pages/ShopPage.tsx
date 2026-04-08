@@ -68,13 +68,7 @@ export default function ShopPage() {
   const openFilterDrawer = useUiStore((state) => state.openFilterDrawer);
   const closeFilterDrawer = useUiStore((state) => state.closeFilterDrawer);
 
-  const products = (productsQuery.data?.items ?? []) as Array<{
-    id: string;
-    slug: string;
-    title: string;
-    estimated_price_tzs: number;
-    brand?: string;
-  }>;
+  const products = (productsQuery.data?.items ?? []) as any[];
   const total = productsQuery.data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / filters.limit));
   const addingProductId = addItem.isPending ? (addItem.variables?.product_id ?? null) : null;
