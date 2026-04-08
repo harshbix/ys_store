@@ -13,50 +13,14 @@ DECLARE
   target_admin_id uuid;
 BEGIN
   ---------------------------------------------------------
-  -- 1. IDENTIFY OR CREATE ADMIN ACCOUNT
+  -- 1. IDENTIFY ADMIN ACCOUNT
   ---------------------------------------------------------
+  -- NOTE: Admin Auth manipulation via SQL is prohibited to prevent GoTrue corruption.
+  -- This script assumes the Admin User is already created via the Supabase Admin Dashboard.
   SELECT id INTO target_admin_id FROM auth.users WHERE email = target_admin_email;
   
   IF target_admin_id IS NULL THEN
-    target_admin_id := gen_random_uuid();
-    
-    INSERT INTO auth.users (
-      id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
-      raw_app_meta_data, raw_user_meta_data, created_at, updated_at
-    ) VALUES (
-      target_admin_id,
-      '00000000-0000-0000-0000-000000000000',
-      'authenticated',
-      'authenticated',
-      target_admin_email,
-      target_admin_password_hash,
-      now(),
-      '{"provider": "email", "providers": ["email"]}'::jsonb,
-      '{}'::jsonb,
-      now(),
-      now()
-    );
-
-    INSERT INTO auth.identities (
-      id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
-    ) VALUES (
-      gen_random_uuid(),
-      target_admin_id,
-      jsonb_build_object('sub', target_admin_id::text, 'email', target_admin_email),
-      'email',
-      target_admin_email,
-      now(),
-      now(),
-      now()
-    );
-  ELSE
-    UPDATE auth.users 
-    SET 
-      encrypted_password = target_admin_password_hash, 
-      email_confirmed_at = COALESCE(email_confirmed_at, now()),
-      role = 'authenticated',
-      updated_at = now()
-    WHERE id = target_admin_id;
+    RAISE EXCEPTION 'Admin auth user not found. Please create yusuphshitambala@gmail.com via the Supabase Dashboard first.';
   END IF;
 
   ---------------------------------------------------------
@@ -91,16 +55,14 @@ BEGIN
   TRUNCATE TABLE public.product_media CASCADE;
 
   ---------------------------------------------------------
-  -- 5. REMOVE ALL OTHER USERS AND ADMINS
+  -- 5. REMOVE ALL OTHER SECONDARY ADMINS (PUBLIC TABLE ONLY)
   ---------------------------------------------------------
   -- Remove secondary admin users to prevent login bypass
   DELETE FROM public.admin_users WHERE id != target_admin_id;
   
-  -- Remove secondary auth users
-  DELETE FROM auth.users WHERE id != target_admin_id;
-  
-  -- Note: We INTENTIONALLY PRESERVE `spec_definitions` and `compatibility_rules` 
-  -- because these are core structural rule configurations required to upload laptops/desktops smoothly.
+  -- NOTE: Do NOT use SQL DELETE on auth.users here. Use the Supabase Dashboard
+  --  'Authentication -> Users -> Select All -> Delete' to remove other accounts
+  --  safely without corrupting the GoTrue service.
   
   ---------------------------------------------------------
   -- END TRANSACTION

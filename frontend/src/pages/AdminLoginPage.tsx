@@ -1,15 +1,15 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAdmin } from '../hooks/useAdmin';
 import { SEO } from '../components/seo/SEO';
+import { InlineAlert } from '../components/feedback/InlineAlert';
+import { Button } from '../components/ui/Button';
+import { toUserMessage } from '../utils/errors';
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, loginMutation } = useAdmin();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { isAuthenticated, googleAdminLoginMutation } = useAdmin();
 
   const target = useMemo(() => {
     const state = location.state as { from?: string } | null;
@@ -22,62 +22,39 @@ export default function AdminLoginPage() {
     }
   }, [isAuthenticated, navigate, target]);
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!email.trim() || !password.trim()) return;
-    loginMutation.mutate({ email: email.trim(), password: password.trim() });
-  };
-
   return (
     <>
       <SEO title="Admin Login" description="YS Store Administrator Login" noindex={true} />
-      <div className="mx-auto max-w-lg space-y-5 pb-8">
-        <header>
-        <h1 className="section-title text-foreground">Admin Login</h1>
-        <p className="mt-2 text-[13px] text-secondary">Sign in with backend-configured administrator credentials.</p>
+      <div className="mx-auto max-w-lg space-y-5 pb-8 pt-6">
+        <header className="space-y-2 text-center">
+        <p className="text-[12px] font-medium tracking-[0.18em] text-secondary">YS STORE</p>
+        <h1 className="text-[34px] font-semibold tracking-[-0.03em] text-foreground">Admin Login</h1>
+        <p className="text-sm text-secondary">Sign in securely with authorized Google credentials.</p>
       </header>
 
-      <section className="rounded-2xl border border-border bg-surface p-5">
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-foreground" htmlFor="admin-email">
-              Email
-            </label>
-            <input
-              id="admin-email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-              className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none ring-0 placeholder:text-muted focus:border-accent"
-            />
-          </div>
+      <section className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
+        <div className="space-y-4">
+          {googleAdminLoginMutation.isError ? (
+            <InlineAlert tone="error" message={toUserMessage(googleAdminLoginMutation.error, 'Admin login failed')} />
+          ) : null}
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-foreground" htmlFor="admin-password">
-              Password
-            </label>
-            <input
-              id="admin-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none ring-0 placeholder:text-muted focus:border-accent"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loginMutation.isPending}
-            className="min-h-11 rounded-full bg-primary px-5 text-sm font-semibold text-primaryForeground disabled:opacity-50"
+          <Button
+            type="button"
+            size="lg"
+            fullWidth
+            loading={googleAdminLoginMutation.isPending}
+            disabled={googleAdminLoginMutation.isPending}
+            onClick={() => googleAdminLoginMutation.mutate(target)}
           >
-            {loginMutation.isPending ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-      </section>
+            Continue with Google (Admin)
+          </Button>
 
-      <section className="rounded-2xl border border-border bg-background p-4 text-sm text-muted">
-        Looking for customer login? <Link to="/login" className="font-semibold text-foreground hover:text-accent">Open customer login</Link>.
+          <p className="text-center text-[12px] text-secondary">Email and password login is disabled for administrators.</p>
+        </div>
+
+        <p className="mt-4 text-center text-[13px] text-secondary">
+          Looking for customer login? <Link to="/login" className="font-semibold text-foreground hover:text-accent">Open customer login</Link>.
+        </p>
       </section>
     </div>
     </>

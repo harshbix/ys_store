@@ -4,6 +4,7 @@ import { CartDrawer } from '../components/cart/CartDrawer';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { PageLoader } from '../components/feedback/PageLoader';
 import { Layout } from '../components/layout/Layout';
+import { useAdmin } from '../hooks/useAdmin';
 import { useAdminAuthStore, useAuthStore } from '../store/auth';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
@@ -27,10 +28,14 @@ function PageBoundary({ children }: { children: ReactNode }) {
 }
 
 function RequireAdmin({ children }: { children: ReactNode }) {
-  const token = useAdminAuthStore((state) => state.token);
+  const { isAuthenticated, meQuery } = useAdmin();
   const location = useLocation();
 
-  if (!token) {
+  if (meQuery.isLoading) {
+    return <PageLoader />;
+  }
+
+  if (!isAuthenticated || meQuery.isError || !meQuery.data?.admin) {
     return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
   }
 

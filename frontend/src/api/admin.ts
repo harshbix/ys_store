@@ -1,4 +1,5 @@
 import { apiFetch } from '../lib/apiClient';
+import { supabase } from '../lib/supabase';
 import type { ApiEnvelope } from '../types/api';
 import type {
   AdminFinalizeUploadPayload,
@@ -19,27 +20,60 @@ function withAdminToken(token: string): HeadersInit {
 }
 
 export async function adminLogin(email: string, password: string): Promise<AdminLoginPayload> {
-  const response = await apiFetch<ApiEnvelope<AdminLoginPayload>>('/admin/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password })
-  });
-  return response.data;
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error || !data.user || !data.session) {
+    throw new Error(error?.message || 'Login failed');
+  }
+
+  const { data: adminUser, error: roleError } = await supabase
+    .from('admin_users')
+    .select('*')
+    .eq('id', data.user.id)
+    .single();
+
+  if (roleError || !adminUser || adminUser.role !== 'owner') {
+    await supabase.auth.signOut();
+    throw new Error('Unauthorized access');
+  }
+
+  return {
+    token: data.session.access_token,
+    admin: {
+      id: data.user.id,
+      email: data.user.email!,
+      role: 'owner',
+      created_at: data.user.created_at
+    }
+  };
 }
 
 export async function adminLogout(token: string): Promise<{ logged_out: boolean }> {
-  const response = await apiFetch<ApiEnvelope<{ logged_out: boolean }>>('/admin/logout', {
-    method: 'POST',
-    headers: withAdminToken(token)
-  });
-  return response.data;
+  await supabase.auth.signOut();
+  return { logged_out: true };
 }
 
 export async function getAdminMe(token: string): Promise<{ admin: AdminUser }> {
-  const response = await apiFetch<ApiEnvelope<{ admin: AdminUser }>>('/admin/me', {
-    method: 'GET',
-    headers: withAdminToken(token)
-  });
-  return response.data;
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) throw new Error('Not authenticated');
+
+  const { data: adminUser, error: roleError } = await supabase
+    .from('admin_users')
+    .select('id, email, full_name, role, is_active')
+    .eq('id', user.id)
+    .single();
+
+  if (roleError || !adminUser || (adminUser.role !== 'owner' && adminUser.role !== 'admin')) {
+    throw new Error('Unauthorized access');
+  }
+
+  return {
+    admin: {
+      id: user.id,
+      email: user.email!,
+      role: 'owner',
+      created_at: user.created_at
+    }
+  };
 }
 
 export async function getAdminProducts(token: string): Promise<AdminProduct[]> {
