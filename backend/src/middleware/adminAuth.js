@@ -23,7 +23,7 @@ export async function requireAdmin(req, res, next) {
     const { data: adminUser, error: roleError } = await supabase
       .from('admin_users')
       .select('id, email, full_name, role, is_active')
-      .eq('email', user.email)
+      .eq('email', email)
       .single();
 
     if (roleError || !adminUser) {
