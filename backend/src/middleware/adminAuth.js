@@ -11,14 +11,16 @@ export async function requireAdmin(req, res, next) {
 
   try {
     // 1. Validate the Supabase token server-side
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const { data: { user }, error: sbError } = await supabase.auth.getUser(token);
     
-    if (error || !user || !user.email) {
+    if (sbError || !user || !user.email) {
+      console.warn('[Admin Auth] Supabase getUser failed:', sbError?.message || 'No user/email returned', 'Token:', token?.substring(0, 15) + '...');
       return fail(res, 401, 'unauthorized', 'Invalid or expired admin token');
     }
 
     // 2. Fetch the admin record using the service role to ensure bypass doesn't obscure failure
     const email = user.email.toLowerCase();
+    console.log('[Admin Auth] Verified Google Auth for email:', email);
     
     const { data: adminUser, error: roleError } = await supabase
       .from('admin_users')
@@ -27,14 +29,17 @@ export async function requireAdmin(req, res, next) {
       .single();
 
     if (roleError || !adminUser) {
+      console.warn(`[Admin Auth] Failed to find admin record for email ${email}:`, roleError?.message || 'No record');
       return fail(res, 403, 'forbidden', 'Admin record not found');
     }
 
     if (!adminUser.is_active) {
+      console.warn(`[Admin Auth] Admin account is inactive: ${email}`);
       return fail(res, 403, 'forbidden', 'Admin account is inactive');
     }
 
     if (adminUser.role !== 'owner' && adminUser.role !== 'admin') {
+      console.warn(`[Admin Auth] Insufficient privileges for ${email}: ${adminUser.role}`);
       return fail(res, 403, 'forbidden', 'Insufficient admin privileges');
     }
 
