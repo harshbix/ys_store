@@ -1,4 +1,6 @@
-﻿import { fail } from '../utils/apiResponse.js';
+﻿import jwt from 'jsonwebtoken';
+import { fail } from '../utils/apiResponse.js';
+import { env } from '../config/env.js';
 import { supabase } from '../lib/supabase.js';
 
 export async function requireAdmin(req, res, next) {
@@ -10,26 +12,28 @@ export async function requireAdmin(req, res, next) {
   }
 
   try {
-    // 1. Validate the Supabase token server-side
-    const { data: { user }, error: sbError } = await supabase.auth.getUser(token);
+    // 1. Verify the backend JWT
+    const decoded = jwt.verify(token, env.adminJwtSecret);
     
-    if (sbError || !user || !user.email) {
-      console.warn('[Admin Auth] Supabase getUser failed:', sbError?.message || 'No user/email returned', 'Token:', token?.substring(0, 15) + '...');
-      return fail(res, 401, 'unauthorized', 'Invalid or expired admin token');
+    if (!decoded.sub || !decoded.email) {
+      console.warn('[Admin Auth] JWT decoded but missing required fields');
+      return fail(res, 401, 'unauthorized', 'Invalid admin token payload');
     }
 
-    // 2. Fetch the admin record using the service role to ensure bypass doesn't obscure failure
-    const email = user.email.toLowerCase();
-    console.log('[Admin Auth] Verified Google Auth for email:', email);
+    const adminId = decoded.sub;
+    const email = decoded.email.toLowerCase();
+    console.log('[Admin Auth] JWT verified for email:', email);
     
+    // 2. Fetch the admin record from database to verify it still exists and is active
     const { data: adminUser, error: roleError } = await supabase
       .from('admin_users')
       .select('id, email, full_name, role, is_active')
+      .eq('id', adminId)
       .eq('email', email)
       .single();
 
     if (roleError || !adminUser) {
-      console.warn(`[Admin Auth] Failed to find admin record for email ${email}:`, roleError?.message || 'No record');
+      console.warn(`[Admin Auth] Failed to find admin record for id ${adminId} email ${email}:`, roleError?.message || 'No record');
       return fail(res, 403, 'forbidden', 'Admin record not found');
     }
 
@@ -55,6 +59,10 @@ export async function requireAdmin(req, res, next) {
     
     return next();
   } catch (err) {
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      console.warn('[Admin Auth] JWT verification failed:', err.message);
+      return fail(res, 401, 'unauthorized', 'Invalid or expired admin token');
+    }
     console.error('[Admin Auth] Verification error:', err);
     return fail(res, 500, 'server_error', 'Internal server error verifying admin identity');
   }

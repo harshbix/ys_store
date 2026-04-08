@@ -16,6 +16,15 @@ for (const key of required) {
   }
 }
 
+// Parse allowed admin emails from comma-separated string
+function parseAllowedAdminEmails() {
+  const emailsStr = process.env.ADMIN_EMAIL || '';
+  return emailsStr
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(e => e.length > 0);
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 4000),
@@ -26,6 +35,8 @@ export const env = {
   supabaseStorageBucket: process.env.SUPABASE_STORAGE_BUCKET,
   adminJwtSecret: process.env.ADMIN_JWT_SECRET,
   adminJwtExpiresIn: process.env.ADMIN_JWT_EXPIRES_IN || '7d',
+  allowedAdminEmails: parseAllowedAdminEmails(),
+  // Legacy env vars (kept for backward compatibility but not used in new auth flow)
   adminEmail: process.env.ADMIN_EMAIL || '',
   adminPassword: process.env.ADMIN_PASSWORD || '',
   whatsappPhoneE164: process.env.WHATSAPP_PHONE_E164,

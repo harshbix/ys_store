@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env.js';
+import { verifyPassword } from '../../utils/password.js';
 import {
   findAdminByEmail,
   listProductsAdmin,
@@ -23,21 +24,51 @@ function assertSpecKeysAllowed(specs, allowedKeys) {
 }
 
 export async function adminLogin(email, password) {
-  if (email !== env.adminEmail || password !== env.adminPassword) {
+  if (!email || !password) {
+    throw { status: 400, code: 'invalid_request', message: 'Email and password are required' };
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  
+  // 1. Check if email is in allowed list
+  const allowedEmails = env.allowedAdminEmails || [];
+  if (!allowedEmails.includes(normalizedEmail)) {
+    console.warn('[Admin Login] Unauthorized email attempted:', normalizedEmail);
     throw { status: 401, code: 'invalid_credentials', message: 'Invalid admin credentials' };
   }
 
-  const adminRes = await findAdminByEmail(email);
-  if (adminRes.error) throw { status: 500, code: 'admin_lookup_failed', message: adminRes.error.message };
-  if (!adminRes.data) throw { status: 403, code: 'admin_not_bootstrapped', message: 'Admin profile not found' };
+  // 2. Look up admin record
+  const adminRes = await findAdminByEmail(normalizedEmail);
+  if (adminRes.error) {
+    throw { status: 500, code: 'admin_lookup_failed', message: adminRes.error.message };
+  }
+  if (!adminRes.data) {
+    console.warn('[Admin Login] Admin record not found for email:', normalizedEmail);
+    throw { status: 403, code: 'admin_not_bootstrapped', message: 'Admin profile not initialized' };
+  }
 
+  const admin = adminRes.data;
+
+  // 3. Verify password
+  if (!admin.password_hash) {
+    console.warn('[Admin Login] Admin record exists but has no password hash:', normalizedEmail);
+    throw { status: 403, code: 'admin_auth_not_configured', message: 'Admin password authentication not configured' };
+  }
+
+  const passwordValid = verifyPassword(password, admin.password_hash);
+  if (!passwordValid) {
+    console.warn('[Admin Login] Password verification failed for:', normalizedEmail);
+    throw { status: 401, code: 'invalid_credentials', message: 'Invalid admin credentials' };
+  }
+
+  // 4. Sign and return JWT
   const token = jwt.sign(
-    { sub: adminRes.data.id, email: adminRes.data.email, role: adminRes.data.role },
+    { sub: admin.id, email: admin.email, role: admin.role },
     env.adminJwtSecret,
     { expiresIn: env.adminJwtExpiresIn }
   );
 
-  return { token, admin: adminRes.data };
+  return { token, admin };
 }
 
 export async function getAdminProducts() {

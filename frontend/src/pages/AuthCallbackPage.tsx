@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { PageLoader } from '../components/feedback/PageLoader';
-import { useAuthStore, useAdminAuthStore } from '../store/auth';
+import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
-import { apiFetch } from '../lib/apiClient';
-import type { ApiEnvelope } from '../types/api';
-import type { AdminUser } from '../types/admin';
 import { logError } from '../utils/errors';
 
 function normalizeReturnTo(value: string | null): string {
@@ -15,6 +12,9 @@ function normalizeReturnTo(value: string | null): string {
   const trimmed = value.trim();
   if (!trimmed.startsWith('/')) return fallback;
 
+  // Admin routes should not be redirected from OAuth callback
+  if (trimmed.startsWith('/admin')) return fallback;
+
   return trimmed;
 }
 
@@ -22,95 +22,53 @@ export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const checkingAdminRef = useRef(false);
+  const authBootstrapRef = useRef(false);
 
   const authBootstrapReady = useAuthStore((state) => state.authBootstrapReady);
-  const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
+  const completeLogin = useAuthStore((state) => state.completeLogin);
 
   const returnTo = useMemo(() => normalizeReturnTo(searchParams.get('returnTo')), [searchParams]);
 
   useEffect(() => {
     if (!authBootstrapReady) return;
+    if (authBootstrapRef.current) return;
+    authBootstrapRef.current = true;
 
-    if (checkingAdminRef.current) return;
-    checkingAdminRef.current = true;
-
-    async function verifyAdminAndReroute() {
+    async function processOAuthCallback() {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-        if (sessionError || !session?.user?.email) {
-          console.warn('[AuthCallback] No Supabase session after OAuth return. Redirecting home.');
+        if (sessionError || !session?.user) {
+          console.warn('[AuthCallback] No Supabase session returned. Redirecting to checkout.');
           navigate('/', { replace: true });
           return;
         }
 
-        const email = session.user.email.toLowerCase();
-        console.log('[AuthCallback] Session resolved for:', email);
+        // For customer OAuth, associate with the customer
+        const customerId = session.user.id;
+        const email = session.user.email;
 
-        // Check if this user is an admin
-        let adminRecord = null;
-        try {
-          const { data, error } = await supabase
-            .from('admin_users')
-            .select('email')
-            .ilike('email', email)
-            .single();
-
-          if (error) {
-            console.error('[AuthCallback] admin_users query error:', error.code, error.message);
-          }
-          adminRecord = data;
-        } catch (err) {
-          console.error('[AuthCallback] Exception querying admin_users:', err);
+        if (!customerId) {
+          console.warn('[AuthCallback] Session has no user id.');
+          navigate('/', { replace: true });
+          return;
         }
 
-        if (adminRecord) {
-          try {
-            const meResponse = await apiFetch<ApiEnvelope<{ admin: AdminUser }>>('/admin/me', {
-              method: 'GET',
-              headers: { Authorization: `Bearer ${session.access_token}` }
-            });
-
-            if (meResponse.data?.admin) {
-              useAdminAuthStore.getState().setSession(session.access_token, meResponse.data.admin as any);
-              navigate('/admin', { replace: true });
-              return;
-            }
-          } catch (err) {
-            console.error('[AuthCallback] /admin/me fetch failed:', err);
-          }
-          // Still redirect to admin even if /admin/me hydration fails — the session is set
-          navigate('/admin', { replace: true });
-        } else {
-          // Regular customer
-          navigate(returnTo === '/admin' ? '/' : returnTo, { replace: true });
-        }
+        console.log('[AuthCallback] OAuth session established for customer:', email);
+        
+        // Complete the customer login
+        completeLogin(session.access_token, customerId, email);
+        
+        // Redirect to original location or checkout
+        navigate(returnTo, { replace: true });
       } catch (err) {
-        logError(err, 'AuthCallback.verifyAdminAndReroute');
+        logError(err, 'AuthCallback.processOAuthCallback');
         navigate('/', { replace: true });
       }
     }
 
-    // Admin flow: skip customer-auth check, go straight to Supabase session check
-    const isAdminFlow = returnTo.startsWith('/admin');
-    if (isAdminFlow) {
-      verifyAdminAndReroute();
-      return;
-    }
-
-    // Customer flow: must have a customer session
-    if (!isAuthenticated) {
-      navigate('/login', {
-        replace: true,
-        state: { from: location.pathname, returnTo }
-      });
-      return;
-    }
-
-    verifyAdminAndReroute();
-
-  }, [authBootstrapReady, isAuthenticated, location.pathname, navigate, returnTo]);
+    processOAuthCallback();
+  }, [authBootstrapReady, completeLogin, navigate, returnTo]);
 
   return <PageLoader />;
 }

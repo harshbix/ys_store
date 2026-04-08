@@ -1,6 +1,7 @@
 ﻿import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  adminLogin,
   adminLogout,
   archiveProduct,
   createAdminProduct,
@@ -32,10 +33,19 @@ export function useAdmin() {
   const setSession = useAdminAuthStore((state) => state.setSession);
   const clearSession = useAdminAuthStore((state) => state.clearSession);
 
-  const googleAdminLoginMutation = useMutation({
-    mutationFn: (target: string) => import('../api/auth').then(m => m.signInWithGoogle(target)),
+  /** Email/password login mutation */
+  const emailPasswordLoginMutation = useMutation({
+    mutationFn: ({ email, password }: { email: string; password: string }) => adminLogin(email, password),
+    onSuccess: (data) => {
+      setSession(data.token, data.admin);
+      showToast({ title: 'Welcome', description: 'Admin login successful.', variant: 'success' });
+    },
     onError: (error) => {
-      showToast({ title: 'Admin login failed', description: toUserMessage(error, 'Check admin credentials.'), variant: 'error' });
+      showToast({ 
+        title: 'Admin login failed', 
+        description: toUserMessage(error, 'Check your email and password.'), 
+        variant: 'error' 
+      });
     }
   });
 
@@ -189,7 +199,7 @@ export function useAdmin() {
     token,
     admin,
     isAuthenticated: Boolean(token) && !meQuery.isError,
-    googleAdminLoginMutation,
+    emailPasswordLoginMutation,
     meQuery,
     productsQuery,
     quotesQuery,

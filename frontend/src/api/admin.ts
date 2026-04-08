@@ -1,5 +1,4 @@
 import { apiFetch } from '../lib/apiClient';
-import { supabase } from '../lib/supabase';
 import type { ApiEnvelope } from '../types/api';
 import type {
   AdminFinalizeUploadPayload,
@@ -19,39 +18,29 @@ function withAdminToken(token: string): HeadersInit {
   };
 }
 
+/**
+ * Login to admin panel using email and password
+ * Returns a backend JWT token (not Supabase token)
+ */
 export async function adminLogin(email: string, password: string): Promise<AdminLoginPayload> {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error || !data.user || !data.session) {
-    throw new Error(error?.message || 'Login failed');
+  if (!email || !password) {
+    throw new Error('Email and password are required');
   }
 
-  const token = data.session.access_token;
-  let adminData: AdminUser;
-  
-  try {
-    const meResponse = await apiFetch<ApiEnvelope<{ admin: AdminUser }>>('/admin/me', {
-      method: 'GET',
-      headers: withAdminToken(token)
-    });
-    
-    if (!meResponse.data?.admin) {
-      throw new Error('Unauthorized access');
-    }
-    
-    adminData = meResponse.data.admin;
-  } catch (err) {
-    await supabase.auth.signOut();
-    throw new Error('Unauthorized access');
+  const response = await apiFetch<ApiEnvelope<AdminLoginPayload>>('/admin/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password })
+  });
+
+  if (!response.data?.token || !response.data?.admin) {
+    throw new Error('Admin login failed: invalid response from server');
   }
 
-  return {
-    token,
-    admin: adminData
-  };
+  return response.data;
 }
 
 export async function adminLogout(token: string): Promise<{ logged_out: boolean }> {
-  await supabase.auth.signOut();
+  // Just clear client-side since backend logout is stateless
   return { logged_out: true };
 }
 

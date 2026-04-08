@@ -1,7 +1,6 @@
-﻿import { useEffect, useMemo } from 'react';
+﻿import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAdmin } from '../hooks/useAdmin';
-import { useAuthStore } from '../store/auth';
 import { SEO } from '../components/seo/SEO';
 import { InlineAlert } from '../components/feedback/InlineAlert';
 import { Button } from '../components/ui/Button';
@@ -10,10 +9,11 @@ import { toUserMessage } from '../utils/errors';
 export default function AdminLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, googleAdminLoginMutation } = useAdmin();
-  
-  const customerEmail = useAuthStore((state) => state.email);
-  const isCustomerAuth = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
+  const { isAuthenticated, emailPasswordLoginMutation } = useAdmin();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const target = useMemo(() => {
     const state = location.state as { from?: string } | null;
@@ -21,46 +21,117 @@ export default function AdminLoginPage() {
   }, [location.state]);
 
   useEffect(() => {
-    if (isAuthenticated && !googleAdminLoginMutation.isError) {
+    if (isAuthenticated && !emailPasswordLoginMutation.isError) {
       navigate(target, { replace: true });
     }
-  }, [isAuthenticated, googleAdminLoginMutation.isError, navigate, target]);
+  }, [isAuthenticated, emailPasswordLoginMutation.isError, navigate, target]);
+
+  function validateForm(): boolean {
+    const newErrors: Record<string, string> = {};
+    
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!email.includes('@')) {
+      newErrors.email = 'Please enter a valid email';
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    emailPasswordLoginMutation.mutate({ email: email.trim().toLowerCase(), password });
+  }
 
   return (
     <>
       <SEO title="Admin Login" description="YS Store Administrator Login" noindex={true} />
       <div className="mx-auto max-w-lg space-y-5 pb-8 pt-6">
         <header className="space-y-2 text-center">
-        <p className="text-[12px] font-medium tracking-[0.18em] text-secondary">YS STORE</p>
-        <h1 className="text-[34px] font-semibold tracking-[-0.03em] text-foreground">Admin Login</h1>
-        <p className="text-sm text-secondary">Sign in securely with authorized Google credentials.</p>
-      </header>
+          <p className="text-[12px] font-medium tracking-[0.18em] text-secondary">YS STORE</p>
+          <h1 className="text-[34px] font-semibold tracking-[-0.03em] text-foreground">Admin Login</h1>
+          <p className="text-sm text-secondary">Sign in with your authorized admin credentials.</p>
+        </header>
 
-      <section className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
-        <div className="space-y-4">
-          {googleAdminLoginMutation.isError ? (
-            <InlineAlert tone="error" message={toUserMessage(googleAdminLoginMutation.error, 'Admin login failed')} />
-          ) : null}
+        <section className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {emailPasswordLoginMutation.isError ? (
+              <InlineAlert 
+                tone="error" 
+                message={toUserMessage(emailPasswordLoginMutation.error, 'Admin login failed. Please check your credentials.')} 
+              />
+            ) : null}
 
-          <Button
-            type="button"
-            size="lg"
-            fullWidth
-            loading={googleAdminLoginMutation.isPending}
-            disabled={googleAdminLoginMutation.isPending}
-            onClick={() => googleAdminLoginMutation.mutate(target)}
-          >
-            Continue with Google (Admin)
-          </Button>
+            <div className="space-y-1">
+              <label htmlFor="email" className="block text-sm font-medium text-foreground">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors({ ...errors, email: '' });
+                }}
+                placeholder="admin@example.com"
+                disabled={emailPasswordLoginMutation.isPending}
+                className="w-full rounded-[2px] border border-border bg-inputBg px-3 py-2 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              {errors.email && <p className="text-xs text-error">{errors.email}</p>}
+            </div>
 
-          <p className="text-center text-[12px] text-secondary">Email and password login is disabled for administrators.</p>
-        </div>
+            <div className="space-y-1">
+              <label htmlFor="password" className="block text-sm font-medium text-foreground">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors({ ...errors, password: '' });
+                }}
+                placeholder="••••••••"
+                disabled={emailPasswordLoginMutation.isPending}
+                className="w-full rounded-[2px] border border-border bg-inputBg px-3 py-2 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              {errors.password && <p className="text-xs text-error">{errors.password}</p>}
+            </div>
 
-        <p className="mt-4 text-center text-[13px] text-secondary">
+            <Button
+              type="submit"
+              size="lg"
+              fullWidth
+              loading={emailPasswordLoginMutation.isPending}
+              disabled={emailPasswordLoginMutation.isPending}
+            >
+              Sign In
+            </Button>
+          </form>
+
+          <p className="mt-4 text-center text-[12px] text-secondary">
+            Only authorized administrators can access this area.
+          </p>
+        </section>
+
+        <p className="text-center text-[13px] text-secondary">
           Looking for customer login? <Link to="/login" className="font-semibold text-foreground hover:text-accent">Open customer login</Link>.
         </p>
-      </section>
-    </div>
+      </div>
     </>
   );
 }
