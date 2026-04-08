@@ -34,11 +34,10 @@ function RequireAdmin({ children }: { children: ReactNode }) {
 
   const { isAuthenticated, meQuery } = useAdmin();
 
-  // Wait until general auth hydation succeeds before enforcing admin blocks.
+  // Wait until general auth hydration succeeds before enforcing admin blocks.
   // If the admin session is fetching/pending, we wait.
   if (!authBootstrapReady || meQuery.isPending || meQuery.isFetching) {
-    // If the loading is technically looping because they simply are NOT an admin (no token),
-    // and we know the auth bootstrapped, we can safely redirect.
+    // If auth is bootstrapped but there's no token at all, no need to wait.
     if (authBootstrapReady && !isAdmin) {
       return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
     }

@@ -38,35 +38,31 @@ export default function AuthCallbackPage() {
     async function verifyAdminAndReroute() {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
+
         if (sessionError || !session?.user?.email) {
+          console.warn('[AuthCallback] No Supabase session after OAuth return. Redirecting home.');
           navigate('/', { replace: true });
           return;
         }
 
         const email = session.user.email.toLowerCase();
+        console.log('[AuthCallback] Session resolved for:', email);
 
-        // Admin-Specific Redirection logic
+        // Check if this user is an admin
         let adminRecord = null;
         try {
           const { data, error } = await supabase
             .from('admin_users')
             .select('email')
-            .ilike('email', email) // Using ilike just in case for case-insensitivity
+            .ilike('email', email)
             .single();
 
           if (error) {
-            console.error('Supabase admin_users query error:', error, 'Code:', error.code);
-            if (error.code === '406' || error.code === '403' || error.message?.includes('RLS')) {
-              console.error('Possible RLS issue preventing admin_users read for email:', email);
-            }
-          } else if (!data) {
-            console.error('No adminRecord found (possible case sensitivity or missing record), email was:', email);
+            console.error('[AuthCallback] admin_users query error:', error.code, error.message);
           }
-          
           adminRecord = data;
         } catch (err) {
-          console.error('Exception querying admin_users:', err);
+          console.error('[AuthCallback] Exception querying admin_users:', err);
         }
 
         if (adminRecord) {
@@ -75,19 +71,19 @@ export default function AuthCallbackPage() {
               method: 'GET',
               headers: { Authorization: `Bearer ${session.access_token}` }
             });
-            
+
             if (meResponse.data?.admin) {
               useAdminAuthStore.getState().setSession(session.access_token, meResponse.data.admin as any);
               navigate('/admin', { replace: true });
               return;
             }
           } catch (err) {
-            console.error('Admin hydration failed:', err);
+            console.error('[AuthCallback] /admin/me fetch failed:', err);
           }
-          // Redirect them to admin even if fetch fails momentarily based on DB check
+          // Still redirect to admin even if /admin/me hydration fails — the session is set
           navigate('/admin', { replace: true });
         } else {
-          // Normal user route
+          // Regular customer
           navigate(returnTo === '/admin' ? '/' : returnTo, { replace: true });
         }
       } catch (err) {
@@ -96,23 +92,18 @@ export default function AuthCallbackPage() {
       }
     }
 
-    // If this looks like an admin login attempt (returnTo starts with /admin),
-    // skip the customer auth check and go straight to the Supabase session check.
+    // Admin flow: skip customer-auth check, go straight to Supabase session check
     const isAdminFlow = returnTo.startsWith('/admin');
-
     if (isAdminFlow) {
       verifyAdminAndReroute();
       return;
     }
 
-    // For customer flows, require a customer session before proceeding.
+    // Customer flow: must have a customer session
     if (!isAuthenticated) {
       navigate('/login', {
         replace: true,
-        state: {
-          from: location.pathname,
-          returnTo
-        }
+        state: { from: location.pathname, returnTo }
       });
       return;
     }
