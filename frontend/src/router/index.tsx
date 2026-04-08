@@ -1,11 +1,11 @@
 import { lazy, Suspense, useEffect, type ReactNode } from 'react';
-import { createBrowserRouter, Navigate, Outlet, useLocation, useRouteError } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet, useLocation, useRouteError, Link } from 'react-router-dom';
 import { CartDrawer } from '../components/cart/CartDrawer';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { PageLoader } from '../components/feedback/PageLoader';
 import { Layout } from '../components/layout/Layout';
 import { useAdmin } from '../hooks/useAdmin';
-import { useAdminAuthStore, useAuthStore } from '../store/auth';
+import { useAdminAuthStore, useAuthStore, useIsAdmin } from '../store/auth';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const ShopPage = lazy(() => import('../pages/ShopPage'));
@@ -66,6 +66,29 @@ function RequireCustomer({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function AdminHomeRedirect({ children }: { children: ReactNode }) {
+  const isAdmin = useIsAdmin();
+  const location = useLocation();
+
+  if (isAdmin && location.pathname === '/') {
+    const state = location.state as { from?: string } | undefined;
+    if (state?.from?.startsWith('/admin')) {
+      return <Navigate to="/admin" replace />;
+    }
+
+    return (
+      <>
+        <div className="bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground sm:px-6 lg:px-8">
+          You are signed in as an Administrator. <Link to="/admin" className="underline underline-offset-2 hover:opacity-80">Go to Dashboard &rarr;</Link>
+        </div>
+        {children}
+      </>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 function RootLayout() {
   const location = useLocation();
 
@@ -75,7 +98,9 @@ function RootLayout() {
 
   return (
     <Layout>
-      <Outlet />
+      <AdminHomeRedirect>
+        <Outlet />
+      </AdminHomeRedirect>
       <CartDrawer />
     </Layout>
   );

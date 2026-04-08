@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
 import { useShowToast } from '../../hooks/useToast';
-import { useAdminAuthStore, useAuthStore } from '../../store/auth';
+import { useAdminAuthStore, useAuthStore, useIsAdmin } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
 import { SearchResultsOverlay } from '../ui/SearchResultsOverlay.tsx';
 
@@ -31,20 +31,24 @@ export function Header() {
   const openSearchOverlay = useUiStore((state) => state.openSearchOverlay);
   const closeSearchOverlay = useUiStore((state) => state.closeSearchOverlay);
   const customerAuthenticated = useAuthStore((state) => Boolean(state.accessToken));
+  const customerEmail = useAuthStore((state) => state.email);
   const customerLogout = useAuthStore((state) => state.logout);
   const adminAuthenticated = useAdminAuthStore((state) => Boolean(state.token));
+  const isAdmin = useIsAdmin();
 
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+    console.log("Current User Email:", customerEmail);
+    console.log("Is Admin:", isAdmin);
     const handleScroll = () => setIsScrolled(window.scrollY > 4);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [customerEmail, isAdmin]);
 
   const cartItems = cartQuery.isSuccess ? (cartQuery.data?.items ?? []) : [];
   const cartCount = cartItems.length;
-  const accountHref = adminAuthenticated 
+  const accountHref = (adminAuthenticated || isAdmin)
     ? '/admin' 
     : customerAuthenticated 
       ? '/shop' 
@@ -60,7 +64,7 @@ export function Header() {
 
     customerLogout();
     showToast({ title: 'Signed out', variant: 'info' });
-    navigate('/login', { replace: true });
+    navigate(isAdmin ? '/admin/login' : '/login', { replace: true });
   };
 
   const handleCartIntent = () => {
@@ -74,7 +78,7 @@ export function Header() {
       description: 'Sign in to open your cart.',
       variant: 'info'
     });
-    navigate('/login', {
+    navigate(isAdmin ? '/admin/login' : '/login', {
       state: {
         from: location.pathname,
         returnTo: '/cart'
