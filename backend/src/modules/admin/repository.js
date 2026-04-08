@@ -71,7 +71,7 @@ const QUOTE_SELECT = [
 ].join(',');
 
 export async function findAdminByEmail(email) {
-  return supabase.from('admin_users').select('id, email, full_name, role, is_active').eq('email', email).single();
+  return supabase.from('admin_users').select('id, email, full_name, role, is_active, password_hash, auth_method').eq('email', email).single();
 }
 
 export async function listProductsAdmin() {
