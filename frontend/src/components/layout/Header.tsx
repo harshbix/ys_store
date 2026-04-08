@@ -44,7 +44,11 @@ export function Header() {
 
   const cartItems = cartQuery.isSuccess ? (cartQuery.data?.items ?? []) : [];
   const cartCount = cartItems.length;
-  const accountHref = adminAuthenticated ? '/admin' : '/login';
+  const accountHref = adminAuthenticated 
+    ? '/admin' 
+    : customerAuthenticated 
+      ? '/shop' 
+      : '/login';
 
   const handleCustomerLogout = async () => {
     try {

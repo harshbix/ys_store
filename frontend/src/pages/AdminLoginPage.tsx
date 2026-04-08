@@ -17,10 +17,10 @@ export default function AdminLoginPage() {
   }, [location.state]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !googleAdminLoginMutation.isError) {
       navigate(target, { replace: true });
     }
-  }, [isAuthenticated, navigate, target]);
+  }, [isAuthenticated, googleAdminLoginMutation.isError, navigate, target]);
 
   return (
     <>

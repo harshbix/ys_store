@@ -188,7 +188,7 @@ export function useAdmin() {
   return {
     token,
     admin,
-    isAuthenticated: Boolean(token),
+    isAuthenticated: Boolean(token) && !meQuery.isError,
     googleAdminLoginMutation,
     meQuery,
     productsQuery,
