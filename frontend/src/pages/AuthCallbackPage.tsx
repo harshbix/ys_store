@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { PageLoader } from '../components/feedback/PageLoader';
 import { useAuthStore, useAdminAuthStore } from '../store/auth';
@@ -89,14 +89,14 @@ export default function AuthCallbackPage() {
             
             if (meResponse.data?.admin) {
               useAdminAuthStore.getState().setSession(session.access_token, meResponse.data.admin as any);
-              navigate('/admin/dashboard', { replace: true });
+              navigate('/admin', { replace: true });
               return;
             }
           } catch (err) {
             console.error('Admin hydration failed:', err);
           }
           // Redirect them to admin even if fetch fails momentarily based on DB check
-          navigate('/admin/dashboard', { replace: true });
+          navigate('/admin', { replace: true });
         } else {
           // Normal user route
           navigate(returnTo === '/admin' ? '/' : returnTo, { replace: true });
