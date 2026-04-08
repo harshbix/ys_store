@@ -29,13 +29,23 @@ function PageBoundary({ children }: { children: ReactNode }) {
 
 function RequireAdmin({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const isAdmin = useIsAdmin();
+  const authBootstrapReady = useAuthStore((state) => state.authBootstrapReady);
 
   const { isAuthenticated, meQuery } = useAdmin();
 
-  if (meQuery.isLoading) {
+  // Wait until general auth hydation succeeds before enforcing admin blocks.
+  // If the admin session is fetching/pending, we wait.
+  if (!authBootstrapReady || meQuery.isPending || meQuery.isFetching) {
+    // If the loading is technically looping because they simply are NOT an admin (no token),
+    // and we know the auth bootstrapped, we can safely redirect.
+    if (authBootstrapReady && !isAdmin) {
+      return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+    }
     return <PageLoader />;
   }
 
+  // Once loading is fully finished, verify the integrity of the session.
   if (!isAuthenticated || meQuery.isError || !meQuery.data?.admin) {
     return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
   }
