@@ -23,7 +23,8 @@ const AdminLoginPage = lazy(() => import('../pages/AdminLoginPage'));
 const AdminDashboardPage = lazy(() => import('../pages/AdminDashboardPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
-
+function PageBoundary({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
 }
 
 function RequireAdmin({ children }: { children: ReactNode }) {
