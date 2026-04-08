@@ -1,8 +1,14 @@
+import { SEO } from '../components/seo/SEO';
 import { Link } from 'react-router-dom';
 
 export default function BlogPage() {
   return (
-    <div className="mx-auto max-w-4xl space-y-5 pb-10">
+    <>
+      <SEO 
+        title="YS Insights | Tech Blog" 
+        description="Tech tips and buying guides from YS Store. Explore our latest thoughts on PC building and hardware."
+      />
+      <div className="mx-auto max-w-4xl space-y-5 pb-10">
       <header className="space-y-2">
         <p className="label-11 text-secondary">YS Insights</p>
         <h1 className="text-[32px] font-semibold tracking-[-0.03em] text-foreground">Tech tips and buying guides</h1>
@@ -21,5 +27,6 @@ export default function BlogPage() {
         </div>
       </section>
     </div>
+    </>
   );
 }

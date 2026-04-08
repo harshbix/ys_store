@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { ArrowRight, BadgeCheck, MessageCircle, ShieldCheck, Truck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ErrorState } from '../components/feedback/ErrorState';
@@ -6,6 +6,8 @@ import { EmptyState } from '../components/feedback/EmptyState';
 import { SkeletonGrid } from '../components/feedback/SkeletonGrid';
 import { ProductGrid } from '../components/ui/ProductGrid';
 import { Button } from '../components/ui/Button';
+import { Image } from '../components/ui/Image';
+import { SEO } from '../components/seo/SEO';
 import { useCart } from '../hooks/useCart';
 import { useProducts } from '../hooks/useProducts';
 import { useWishlist } from '../hooks/useWishlist';
@@ -42,6 +44,10 @@ export default function HomePage() {
 
   return (
     <div className="space-y-20 pb-24 md:space-y-28">
+      <SEO 
+        title="Gaming PCs & Laptops in Tanzania" 
+        description="Experience peak performance with custom gaming PCs, laptops, and premium accessories. Delivered to you in Dar es Salaam."
+      />
       {/* HERO SECTION */}
       <section className="relative overflow-hidden rounded-[2.25rem] border border-white/10 bg-[#06090f] px-5 py-10 shadow-[0_24px_90px_rgba(0,0,0,0.45)] sm:px-8 md:px-10 md:py-12 lg:px-12 lg:py-14">
         <div className="pointer-events-none absolute inset-0">
@@ -56,14 +62,13 @@ export default function HomePage() {
         </div>
 
         <div className="relative grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-center">
-          <motion.div variants={fadeInUp} initial="hidden" animate="visible" className="relative">
+          <motion.div 
+            variants={fadeInUp} 
+            initial="hidden" 
+            animate="visible" 
+            className="relative lg:order-last"
+          >
             <div className="relative h-[420px] overflow-hidden rounded-[1.75rem] bg-black/20 sm:h-[500px]">
-              <img
-                src="/hero/desktop3.jpeg"
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-55 blur-2xl"
-              />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_22%,rgba(125,211,252,0.18),transparent_38%),radial-gradient(circle_at_80%_74%,rgba(236,72,153,0.16),transparent_36%)]" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/45" />
 
@@ -71,10 +76,11 @@ export default function HomePage() {
               <div className="pointer-events-none absolute left-8 top-8 z-10 h-[44%] w-[34%] rounded-[1.2rem] border border-white/20 bg-white/10 opacity-50 backdrop-blur-xl" />
               <div className="pointer-events-none absolute left-10 top-10 z-10 h-[1px] w-[25%] bg-white/70 blur-[0.6px]" />
 
-              <img
-                src="/hero/desktop3.jpeg"
+              <Image
+                src="/hero/desktop3.webp"
                 alt="Gaming desktop"
-                className="relative z-20 h-full w-full object-contain object-center p-4 sm:p-5"
+                disableLazy={true}
+                className="relative z-20 h-full w-full object-contain object-center p-4 sm:p-5 bg-transparent"
               />
             </div>
 

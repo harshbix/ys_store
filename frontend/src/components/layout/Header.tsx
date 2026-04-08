@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
 import { useShowToast } from '../../hooks/useToast';
-import { supabase } from '../../lib/supabase';
 import { useAdminAuthStore, useAuthStore } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
 import { SearchResultsOverlay } from '../ui/SearchResultsOverlay.tsx';
@@ -25,7 +24,9 @@ export function Header() {
   const showToast = useShowToast();
   const { cartQuery } = useCart();
   const openMobileNav = useUiStore((state) => state.openMobileNav);
+  const mobileNavOpen = useUiStore((state) => state.mobileNavOpen);
   const openCartDrawer = useUiStore((state) => state.openCartDrawer);
+  const cartDrawerOpen = useUiStore((state) => state.cartDrawerOpen);
   const searchOverlayOpen = useUiStore((state) => state.searchOverlayOpen);
   const openSearchOverlay = useUiStore((state) => state.openSearchOverlay);
   const closeSearchOverlay = useUiStore((state) => state.closeSearchOverlay);
@@ -47,6 +48,7 @@ export function Header() {
 
   const handleCustomerLogout = async () => {
     try {
+      const { supabase } = await import('../../lib/supabase');
       await supabase.auth.signOut();
     } catch {
       // Continue local logout even if remote signOut call fails.
@@ -82,7 +84,7 @@ export function Header() {
         <div className="relative flex h-full items-center justify-between lg:hidden">
           <button
             type="button"
-            onClick={openMobileNav}
+            onClick={openMobileNav} aria-expanded={mobileNavOpen} aria-controls="mobile-nav"
             className="inline-flex h-9 w-9 items-center justify-center text-secondary"
             aria-label="Open menu"
           >
@@ -98,7 +100,7 @@ export function Header() {
           <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
-              onClick={openSearchOverlay}
+              onClick={openSearchOverlay} aria-expanded={searchOverlayOpen} aria-controls="search-overlay"
               className="inline-flex h-9 w-9 items-center justify-center text-secondary"
               aria-label="Open product search"
             >
@@ -107,7 +109,7 @@ export function Header() {
 
             <button
               type="button"
-              onClick={handleCartIntent}
+              onClick={handleCartIntent} aria-expanded={cartDrawerOpen} aria-controls="cart-drawer"
               className="relative inline-flex h-9 w-9 items-center justify-center text-secondary"
               aria-label="Cart"
             >
@@ -128,7 +130,7 @@ export function Header() {
             </span>
           </Link>
 
-          <nav className="flex items-center gap-6">
+          <nav aria-label="Main Navigation" className="flex items-center gap-6">
             {navLinks.map((link) => (
               <NavLink
                 key={link.to}
@@ -136,6 +138,7 @@ export function Header() {
                 className={({ isActive }) =>
                   `text-[12px] font-medium tracking-[0.04em] transition ${isActive ? 'text-foreground' : 'text-secondary hover:text-foreground'}`
                 }
+                aria-current={isActive => (isActive ? 'page' : undefined)}
               >
                 {link.label}
               </NavLink>
@@ -145,7 +148,7 @@ export function Header() {
           <div className="ml-auto flex items-center gap-5">
             <button
               type="button"
-              onClick={openSearchOverlay}
+              onClick={openSearchOverlay} aria-expanded={searchOverlayOpen} aria-controls="search-overlay"
               className="inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground"
               aria-label="Search"
             >
@@ -158,7 +161,7 @@ export function Header() {
 
             <button
               type="button"
-              onClick={handleCartIntent}
+              onClick={handleCartIntent} aria-expanded={cartDrawerOpen} aria-controls="cart-drawer"
               className="relative inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground"
               aria-label="Open cart"
             >

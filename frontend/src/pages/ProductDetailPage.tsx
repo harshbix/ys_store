@@ -1,7 +1,8 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import { ChevronRight, Heart } from 'lucide-react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { SEO } from '../components/seo/SEO';
 import { useCart } from '../hooks/useCart';
 import { useProductDetail, useProducts } from '../hooks/useProducts';
 import { useWishlist } from '../hooks/useWishlist';
@@ -120,6 +121,12 @@ export default function ProductDetailPage() {
 
   return (
     <div className="space-y-8 pb-24 md:space-y-10">
+      <SEO 
+        title={product.title} 
+        description={product.short_description || `Buy ${product.title} in Dar es Salaam, Tanzania.`}
+        image={imageSrc === fallbackImage ? undefined : imageSrc}
+        type="product"
+      />
       <Button size="sm" variant="secondary" onClick={() => navigate(-1)}>
         Back
       </Button>

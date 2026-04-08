@@ -1,16 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addCartItem, getCart, removeCartItem, updateCartItem, type AddCartItemBody } from '../api/cart';
+import type { AddCartItemBody } from '../api/cart';
 import { queryKeys } from '../lib/queryKeys';
 import type { CartPayload } from '../types/api';
 import { useShowToast } from './useToast';
+import { useAuthStore } from '../store/auth';
 
 export function useCart() {
   const queryClient = useQueryClient();
   const showToast = useShowToast();
+  const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
 
   const cartQuery = useQuery({
     queryKey: queryKeys.cart.current,
-    queryFn: getCart,
+    queryFn: async () => {
+      const { getCart } = await import('../api/cart');
+      return getCart();
+    },
+    enabled: isAuthenticated,
     staleTime: 1000 * 10,
     retry: 1
   });
@@ -20,7 +26,10 @@ export function useCart() {
   };
 
   const addItem = useMutation({
-    mutationFn: (body: AddCartItemBody) => addCartItem(body),
+    mutationFn: async (body: AddCartItemBody) => {
+      const { addCartItem } = await import('../api/cart');
+      return addCartItem(body);
+    },
     onSuccess: () => {
       showToast({ title: 'Added to cart', variant: 'success' });
       void invalidate();
@@ -31,7 +40,10 @@ export function useCart() {
   });
 
   const updateItem = useMutation({
-    mutationFn: ({ itemId, quantity }: { itemId: string; quantity: number }) => updateCartItem(itemId, { quantity }),
+    mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+      const { updateCartItem } = await import('../api/cart');
+      return updateCartItem(itemId, { quantity });
+    },
     onMutate: async ({ itemId, quantity }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.cart.current });
       const previousCart = queryClient.getQueryData<CartPayload>(queryKeys.cart.current);
@@ -66,7 +78,10 @@ export function useCart() {
   });
 
   const removeItem = useMutation({
-    mutationFn: (itemId: string) => removeCartItem(itemId),
+    mutationFn: async (itemId: string) => {
+      const { removeCartItem } = await import('../api/cart');
+      return removeCartItem(itemId);
+    },
     onMutate: async (itemId) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.cart.current });
       const previousCart = queryClient.getQueryData<CartPayload>(queryKeys.cart.current);

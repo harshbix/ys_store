@@ -2,9 +2,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Heart, LogIn, ShoppingCart, Wrench, X } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useShowToast } from '../../hooks/useToast';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useAdminAuthStore, useAuthStore } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { useRef } from 'react';
 
 const links = [
   { to: '/', label: 'Home' },
@@ -25,6 +28,10 @@ export function MobileNav() {
   const close = useUiStore((state) => state.closeMobileNav);
   const customerAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
   const adminAuthenticated = useAdminAuthStore((state) => Boolean(state.token));
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEscapeKey(close, isOpen);
+  useFocusTrap(containerRef, isOpen);
 
   const handleCartClick = () => {
     close();
@@ -57,7 +64,7 @@ export function MobileNav() {
             onClick={close}
             className="fixed inset-0 z-40 bg-overlay/70"
           />
-          <motion.aside
+          <motion.aside id="mobile-nav" ref={containerRef as any} aria-label="Mobile Navigation"
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
@@ -76,7 +83,7 @@ export function MobileNav() {
               </button>
             </div>
 
-            <nav className="space-y-1">
+            <nav aria-label="Mobile Main Navigation" className="space-y-1">
               {links.map((link) => (
                 <NavLink
                   key={link.to}

@@ -3,6 +3,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { QuoteFormInput } from '../../types/ui';
 
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+
 const schema = z.object({
   customer_name: z.string().min(2, 'Name is required'),
   notes: z.string().max(1000).optional(),
@@ -32,22 +35,20 @@ export function CustomerInfoForm({ disabled, onSubmit }: CustomerInfoFormProps) 
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-2xl border border-border bg-surface p-5">
       <h2 className="text-base font-semibold text-foreground">Customer Information</h2>
 
-      <label className="block text-sm text-muted">
-        Full Name
-        <input
-          {...register('customer_name')}
-          disabled={disabled}
-          className="mt-1 min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none ring-accent transition focus:ring-2"
-        />
-        {errors.customer_name ? <p className="mt-1 text-xs text-danger">{errors.customer_name.message}</p> : null}
-      </label>
+      <Input
+        label="Full Name"
+        {...register('customer_name')}
+        disabled={disabled}
+        error={errors.customer_name?.message}
+      />
 
-      <label className="block text-sm text-muted">
-        Quote Type
+      <div className="space-y-1.5">
+        <label htmlFor="quote-type" className="block label-11 text-secondary">Quote Type</label>
         <select
+          id="quote-type"
           {...register('quote_type')}
           disabled={disabled}
-          className="mt-1 min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
+          className="h-10 w-full block rounded-[2px] border border-border bg-inputBg px-3 text-[13px] text-foreground transition focus-visible:border-ring focus-visible:outline-none focus:ring-1 focus:ring-ring"
         >
           <option value="general">General</option>
           <option value="desktop">Desktop</option>
@@ -56,26 +57,28 @@ export function CustomerInfoForm({ disabled, onSubmit }: CustomerInfoFormProps) 
           <option value="upgrade">Upgrade</option>
           <option value="warranty">Warranty</option>
         </select>
-      </label>
+      </div>
 
-      <label className="block text-sm text-muted">
-        Notes (optional)
+      <div className="space-y-1.5">
+        <label htmlFor="notes-field" className="block label-11 text-secondary">Notes (optional)</label>
         <textarea
+          id="notes-field"
           {...register('notes')}
           rows={4}
           disabled={disabled}
-          className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent transition focus:ring-2"
+          className="w-full block rounded-[2px] border border-border bg-inputBg px-3 py-2 text-[13px] text-foreground transition focus-visible:border-ring focus-visible:outline-none focus:ring-1 focus:ring-ring"
         />
-        {errors.notes ? <p className="mt-1 text-xs text-danger">{errors.notes.message}</p> : null}
-      </label>
+        {errors.notes ? <p className="text-[12px] text-danger" role="alert">{errors.notes.message}</p> : null}
+      </div>
 
-      <button
+      <Button
         type="submit"
         disabled={disabled}
-        className="min-h-11 rounded-full bg-primary px-5 text-sm font-semibold text-primaryForeground disabled:opacity-40"
+        size="lg"
+        className="w-auto px-5"
       >
         Generate Quote
-      </button>
+      </Button>
     </form>
   );
 }

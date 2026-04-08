@@ -1,6 +1,7 @@
 import { SlidersHorizontal } from 'lucide-react';
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { SEO } from '../components/seo/SEO';
 import { Button } from '../components/ui/Button';
 import { useCart } from '../hooks/useCart';
 import { useProducts } from '../hooks/useProducts';
@@ -101,6 +102,10 @@ export default function ShopPage() {
 
   return (
     <div className="space-y-6 pb-8 md:space-y-8">
+      <SEO 
+        title="Shop Premium PC & Laptops" 
+        description="Browse our collection of high-end gaming laptops, desktop PCs, and premium accessories in Dar es Salaam, Tanzania."
+      />
       <header className="space-y-4 border-b border-border pb-4">
         <Button size="sm" variant="secondary" onClick={() => navigate(-1)}>
           Back

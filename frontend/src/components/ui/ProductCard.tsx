@@ -7,6 +7,7 @@ import { getProductImage, placeholderForProduct } from '../../utils/imageFallbac
 import { Button } from './Button';
 import { ConditionBadge } from './ConditionBadge';
 import { PriceDisplay } from './PriceDisplay';
+import { Image } from './Image';
 
 type ProductCardProps = {
   product: Product;
@@ -30,15 +31,12 @@ export function ProductCard({ product, inWishlist, onToggleWishlist, onQuickAdd,
     <article className="group flex h-full flex-col bg-surface">
       <Link to={`/products/${product.slug}`} className="relative block overflow-hidden bg-surface">
         <div className="relative aspect-[4/5] overflow-hidden bg-surface">
-          <img
+          <Image
             src={imageSrc}
             alt={product.title}
-            loading="lazy"
-            className="h-full w-full object-contain px-6 py-4 transition-transform duration-300 group-hover:scale-[1.03]"
-            onError={(event) => {
-              if (event.currentTarget.src.endsWith(fallbackImage)) return;
-              setImageSrc(fallbackImage);
-            }}
+            fallbackSrc={fallbackImage}
+            disableLazy={false}
+            className="h-full w-full object-contain px-6 py-4 transition-transform duration-300 group-hover:scale-[1.03] bg-transparent"
           />
           <div className="absolute left-2 top-2">
             <ConditionBadge condition={product.condition} />
@@ -61,9 +59,11 @@ export function ProductCard({ product, inWishlist, onToggleWishlist, onQuickAdd,
       <div className="flex flex-1 flex-col px-2 pb-3 pt-3">
         <p className="font-mono text-[11px] uppercase tracking-[0.09em] text-muted">{specLine || titleCase(product.product_type)}</p>
 
-        <Link to={`/products/${product.slug}`} className="product-name-clamp mt-2 text-[14px] font-normal leading-5 text-foreground">
-          {product.title}
-        </Link>
+        <h3 className="mt-2 text-[14px] font-normal leading-5 text-foreground">
+          <Link to={`/products/${product.slug}`} className="product-name-clamp focus-visible:outline-none focus:ring-1 focus:ring-ring">
+            {product.title}
+          </Link>
+        </h3>
 
         <p className="mt-1 text-[12px] text-secondary">{compactText(product.short_description, product.brand)}</p>
 

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAdmin } from '../hooks/useAdmin';
+import { SEO } from '../components/seo/SEO';
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
@@ -28,8 +29,10 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="mx-auto max-w-lg space-y-5 pb-8">
-      <header>
+    <>
+      <SEO title="Admin Login" description="YS Store Administrator Login" noindex={true} />
+      <div className="mx-auto max-w-lg space-y-5 pb-8">
+        <header>
         <h1 className="section-title text-foreground">Admin Login</h1>
         <p className="mt-2 text-[13px] text-secondary">Sign in with backend-configured administrator credentials.</p>
       </header>
@@ -77,5 +80,6 @@ export default function AdminLoginPage() {
         Looking for customer login? <Link to="/login" className="font-semibold text-foreground hover:text-accent">Open customer login</Link>.
       </section>
     </div>
+    </>
   );
 }

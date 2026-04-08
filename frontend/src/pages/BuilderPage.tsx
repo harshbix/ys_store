@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { SEO } from '../components/seo/SEO';
 import { useNavigate } from 'react-router-dom';
 import { BuildPartPicker } from '../components/builder/BuildPartPicker';
 import { BuildSlot } from '../components/builder/BuildSlot';
@@ -89,10 +90,15 @@ export default function BuilderPage() {
   };
 
   return (
-    <div className="space-y-5 pb-24 lg:pb-8">
-      <Button size="sm" variant="secondary" onClick={() => navigate(-1)}>
-        Back
-      </Button>
+    <>
+      <SEO 
+        title="Custom PC Builder" 
+        description="Design your custom PC build from a variety of compatible parts suitable for gaming, productivity, and workstation needs."
+      />
+      <div className="space-y-5 pb-24 lg:pb-8">
+        <Button size="sm" variant="secondary" onClick={() => navigate(-1)}>
+          Back
+        </Button>
       <header>
         <h1 className="section-title text-foreground">PC Builder</h1>
         <p className="mt-2 text-[13px] text-secondary">Create or resume your build, validate compatibility, then add to cart.</p>
@@ -157,5 +163,6 @@ export default function BuilderPage() {
         adding={addToCartMutation.isPending}
       />
     </div>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { SEO } from '../components/seo/SEO';
 import { CartItemRow } from '../components/cart/CartItemRow';
 import { CartSummary } from '../components/cart/CartSummary';
 import { EmptyState } from '../components/feedback/EmptyState';
@@ -33,13 +34,15 @@ export default function CartPage() {
   const total = cartQuery.data?.estimated_total_tzs ?? 0;
 
   return (
-    <div className="space-y-6 pb-8">
-      <header>
-        <h1 className="section-title text-foreground">Your Cart</h1>
-        <p className="mt-2 text-[13px] text-secondary">Review quantities, adjust items, then continue to quote checkout.</p>
-      </header>
+    <>
+      <SEO title="Your Cart" description="Review quantities, adjust items, and continue to quote checkout." />
+      <div className="space-y-6 pb-8">
+        <header>
+          <h1 className="section-title text-foreground">Your Cart</h1>
+          <p className="mt-2 text-[13px] text-secondary">Review quantities, adjust items, then continue to quote checkout.</p>
+        </header>
 
-      {cartQuery.isLoading ? <SkeletonGrid count={4} /> : null}
+        {cartQuery.isLoading ? <SkeletonGrid count={4} /> : null}
       {cartQuery.isError ? <ErrorState onRetry={() => cartQuery.refetch()} /> : null}
 
       {!cartQuery.isLoading && !cartQuery.isError && items.length === 0 ? (
@@ -70,6 +73,7 @@ export default function CartPage() {
           </aside>
         </div>
       ) : null}
-    </div>
+      </div>
+    </>
   );
 }

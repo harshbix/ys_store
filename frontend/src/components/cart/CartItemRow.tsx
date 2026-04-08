@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 import type { CartItem } from '../../types/api';
 import { formatTzs } from '../../lib/currency';

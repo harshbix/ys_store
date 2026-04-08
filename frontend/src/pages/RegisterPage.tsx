@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { SEO } from '../components/seo/SEO';
 import { InlineAlert } from '../components/feedback/InlineAlert';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../hooks/useAuth';
@@ -15,8 +16,10 @@ export default function RegisterPage() {
   }, [isAuthenticated, navigate]);
 
   return (
-    <div className="mx-auto max-w-md space-y-6 pb-10 pt-2">
-      <header className="space-y-2 text-center">
+    <>
+      <SEO title="Create Account" description="Create your YS Store account to check out fast, save quotes, and more." noindex={true} />
+      <div className="mx-auto max-w-md space-y-6 pb-10 pt-2">
+        <header className="space-y-2 text-center">
         <p className="text-[12px] font-medium tracking-[0.18em] text-secondary">YS STORE</p>
         <h1 className="text-[34px] font-semibold tracking-[-0.03em] text-foreground">Create account</h1>
         <p className="text-sm text-secondary">Create your customer account with Google in one step.</p>
@@ -45,10 +48,11 @@ export default function RegisterPage() {
           <p className="text-center text-[12px] text-secondary">Customer accounts use Google sign-in only.</p>
         </div>
 
-        <p className="mt-4 text-center text-sm text-secondary">
+        <p className="mt-4 text-center text-[13px] text-secondary">
           Already have an account? <Link to="/login" className="font-semibold text-foreground hover:text-accent">Sign in with Google</Link>
         </p>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

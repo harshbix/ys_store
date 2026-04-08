@@ -2,15 +2,22 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUiStore } from '../../store/ui';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useCart } from '../../hooks/useCart';
 import { ErrorState } from '../feedback/ErrorState';
 import { CartItemRow } from './CartItemRow';
 import { CartSummary } from './CartSummary';
+import { useRef } from 'react';
 
 export function CartDrawer() {
   const isOpen = useUiStore((state) => state.cartDrawerOpen);
   const close = useUiStore((state) => state.closeCartDrawer);
   const { cartQuery, updateItem, removeItem } = useCart();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEscapeKey(close, isOpen);
+  useFocusTrap(containerRef, isOpen);
 
   const items = cartQuery.isSuccess ? (cartQuery.data?.items ?? []) : [];
   const estimatedTotal = cartQuery.isSuccess ? (cartQuery.data?.estimated_total_tzs ?? 0) : 0;
@@ -26,7 +33,7 @@ export function CartDrawer() {
             onClick={close}
             className="fixed inset-0 z-40 bg-overlay/70"
           />
-          <motion.aside
+          <motion.aside id="cart-drawer" ref={containerRef as any} aria-label="Your Cart"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}

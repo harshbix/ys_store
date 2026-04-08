@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useProducts } from '../../hooks/useProducts';
 import { SearchInput } from './SearchInput';
 import { PriceDisplay } from './PriceDisplay';
@@ -13,6 +15,10 @@ type SearchResultsOverlayProps = {
 
 export function SearchResultsOverlay({ open, onClose }: SearchResultsOverlayProps) {
   const [query, setQuery] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEscapeKey(onClose, open);
+  useFocusTrap(containerRef, open);
 
   const productsQuery = useProducts({
     brand: query || undefined,
@@ -27,7 +33,7 @@ export function SearchResultsOverlay({ open, onClose }: SearchResultsOverlayProp
     <AnimatePresence>
       {open ? (
         <>
-          <motion.div
+          <motion.div id="search-overlay" ref={containerRef as any} role="search" aria-label="Search Products"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

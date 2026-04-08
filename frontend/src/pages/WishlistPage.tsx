@@ -1,3 +1,4 @@
+import { SEO } from '../components/seo/SEO';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { SkeletonGrid } from '../components/feedback/SkeletonGrid';
@@ -12,8 +13,10 @@ export default function WishlistPage() {
   const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken));
 
   return (
-    <div className="space-y-5 pb-8">
-      <header>
+    <>
+      <SEO title="Your Wishlist" description="View and manage the hardware you've saved for later." />
+      <div className="space-y-5 pb-8">
+        <header>
         <h1 className="section-title text-foreground">Wishlist</h1>
         <p className="mt-2 text-[13px] text-secondary">
           {isAuthenticated ? 'Saved to your customer account.' : 'Saved locally for this device and guest session continuity.'}
@@ -48,6 +51,7 @@ export default function WishlistPage() {
           onQuickAdd={(productId) => addItem.mutate({ item_type: 'product', product_id: productId, quantity: 1 })}
         />
       ) : null}
-    </div>
+      </div>
+    </>
   );
 }

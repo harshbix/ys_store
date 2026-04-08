@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addRemoteWishlistItem, getRemoteWishlist, removeRemoteWishlistItem } from '../api/auth';
-import { getProductBySlug } from '../api/products';
 import { queryKeys } from '../lib/queryKeys';
 import { useAuthStore } from '../store/auth';
 import { useSessionStore } from '../store/session';
@@ -21,7 +19,10 @@ export function useWishlist() {
 
   const remoteWishlistQuery = useQuery({
     queryKey: queryKeys.auth.wishlist,
-    queryFn: () => getRemoteWishlist(accessToken || ''),
+    queryFn: async () => {
+      const { getRemoteWishlist } = await import('../api/auth');
+      return getRemoteWishlist(accessToken || '');
+    },
     enabled: Boolean(accessToken),
     staleTime: 1000 * 60,
     retry: 1
@@ -30,7 +31,10 @@ export function useWishlist() {
   const productQueries = useQueries({
     queries: (accessToken ? [] : wishlist).map((item) => ({
       queryKey: queryKeys.products.detail(item.slug),
-      queryFn: () => getProductBySlug(item.slug),
+      queryFn: async () => {
+        const { getProductBySlug } = await import('../api/products');
+        return getProductBySlug(item.slug);
+      },
       staleTime: 1000 * 60
     }))
   });
@@ -82,6 +86,7 @@ export function useWishlist() {
 
     void (async () => {
       try {
+        const { removeRemoteWishlistItem, addRemoteWishlistItem } = await import('../api/auth');
         const exists = remoteItems.some((entry) => entry.product_id === item.id);
         if (exists) {
           await removeRemoteWishlistItem(item.id, accessToken);

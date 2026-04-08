@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { SlidersHorizontal, X } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 type FilterDrawerProps = {
   open: boolean;
@@ -9,6 +10,8 @@ type FilterDrawerProps = {
 };
 
 export function FilterDrawer({ open, onClose, children }: FilterDrawerProps) {
+  useEscapeKey(onClose, open);
+
   return (
     <AnimatePresence>
       {open ? (

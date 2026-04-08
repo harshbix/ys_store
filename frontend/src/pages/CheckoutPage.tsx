@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { SEO } from '../components/seo/SEO';
 import { CustomerInfoForm } from '../components/checkout/CustomerInfoForm';
 import { QuoteConfirmation } from '../components/checkout/QuoteConfirmation';
 import { QuoteSummary } from '../components/checkout/QuoteSummary';
@@ -105,11 +106,16 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="space-y-5 pb-8">
-      <header>
-        <h1 className="section-title text-foreground">Quote Checkout</h1>
-        <p className="mt-2 text-[13px] text-secondary">Submit customer details, generate quote code, then continue through WhatsApp.</p>
-      </header>
+    <>
+      <SEO 
+        title="Checkout | Request Quote"
+        description="Verify your selected products and custom builds before requesting a formal quote via WhatsApp."
+      />
+      <div className="space-y-5 pb-8">
+        <header>
+          <h1 className="section-title text-foreground">Quote Checkout</h1>
+          <p className="mt-2 text-[13px] text-secondary">Submit customer details, generate quote code, then continue through WhatsApp.</p>
+        </header>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <section className="space-y-4">
@@ -131,7 +137,8 @@ export default function CheckoutPage() {
           {quote && generatedWhatsappUrl ? <QuoteConfirmation quote={quote} whatsappUrl={generatedWhatsappUrl} onTrackAndOpen={handleTrackAndOpen} /> : null}
         </aside>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
