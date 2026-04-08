@@ -58,11 +58,27 @@ export default function AuthCallbackPage() {
         const email = session.user.email.toLowerCase();
 
         // Admin-Specific Redirection logic
-        const { data: adminRecord } = await supabase
-          .from('admin_users')
-          .select('email')
-          .eq('email', email)
-          .single();
+        let adminRecord = null;
+        try {
+          const { data, error } = await supabase
+            .from('admin_users')
+            .select('email')
+            .ilike('email', email) // Using ilike just in case for case-insensitivity
+            .single();
+
+          if (error) {
+            console.error('Supabase admin_users query error:', error, 'Code:', error.code);
+            if (error.code === '406' || error.code === '403' || error.message?.includes('RLS')) {
+              console.error('Possible RLS issue preventing admin_users read for email:', email);
+            }
+          } else if (!data) {
+            console.error('No adminRecord found (possible case sensitivity or missing record), email was:', email);
+          }
+          
+          adminRecord = data;
+        } catch (err) {
+          console.error('Exception querying admin_users:', err);
+        }
 
         if (adminRecord) {
           try {
