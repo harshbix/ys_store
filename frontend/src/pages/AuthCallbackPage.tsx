@@ -8,7 +8,7 @@ import type { ApiEnvelope } from '../types/api';
 import type { AdminUser } from '../types/admin';
 import { logError } from '../utils/errors';
 
-const ADMIN_EMAILS = ['kidabixson@gmail.com', 'yusuphshitambala@gmail.com'];
+const ADMIN_EMAILS = import.meta.env.VITE_ADMIN_EMAILS?.split(',').map((e: string) => e.trim().toLowerCase()) || [];
 
 function normalizeReturnTo(value: string | null): string {
   const fallback = '/shop';

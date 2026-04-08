@@ -1,15 +1,21 @@
 ﻿import { useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAdmin } from '../hooks/useAdmin';
+import { useAuthStore } from '../store/auth';
 import { SEO } from '../components/seo/SEO';
 import { InlineAlert } from '../components/feedback/InlineAlert';
 import { Button } from '../components/ui/Button';
 import { toUserMessage } from '../utils/errors';
 
+const ADMIN_EMAILS = import.meta.env.VITE_ADMIN_EMAILS?.split(',').map((e: string) => e.trim().toLowerCase()) || [];
+
 export default function AdminLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, googleAdminLoginMutation } = useAdmin();
+  
+  const customerEmail = useAuthStore((state) => state.email);
+  const isCustomerAuth = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
 
   const target = useMemo(() => {
     const state = location.state as { from?: string } | null;
@@ -19,8 +25,10 @@ export default function AdminLoginPage() {
   useEffect(() => {
     if (isAuthenticated && !googleAdminLoginMutation.isError) {
       navigate(target, { replace: true });
+    } else if (isCustomerAuth && customerEmail && ADMIN_EMAILS.includes(customerEmail.toLowerCase())) {
+      navigate(target, { replace: true });
     }
-  }, [isAuthenticated, googleAdminLoginMutation.isError, navigate, target]);
+  }, [isAuthenticated, isCustomerAuth, customerEmail, googleAdminLoginMutation.isError, navigate, target]);
 
   return (
     <>
