@@ -7,8 +7,6 @@ import { InlineAlert } from '../components/feedback/InlineAlert';
 import { Button } from '../components/ui/Button';
 import { toUserMessage } from '../utils/errors';
 
-const ADMIN_EMAILS = import.meta.env.VITE_ADMIN_EMAILS?.split(',').map((e: string) => e.trim().toLowerCase()) || [];
-
 export default function AdminLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,10 +23,8 @@ export default function AdminLoginPage() {
   useEffect(() => {
     if (isAuthenticated && !googleAdminLoginMutation.isError) {
       navigate(target, { replace: true });
-    } else if (isCustomerAuth && customerEmail && ADMIN_EMAILS.includes(customerEmail.toLowerCase())) {
-      navigate(target, { replace: true });
     }
-  }, [isAuthenticated, isCustomerAuth, customerEmail, googleAdminLoginMutation.isError, navigate, target]);
+  }, [isAuthenticated, googleAdminLoginMutation.isError, navigate, target]);
 
   return (
     <>

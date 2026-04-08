@@ -36,11 +36,9 @@ export const useAuthStore = create<CustomerAuthStore>()(
   )
 );
 
-const ADMIN_EMAILS = import.meta.env.VITE_ADMIN_EMAILS?.split(',').map((e: string) => e.trim().toLowerCase()) || [];
-
 export const useIsAdmin = () => {
-  const email = useAuthStore((state) => state.email);
-  return email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false;
+  const adminEntry = useAdminAuthStore((state) => state.admin);
+  return Boolean(adminEntry);
 };
 
 export const useAdminAuthStore = create<AdminAuthStore>()(

@@ -8,8 +8,6 @@ import type { ApiEnvelope } from '../types/api';
 import type { AdminUser } from '../types/admin';
 import { logError } from '../utils/errors';
 
-const ADMIN_EMAILS = import.meta.env.VITE_ADMIN_EMAILS?.split(',').map((e: string) => e.trim().toLowerCase()) || [];
-
 function normalizeReturnTo(value: string | null): string {
   const fallback = '/shop';
   if (!value) return fallback;
@@ -60,7 +58,13 @@ export default function AuthCallbackPage() {
         const email = session.user.email.toLowerCase();
 
         // Admin-Specific Redirection logic
-        if (ADMIN_EMAILS.includes(email)) {
+        const { data: adminRecord } = await supabase
+          .from('admin_users')
+          .select('email')
+          .eq('email', email)
+          .single();
+
+        if (adminRecord) {
           try {
             const meResponse = await apiFetch<ApiEnvelope<{ admin: AdminUser }>>('/admin/me', {
               method: 'GET',
@@ -69,14 +73,14 @@ export default function AuthCallbackPage() {
             
             if (meResponse.data?.admin) {
               useAdminAuthStore.getState().setSession(session.access_token, meResponse.data.admin as any);
-              navigate('/admin', { replace: true });
+              navigate('/admin/dashboard', { replace: true });
               return;
             }
           } catch (err) {
-            // fallback if apiFetch fails but they are in the list
+            console.error('Admin hydration failed:', err);
           }
-          // Redirect them to admin even if fetch fails momentarily based on email hardcode check
-          navigate('/admin', { replace: true });
+          // Redirect them to admin even if fetch fails momentarily based on DB check
+          navigate('/admin/dashboard', { replace: true });
         } else {
           // Normal user route
           navigate(returnTo === '/admin' ? '/' : returnTo, { replace: true });
