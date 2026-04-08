@@ -23,8 +23,7 @@ export async function requireAdmin(req, res, next) {
     const { data: adminUser, error: roleError } = await supabase
       .from('admin_users')
       .select('id, email, full_name, role, is_active')
-      .eq('id', user.id)
-      .eq('email', email)
+      .eq('email', user.email)
       .single();
 
     if (roleError || !adminUser) {
@@ -42,10 +41,11 @@ export async function requireAdmin(req, res, next) {
     // 3. Attach the verified, trusted admin info
     req.admin = {
       id: adminUser.id,
-      sub: adminUser.id, // For backward compatibility with controllers expecting JWT `sub`
+      sub: adminUser.id,
       email: adminUser.email,
       role: adminUser.role,
-      full_name: adminUser.full_name
+      full_name: adminUser.full_name,
+      is_active: adminUser.is_active
     };
     
     return next();

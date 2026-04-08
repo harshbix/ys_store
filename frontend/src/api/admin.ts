@@ -25,25 +25,28 @@ export async function adminLogin(email: string, password: string): Promise<Admin
     throw new Error(error?.message || 'Login failed');
   }
 
-  const { data: adminUser, error: roleError } = await supabase
-    .from('admin_users')
-    .select('*')
-    .eq('id', data.user.id)
-    .single();
-
-  if (roleError || !adminUser || adminUser.role !== 'owner') {
+  const token = data.session.access_token;
+  let adminData: AdminUser;
+  
+  try {
+    const meResponse = await apiFetch<ApiEnvelope<{ admin: AdminUser }>>('/admin/me', {
+      method: 'GET',
+      headers: withAdminToken(token)
+    });
+    
+    if (!meResponse.data?.admin) {
+      throw new Error('Unauthorized access');
+    }
+    
+    adminData = meResponse.data.admin;
+  } catch (err) {
     await supabase.auth.signOut();
     throw new Error('Unauthorized access');
   }
 
   return {
-    token: data.session.access_token,
-    admin: {
-      id: data.user.id,
-      email: data.user.email!,
-      role: 'owner',
-      created_at: data.user.created_at
-    }
+    token,
+    admin: adminData
   };
 }
 
@@ -53,26 +56,17 @@ export async function adminLogout(token: string): Promise<{ logged_out: boolean 
 }
 
 export async function getAdminMe(token: string): Promise<{ admin: AdminUser }> {
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) throw new Error('Not authenticated');
+  const meResponse = await apiFetch<ApiEnvelope<{ admin: AdminUser }>>('/admin/me', {
+    method: 'GET',
+    headers: withAdminToken(token)
+  });
 
-  const { data: adminUser, error: roleError } = await supabase
-    .from('admin_users')
-    .select('id, email, full_name, role, is_active')
-    .eq('id', user.id)
-    .single();
-
-  if (roleError || !adminUser || (adminUser.role !== 'owner' && adminUser.role !== 'admin')) {
+  if (!meResponse.data?.admin) {
     throw new Error('Unauthorized access');
   }
 
   return {
-    admin: {
-      id: user.id,
-      email: user.email!,
-      role: 'owner',
-      created_at: user.created_at
-    }
+    admin: meResponse.data.admin
   };
 }
 

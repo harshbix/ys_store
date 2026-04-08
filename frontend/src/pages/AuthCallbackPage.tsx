@@ -3,9 +3,10 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { PageLoader } from '../components/feedback/PageLoader';
 import { useAuthStore, useAdminAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/apiClient';
+import type { ApiEnvelope } from '../types/api';
+import type { AdminUser } from '../types/admin';
 import { logError } from '../utils/errors';
-
-const ALLOWED_ADMINS = ['kidabixson@gmail.com', 'yusuphshitambala@gmail.com'];
 
 function normalizeReturnTo(value: string | null): string {
   const fallback = '/shop';
@@ -56,46 +57,19 @@ export default function AuthCallbackPage() {
 
         const email = session.user.email.toLowerCase();
 
-        if (ALLOWED_ADMINS.includes(email)) {
-          const { data: dbAdmin } = await supabase
-            .from('admin_users')
-            .select('id, email, full_name, role, is_active')
-          let activeAdmin = dbAdmin;
-
-          if (!activeAdmin) {
-             const { data: upsertedAdmin, error: upsertErr } = await supabase
-              .from('admin_users')
-              .upsert({
-                id: session.user.id,
-                email: email,
-                full_name: session.user.user_metadata?.full_name || email.split('@')[0],
-                role: 'owner',
-                is_active: true
-              }, { onConflict: 'email' })
-              .select('id, email, full_name, role, is_active')
-              .single();
-
-              if (upsertedAdmin && !upsertErr) {
-                activeAdmin = upsertedAdmin;
-              } else if (upsertErr) {
-                logError(upsertErr, 'AuthCallback.adminUpsert');
-              }
-          } else {
-             if (activeAdmin.id !== session.user.id) {
-               await supabase.from('admin_users').update({ 
-                 id: session.user.id,
-                 full_name: session.user.user_metadata?.full_name || activeAdmin.full_name
-               }).eq('email', email);
-               activeAdmin.id = session.user.id;
-             }
+        try {
+          const meResponse = await apiFetch<ApiEnvelope<{ admin: AdminUser }>>('/admin/me', {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${session.access_token}` }
+          });
+          
+          if (meResponse.data?.admin) {
+            useAdminAuthStore.getState().setSession(session.access_token, meResponse.data.admin as any);
+            navigate(returnTo === '/shop' ? '/admin' : returnTo, { replace: true });
+            return;
           }
-
-          if (activeAdmin && activeAdmin.is_active && (activeAdmin.role === 'owner' || activeAdmin.role === 'admin')) {
-             useAdminAuthStore.getState().setSession(session.access_token, activeAdmin as any);
-             
-             navigate(returnTo === '/shop' ? '/admin' : returnTo, { replace: true });
-             return;
-          }
+        } catch (err) {
+          // If it fails, they are simply not an admin.
         }
 
         navigate(returnTo, { replace: true, state: { from: location.pathname } });
