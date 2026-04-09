@@ -285,7 +285,10 @@ export async function getBuild(buildId: string): Promise<any> {
     });
 
     if (error) throw error;
-    const result = data[0] || data;
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+      throw { status: 404, message: 'Build not found' };
+    }
+    const result = Array.isArray(data) ? data[0] : data;
     return {
       success: true,
       message: 'Build retrieved',
