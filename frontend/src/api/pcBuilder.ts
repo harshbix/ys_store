@@ -1,4 +1,4 @@
-import { apiClient } from '../lib/apiClient';
+import { apiClient } from './client';
 import type { BuildPreset, PCComponent } from '../types/api';
 
 /**

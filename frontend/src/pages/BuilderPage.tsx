@@ -10,7 +10,7 @@ import { PresetSelector } from '../components/builder/PresetSelector';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { Button } from '../components/ui/Button';
 import { useBuilds } from '../hooks/useBuilds';
-import type { BuildItem, ComponentType, Product, BuildPreset } from '../types/api';
+import type { BuildItem, ComponentType, PCComponent, BuildPreset } from '../types/api';
 
 const slotDefinitions: Array<{ key: ComponentType; label: string; helper: string }> = [
   { key: 'cpu', label: 'Processor', helper: 'Core performance and workload handling' },
@@ -60,7 +60,7 @@ export default function BuilderPage() {
     setPickerOpen(true);
   };
 
-  const handleSelectProduct = async (product: Product) => {
+  const handleSelectProduct = async (component: PCComponent) => {
     if (!pickerComponent) return;
 
     const buildId = await ensureBuild();
@@ -71,7 +71,7 @@ export default function BuilderPage() {
         buildId,
         body: {
           component_type: pickerComponent,
-          product_id: product.id
+          product_id: component.id
         }
       });
       setPickerOpen(false);

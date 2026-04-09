@@ -1,22 +1,21 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useMemo } from 'react';
-import { useProducts } from '../../hooks/useProducts';
-import type { ComponentType, Product } from '../../types/api';
+import { useComponentsQuery } from '../../hooks/usePCBuilder';
+import type { ComponentType, PCComponent } from '../../types/api';
 import { formatTzs } from '../../lib/currency';
-import { getProductImage, placeholderForProduct } from '../../utils/imageFallback';
 
 type BuildPartPickerProps = {
   componentType: ComponentType | null;
   open: boolean;
   onClose: () => void;
-  onSelect: (product: Product) => void;
+  onSelect: (component: PCComponent) => void;
 };
 
 export function BuildPartPicker({ componentType, open, onClose, onSelect }: BuildPartPickerProps) {
-  const productsQuery = useProducts({ type: 'component', page: 1, limit: 24, sort: 'newest', stock_status: 'in_stock' });
+  const componentsQuery = useComponentsQuery(componentType);
 
-  const products = useMemo(() => productsQuery.data?.items ?? [], [productsQuery.data?.items]);
+  const components = useMemo(() => componentsQuery.data ?? [], [componentsQuery.data]);
 
   return (
     <AnimatePresence>
@@ -46,7 +45,7 @@ export function BuildPartPicker({ componentType, open, onClose, onSelect }: Buil
               </button>
             </div>
 
-            {productsQuery.isLoading ? (
+            {componentsQuery.isLoading ? (
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <div key={`build-picker-skeleton-${index}`} className="h-24 animate-pulse rounded-xl border border-border bg-surface" />
@@ -54,37 +53,24 @@ export function BuildPartPicker({ componentType, open, onClose, onSelect }: Buil
               </div>
             ) : null}
 
-            {productsQuery.isError ? <p className="text-sm text-danger">Failed to load components.</p> : null}
+            {componentsQuery.isError ? <p className="text-sm text-danger">Failed to load components.</p> : null}
 
-            {!productsQuery.isLoading && !productsQuery.isError && products.length === 0 ? (
-              <p className="text-sm text-muted">No in-stock components available right now.</p>
+            {!componentsQuery.isLoading && !componentsQuery.isError && components.length === 0 ? (
+              <p className="text-sm text-muted">No components available for this type.</p>
             ) : null}
 
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {products.map((product) => (
+              {components.map((component) => (
                 <button
-                  key={product.id}
+                  key={component.id}
                   type="button"
-                  onClick={() => onSelect(product)}
+                  onClick={() => onSelect(component)}
                   className="rounded-xl border border-border bg-surface p-3 text-left transition hover:border-accent"
                 >
-                  <div className="flex items-start gap-3">
-                    <img
-                      src={getProductImage(product)}
-                      alt={product.title}
-                      loading="lazy"
-                      className="h-16 w-16 shrink-0 rounded-lg border border-border object-cover"
-                      onError={(event) => {
-                        const fallback = placeholderForProduct(product);
-                        if (event.currentTarget.src.endsWith(fallback)) return;
-                        event.currentTarget.src = fallback;
-                      }}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground">{product.title}</p>
-                      <p className="mt-1 text-xs text-muted">{product.brand}</p>
-                      <p className="mt-3 text-sm font-semibold text-foreground">{formatTzs(product.estimated_price_tzs)}</p>
-                    </div>
+                  <div className="flex flex-col gap-2">
+                    <p className="font-semibold text-foreground text-sm">{component.name}</p>
+                    <p className="text-xs text-muted line-clamp-2">{component.type}</p>
+                    <p className="mt-2 text-sm font-semibold text-accent">{formatTzs(component.price_tzs || 0)}</p>
                   </div>
                 </button>
               ))}
