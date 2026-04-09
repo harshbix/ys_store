@@ -13,15 +13,16 @@ type PresetSelectorProps = {
 
 type Category = 'all' | 'budget' | 'mid-range' | 'high-end' | 'gaming' | 'editing' | 'streaming' | 'value';
 
+// Professional SaaS color palette - WCAG AA compliant
 const categoryConfig: Record<Category, { icon: React.ReactNode; label: string; color: string }> = {
-  all: { icon: <Sparkles className="h-4 w-4" />, label: 'All', color: 'bg-slate-500/10 text-slate-600 hover:bg-slate-500/20 border-slate-500/30' },
-  budget: { icon: <Zap className="h-4 w-4" />, label: 'Budget', color: 'bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/30' },
-  'mid-range': { icon: <Briefcase className="h-4 w-4" />, label: 'Mid-Range', color: 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border-blue-500/30' },
-  'high-end': { icon: <Award className="h-4 w-4" />, label: 'High-End', color: 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-amber-500/30' },
-  gaming: { icon: <Gamepad2 className="h-4 w-4" />, label: 'Gaming', color: 'bg-red-500/10 text-red-600 hover:bg-red-500/20 border-red-500/30' },
-  editing: { icon: <Briefcase className="h-4 w-4" />, label: 'Editing', color: 'bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 border-purple-500/30' },
-  streaming: { icon: <Gamepad2 className="h-4 w-4" />, label: 'Streaming', color: 'bg-pink-500/10 text-pink-600 hover:bg-pink-500/20 border-pink-500/30' },
-  value: { icon: <Award className="h-4 w-4" />, label: 'Best Value', color: 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-500/30' }
+  all: { icon: <Sparkles className="h-4 w-4" />, label: 'All', color: 'bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800/60' },
+  budget: { icon: <Zap className="h-4 w-4" />, label: 'Budget', color: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700/50 hover:bg-emerald-100 dark:hover:bg-emerald-800/50' },
+  'mid-range': { icon: <Briefcase className="h-4 w-4" />, label: 'Mid-Range', color: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700/50 hover:bg-blue-100 dark:hover:bg-blue-800/50' },
+  'high-end': { icon: <Award className="h-4 w-4" />, label: 'High-End', color: 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700/50 hover:bg-purple-100 dark:hover:bg-purple-800/50' },
+  gaming: { icon: <Gamepad2 className="h-4 w-4" />, label: 'Gaming', color: 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-700/50 hover:bg-cyan-100 dark:hover:bg-cyan-800/50' },
+  editing: { icon: <Briefcase className="h-4 w-4" />, label: 'Editing', color: 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700/50 hover:bg-indigo-100 dark:hover:bg-indigo-800/50' },
+  streaming: { icon: <Gamepad2 className="h-4 w-4" />, label: 'Streaming', color: 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-700/50 hover:bg-rose-100 dark:hover:bg-rose-800/50' },
+  value: { icon: <Award className="h-4 w-4" />, label: 'Best Value', color: 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-700/50 hover:bg-teal-100 dark:hover:bg-teal-800/50' }
 };
 
 function inferCategories(preset: BuildPreset): Category[] {
@@ -167,22 +168,22 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="space-y-2">
-        <h2 className="text-3xl font-bold text-foreground">Pick a Starting Build</h2>
-        <p className="text-base text-muted">Browse curated PCs by price and performance. Start with one, then customize it however you want.</p>
+      <div className="space-y-3">
+        <h2 className="text-4xl sm:text-3xl font-bold text-foreground">Pick a Starting Build</h2>
+        <p className="text-base sm:text-sm text-muted max-w-2xl leading-relaxed">Browse curated PCs by price and performance. Start with one, then customize it however you want.</p>
       </div>
 
       {presetsQuery.isError ? (
         <div className="rounded-lg border border-danger/30 bg-danger/5 p-4 flex gap-3">
-          <AlertCircle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
+          <AlertCircle className="h-5 w-5 text-danger shrink-0 mt-0.5 flex-shrink-0" />
           <p className="text-sm text-danger">Failed to load builds. Please try again.</p>
         </div>
       ) : null}
 
       {!presetsQuery.isLoading && allPresets.length === 0 ? (
-        <p className="text-sm text-muted text-center py-12">No builds available right now.</p>
+        <p className="text-sm text-muted text-center py-16">No builds available right now.</p>
       ) : null}
 
       {!presetsQuery.isError && allPresets.length > 0 ? (
@@ -190,7 +191,7 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
           {/* Filter Bar */}
           <div className="space-y-4">
             {/* Search & Sort */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col xs:flex-row gap-3">
               <div className="flex-1 min-w-0">
                 <SearchInput
                   value={searchQuery}
@@ -202,7 +203,7 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3 py-2.5 min-h-11 rounded-lg border border-border bg-surface text-sm text-foreground outline-none ring-accent transition focus:ring-2"
+                className="px-4 py-3 xs:py-2.5 min-h-12 xs:min-h-11 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-foreground outline-none ring-blue-500 transition focus:ring-2 font-medium"
               >
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
@@ -210,8 +211,8 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
               </select>
             </div>
 
-            {/* Category Chips */}
-            <div className="flex flex-wrap gap-2">
+            {/* Category Chips - Horizontal scroll on mobile */}
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
               {(Object.entries(categoryConfig) as Array<[Category, any]>).map(([category, config]) => (
                 <button
                   key={category}
@@ -219,11 +220,12 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
                     setSelectedCategory(category);
                     setCarouselIndex(0);
                   }}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-full border transition text-sm font-medium ${
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full border text-sm font-medium transition whitespace-nowrap flex-shrink-0 sm:flex-shrink ${
                     selectedCategory === category
-                      ? `${config.color.split(' hover:')[0]} border-current`
-                      : `${config.color}`
+                      ? `${config.color.split(' hover:')[0]} border-current shadow-sm`
+                      : `${config.color} border`
                   }`}
+                  aria-pressed={selectedCategory === category}
                 >
                   {config.icon}
                   <span>{config.label}</span>
@@ -233,9 +235,9 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
           </div>
 
           {/* Results Info */}
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted">
-              {filteredPresets.length} {filteredPresets.length === 1 ? 'build' : 'builds'} available
+          <div className="flex items-center justify-between pt-2">
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+              {filteredPresets.length} {filteredPresets.length === 1 ? 'build' : 'builds'}
             </p>
           </div>
 
@@ -243,18 +245,19 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
           {presetsQuery.isLoading ? (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={`skeleton-${i}`} className="h-80 animate-pulse rounded-xl border border-border bg-surface/50" />
+                <div key={`skeleton-${i}`} className="h-96 sm:h-80 animate-pulse rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50" />
               ))}
             </div>
           ) : filteredPresets.length === 0 ? (
-            <div className="text-center py-12">
-              <Filter className="h-12 w-12 mx-auto text-muted/40 mb-3" />
-              <p className="text-muted">No builds match your filters. Try adjusting your search.</p>
+            <div className="text-center py-16">
+              <Filter className="h-14 w-14 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+              <p className="text-slate-600 dark:text-slate-400 text-lg">No builds match your filters</p>
+              <p className="text-sm text-slate-500 dark:text-slate-500 mt-2">Try adjusting your search or filters</p>
             </div>
           ) : (
             <div className="relative">
               {/* Carousel Grid */}
-              <div className="overflow-hidden">
+              <div className="overflow-hidden rounded-lg">
                 <div
                   className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-300"
                   key={`carousel-${safeIndex}`}
@@ -268,59 +271,60 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
                     return (
                       <div
                         key={preset.id}
-                        className="group flex flex-col rounded-xl border border-border bg-surface hover:border-accent hover:shadow-lg transition-all overflow-hidden"
+                        className="group flex flex-col rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-lg dark:hover:shadow-blue-900/30 transition-all duration-200 overflow-hidden"
                       >
                         {/* Card Header */}
-                        <div className="p-4 border-b border-border/50">
-                          <h3 className="font-semibold text-foreground truncate text-base">{preset.name}</h3>
-                          <p className="text-xs text-muted mt-1">{preset.cpu_family}</p>
+                        <div className="p-4 border-b border-slate-200 dark:border-slate-700/50">
+                          <h3 className="font-semibold text-foreground truncate text-base leading-tight">{preset.name}</h3>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 truncate">{preset.cpu_family}</p>
                         </div>
 
                         {/* Price Section */}
-                        <div className="px-4 pt-3 pb-2">
-                          <p className="text-sm font-bold text-accent">{formatTzs(preset.total_tzs)}</p>
+                        <div className="px-4 pt-4 pb-2">
+                          <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Total Price</p>
+                          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">{formatTzs(preset.total_tzs)}</p>
                         </div>
 
                         {/* Category Badge */}
                         <div className="px-4 pb-3">
-                          <div className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full border text-xs font-medium ${categoryColor}`}>
+                          <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold ${categoryColor}`}>
                             {categoryConfig[categories[0]]?.icon}
                             <span>{categoryConfig[categories[0]]?.label}</span>
                           </div>
                         </div>
 
                         {/* Specs Section */}
-                        <div className="px-4 py-3 bg-surface/50 space-y-2 flex-1">
-                          <p className="text-xs font-semibold text-muted uppercase tracking-wide">Quick Specs</p>
-                          <div className="space-y-1.5">
-                            <p className="text-xs text-foreground line-clamp-1" title={cpu}>
-                              <span className="text-muted">CPU:</span> {cpu}
+                        <div className="px-4 py-3.5 bg-slate-50 dark:bg-slate-900/40 border-y border-slate-200 dark:border-slate-700/50 space-y-3 flex-1">
+                          <p className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Quick Specs</p>
+                          <div className="space-y-2.5">
+                            <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-1" title={cpu}>
+                              <span className="text-slate-500 dark:text-slate-400 font-medium">CPU:</span> {cpu}
                             </p>
-                            <p className="text-xs text-foreground line-clamp-1" title={gpu}>
-                              <span className="text-muted">GPU:</span> {gpu}
+                            <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-1" title={gpu}>
+                              <span className="text-slate-500 dark:text-slate-400 font-medium">GPU:</span> {gpu}
                             </p>
                             {highlights.map((h, i) => (
-                              <p key={i} className="text-xs text-foreground">
-                                • {h}
+                              <p key={i} className="text-sm text-slate-700 dark:text-slate-300">
+                                <span className="text-blue-500 dark:text-blue-400 font-bold">•</span> {h}
                               </p>
                             ))}
                           </div>
                         </div>
 
                         {/* Actions */}
-                        <div className="border-t border-border/50 p-3 space-y-2">
+                        <div className="p-3 space-y-2.5">
                           <button
                             type="button"
                             onClick={() => handleUsePreset(preset)}
                             disabled={isLoading}
-                            className="w-full px-3 py-2.5 rounded-lg bg-accent text-accent-foreground font-semibold text-sm hover:bg-accent/90 transition disabled:opacity-50"
+                            className="w-full px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-semibold text-sm transition duration-150 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                           >
                             Use This Build
                           </button>
                           <button
                             type="button"
                             onClick={() => handleViewDetails(preset)}
-                            className="w-full px-3 py-2 rounded-lg border border-border text-foreground text-sm hover:bg-surface/80 transition"
+                            className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-700 font-semibold text-sm transition duration-150"
                           >
                             Details
                           </button>
@@ -331,39 +335,39 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
                 </div>
               </div>
 
-              {/* Navigation Arrows */}
+              {/* Navigation Arrows - Hidden on mobile */}
               {carouselItems.length > visibleCount && (
                 <>
                   <button
                     onClick={handlePrevious}
                     disabled={safeIndex === 0}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 sm:-translate-x-6 p-2 rounded-full bg-surface border border-border hover:bg-surface/80 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 p-2.5 rounded-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
                     aria-label="Previous builds"
                   >
-                    <ChevronLeft className="h-5 w-5 text-foreground" />
+                    <ChevronLeft className="h-6 w-6 text-slate-700 dark:text-slate-300" />
                   </button>
                   <button
                     onClick={handleNext}
                     disabled={safeIndex >= maxIndex}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 sm:translate-x-6 p-2 rounded-full bg-surface border border-border hover:bg-surface/80 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 p-2.5 rounded-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
                     aria-label="Next builds"
                   >
-                    <ChevronRight className="h-5 w-5 text-foreground" />
+                    <ChevronRight className="h-6 w-6 text-slate-700 dark:text-slate-300" />
                   </button>
                 </>
               )}
 
               {/* Pagination Dots */}
               {carouselItems.length > visibleCount && (
-                <div className="flex justify-center gap-2 mt-5">
+                <div className="flex justify-center gap-2.5 mt-6 sm:mt-7">
                   {Array.from({ length: Math.ceil(carouselItems.length / (visibleCount - 1)) }).map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setCarouselIndex(i * (visibleCount - 1))}
-                      className={`h-2 rounded-full transition ${
+                      className={`rounded-full transition duration-200 ${
                         i === Math.floor(safeIndex / (visibleCount - 1))
-                          ? 'bg-accent w-6'
-                          : 'bg-border w-2 hover:bg-border/70'
+                          ? 'bg-blue-600 dark:bg-blue-500 w-8 h-3'
+                          : 'bg-slate-300 dark:bg-slate-600 w-3 h-3 hover:bg-slate-400 dark:hover:bg-slate-500'
                       }`}
                       aria-label={`Go to page ${i + 1}`}
                     />
@@ -384,17 +388,17 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
       >
         {selectedPreset && (
           <div className="space-y-6">
-            {/* Price & Category */}
-            <div className="flex items-start justify-between">
+            {/* Price & Status */}
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm text-muted">Total Price</p>
-                <p className="text-3xl font-bold text-accent mt-1">{formatTzs(selectedPreset.total_tzs)}</p>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Price</p>
+                <p className="text-4xl font-bold text-blue-600 dark:text-blue-400 mt-2">{formatTzs(selectedPreset.total_tzs)}</p>
               </div>
               {selectedPreset.compatibility_status && selectedPreset.compatibility_status !== 'valid' && (
-                <div className={`inline-flex items-center px-3 py-1.5 rounded-full border text-xs font-medium gap-2 ${
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border font-medium text-sm flex-shrink-0 ${
                   selectedPreset.compatibility_status === 'warning'
-                    ? 'bg-warning/10 text-warning border-warning/30'
-                    : 'bg-danger/10 text-danger border-danger/30'
+                    ? 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700/50'
+                    : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700/50'
                 }`}>
                   {selectedPreset.compatibility_status === 'warning' ? '⚠️' : '❌'} {selectedPreset.compatibility_status}
                 </div>
@@ -402,36 +406,38 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
             </div>
 
             {/* CPU & GPU Summary */}
-            <div className="space-y-3 p-4 bg-surface/50 rounded-lg">
-              <p className="text-sm font-semibold text-foreground">Performance Summary</p>
-              <div className="space-y-2">
-                <p className="text-sm text-foreground">
-                  <span className="text-muted">CPU:</span> {getCpuGpu(selectedPreset).cpu}
-                </p>
-                <p className="text-sm text-foreground">
-                  <span className="text-muted">GPU:</span> {getCpuGpu(selectedPreset).gpu}
-                </p>
+            <div className="space-y-3 p-4 bg-slate-50 dark:bg-slate-900/40 rounded-lg border border-slate-200 dark:border-slate-700/50">
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Performance Summary</p>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Processor</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 font-medium mt-1">{getCpuGpu(selectedPreset).cpu}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Graphics</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 font-medium mt-1">{getCpuGpu(selectedPreset).gpu}</p>
+                </div>
               </div>
             </div>
 
             {/* Full Component List */}
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">Complete Component List</p>
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Complete Build</p>
               <div className="space-y-2">
                 {selectedPreset.pc_build_preset_items && selectedPreset.pc_build_preset_items.length > 0 ? (
                   selectedPreset.pc_build_preset_items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-start p-2 bg-surface/30 rounded border border-border/30">
-                      <div className="flex-1">
-                        <p className="text-xs text-muted capitalize">{item.component_type}</p>
-                        <p className="text-sm text-foreground font-medium">{item.pc_components?.name || 'N/A'}</p>
+                    <div key={idx} className="flex justify-between items-start p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700/50 hover:shadow-sm transition">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{item.component_type}</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 font-medium mt-1 truncate" title={item.pc_components?.name}>{item.pc_components?.name || 'N/A'}</p>
                       </div>
                       {item.pc_components?.price_tzs && (
-                        <p className="text-sm text-accent font-semibold">{formatTzs(item.pc_components.price_tzs)}</p>
+                        <p className="text-sm font-bold text-blue-600 dark:text-blue-400 ml-4 flex-shrink-0">{formatTzs(item.pc_components.price_tzs)}</p>
                       )}
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted">No components listed</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 py-8 text-center">No components listed</p>
                 )}
               </div>
             </div>
@@ -441,9 +447,9 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
               type="button"
               onClick={() => handleUsePreset(selectedPreset)}
               disabled={isLoading}
-              className="w-full px-4 py-3 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition disabled:opacity-50"
+              className="w-full px-4 py-4 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-bold text-base transition duration-150 disabled:opacity-60 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
             >
-              Use This Build
+              {isLoading ? 'Loading...' : 'Use This Build'}
             </button>
           </div>
         )}
