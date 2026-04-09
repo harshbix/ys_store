@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase.js';
  * Fetch all PC build presets
  */
 export async function getPresets() {
-  return supabase
+  return await supabase
     .from('pc_build_presets')
     .select(`
       id,
@@ -51,7 +51,7 @@ export async function getPresets() {
  * Fetch a single preset by ID
  */
 export async function getPresetById(presetId) {
-  return supabase
+  return await supabase
     .from('pc_build_presets')
     .select(`
       id,
@@ -96,7 +96,7 @@ export async function getPresetById(presetId) {
  * Fetch PC components filtered by type
  */
 export async function getComponentsByType(componentType) {
-  return supabase
+  return await supabase
     .from('pc_components')
     .select(`
       id,
