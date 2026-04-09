@@ -29,7 +29,7 @@ const router = Router();
 router.get('/presets', listPresetsController);
 router.get('/presets/:presetId', getPresetController);
 router.get('/components/types', listComponentTypesController);
-router.get('/components', validateRequest({ query: { type: { type: 'string' } } }, 'query'), listComponentsController);
+router.get('/components', listComponentsController);
 
 // Custom build endpoints (require guest session)
 router.use(ensureGuestSession);
