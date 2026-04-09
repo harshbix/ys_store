@@ -139,8 +139,8 @@ export default function BuilderPage() {
         <CompatibilityBanner payload={validateMutation.data?.data} />
 
         {/* Main Grid */}
-        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-          <main className="space-y-8">
+        <div className="grid gap-8 lg:grid-cols-[1fr_360px] items-start">
+          <main className="space-y-8 min-w-0 w-full overflow-hidden">
             {/* Presets Section */}
             <PresetSelector onLoadPreset={handleLoadPreset} isLoading={upsertItemMutation.isPending} />
 

@@ -189,9 +189,9 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
       {!presetsQuery.isError && allPresets.length > 0 ? (
         <>
           {/* Filter Bar */}
-          <div className="space-y-4">
+          <div className="space-y-4 w-full">
             {/* Search & Sort */}
-            <div className="flex flex-col xs:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 min-w-0">
                 <SearchInput
                   value={searchQuery}
@@ -203,7 +203,7 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-4 py-3 xs:py-2.5 min-h-12 xs:min-h-11 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-foreground outline-none ring-blue-500 transition focus:ring-2 font-medium"
+                className="px-4 py-3 sm:py-2.5 min-h-12 sm:min-h-11 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-foreground outline-none ring-blue-500 transition focus:ring-2 font-medium"
               >
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
@@ -212,25 +212,32 @@ export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps)
             </div>
 
             {/* Category Chips - Horizontal scroll on mobile */}
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
-              {(Object.entries(categoryConfig) as Array<[Category, any]>).map(([category, config]) => (
-                <button
-                  key={category}
-                  onClick={() => {
-                    setSelectedCategory(category);
-                    setCarouselIndex(0);
-                  }}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full border text-sm font-medium transition whitespace-nowrap flex-shrink-0 sm:flex-shrink ${
-                    selectedCategory === category
-                      ? `${config.color.split(' hover:')[0]} border-current shadow-sm`
-                      : `${config.color} border`
-                  }`}
-                  aria-pressed={selectedCategory === category}
-                >
-                  {config.icon}
-                  <span>{config.label}</span>
-                </button>
-              ))}
+            <div 
+              className="flex gap-2 overflow-x-auto pb-2 sm:flex-wrap w-full"
+              style={{ paddingBottom: '0.5rem', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              // Webkit specific styling for hiding scrollbar is usually handled in global CSS, but inline guarantees no broken layout
+            >
+              <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+              <div className="flex flex-nowrap sm:flex-wrap gap-2 hide-scrollbar w-full min-w-max sm:min-w-0">
+                {(Object.entries(categoryConfig) as Array<[Category, any]>).map(([category, config]) => (
+                  <button
+                    key={category}
+                    onClick={() => {
+                      setSelectedCategory(category);
+                      setCarouselIndex(0);
+                    }}
+                    className={`flex flex-shrink-0 items-center gap-1.5 px-4 py-2.5 rounded-full border text-sm font-medium transition ${
+                      selectedCategory === category
+                        ? `${config.color.split(' hover:')[0]} border-current shadow-sm`
+                        : `${config.color} border-slate-200 dark:border-slate-700`
+                    }`}
+                    aria-pressed={selectedCategory === category}
+                  >
+                    {config.icon}
+                    <span>{config.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
