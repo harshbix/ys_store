@@ -7,22 +7,25 @@ type BuildSummaryProps = {
 
 export function BuildSummary({ build }: BuildSummaryProps) {
   return (
-    <aside className="rounded-2xl border border-border bg-surface p-5">
-      <h2 className="text-base font-semibold text-foreground">Build Summary</h2>
-      <p className="mt-1 text-xs text-muted">Code: {build.build_code}</p>
+    <aside className="rounded-2xl border border-border bg-surface p-5 space-y-4">
+      {/* Total Price - Prominent */}
+      <div className="rounded-xl bg-gradient-to-br from-accent to-accent/80 p-6 text-accent-foreground">
+        <p className="text-xs font-medium uppercase tracking-wider opacity-90">Total Build Price</p>
+        <p className="text-4xl font-bold mt-2">{formatTzs(build.total_estimated_price_tzs)}</p>
+        <div className="mt-4 pt-4 border-t border-accent/30 text-sm space-y-1">
+          <p className="text-xs uppercase tracking-wide opacity-90">Status: <span className="font-semibold capitalize">{build.compatibility_status}</span></p>
+        </div>
+      </div>
 
-      <dl className="mt-4 space-y-3 text-sm">
-        <div className="flex items-center justify-between text-muted">
-          <dt>Components</dt>
-          <dd>{build.items.length}</dd>
+      {/* Summary Stats */}
+      <dl className="space-y-3 text-sm">
+        <div className="flex items-center justify-between">
+          <dt className="text-muted">Components Selected</dt>
+          <dd className="font-semibold text-foreground">{build.items.length}</dd>
         </div>
-        <div className="flex items-center justify-between text-muted">
-          <dt>Status</dt>
-          <dd className="capitalize">{build.compatibility_status}</dd>
-        </div>
-        <div className="flex items-center justify-between text-foreground">
-          <dt className="font-semibold">Estimated Total</dt>
-          <dd className="font-semibold">{formatTzs(build.total_estimated_price_tzs)}</dd>
+        <div className="flex items-center justify-between">
+          <dt className="text-muted">Build Code</dt>
+          <dd className="font-mono text-xs text-foreground bg-surface-hover px-2 py-1 rounded">{build.build_code}</dd>
         </div>
       </dl>
     </aside>

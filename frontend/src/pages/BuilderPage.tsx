@@ -94,14 +94,26 @@ export default function BuilderPage() {
     const buildId = await ensureBuild();
     if (!buildId || !preset.pc_build_preset_items) return;
 
-    // Note: Preset loading requires mapping component_id to product_id
-    // For now, showing a placeholder implementation
-    // TODO: Implement component-to-product mapping or update validation to support component_id
-    console.log('Loading preset:', preset.name, 'with', preset.pc_build_preset_items.length, 'components');
-    // In a production implementation, you would:
-    // 1. Map each component_id to a product_id
-    // 2. Call upsertItemMutation for each component
-    // 3. Show a confirmation that the preset was loaded
+    try {
+      // Load all preset components into the build
+      for (const item of preset.pc_build_preset_items) {
+        await upsertItemMutation.mutateAsync({
+          buildId,
+          body: {
+            component_type: item.component_type,
+            product_id: item.component_id // Use component_id as product_id since we're using PC components
+          }
+        });
+      }
+      
+      // Scroll to builder section
+      setTimeout(() => {
+        const builderSection = document.querySelector('[data-section="builder"]');
+        builderSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } catch (err) {
+      console.error('Failed to load preset:', err);
+    }
   };
 
   return (
@@ -110,66 +122,85 @@ export default function BuilderPage() {
         title="Custom PC Builder" 
         description="Design your custom PC build from a variety of compatible parts suitable for gaming, productivity, and workstation needs."
       />
-      <div className="space-y-5 pb-24 lg:pb-8">
-        <Button size="sm" variant="secondary" onClick={() => navigate(-1)}>
-          Back
-        </Button>
-      <header>
-        <h1 className="section-title text-foreground">PC Builder</h1>
-        <p className="mt-2 text-[13px] text-secondary">Create or resume your build, validate compatibility, then add to cart.</p>
-      </header>
+      <div className="space-y-8 pb-24 lg:pb-8">
+        {/* Header */}
+        <div className="space-y-3">
+          <Button size="sm" variant="secondary" onClick={() => navigate(-1)}>
+            ← Back
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Build Your PC</h1>
+            <p className="mt-2 text-muted">Choose from pre-built systems or customize every component</p>
+          </div>
+        </div>
 
-      {buildQuery.isError ? <ErrorState onRetry={() => buildQuery.refetch()} /> : null}
+        {buildQuery.isError ? <ErrorState onRetry={() => buildQuery.refetch()} /> : null}
 
-      <CompatibilityBanner payload={validateMutation.data?.data} />
+        <CompatibilityBanner payload={validateMutation.data?.data} />
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-        <section className="space-y-6">
-          {/* Preset Selector */}
-          <div className="rounded-2xl border border-border bg-surface p-5">
+        {/* Main Grid */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+          <main className="space-y-8">
+            {/* Presets Section */}
             <PresetSelector onLoadPreset={handleLoadPreset} isLoading={upsertItemMutation.isPending} />
-          </div>
 
-          {/* Component Slots */}
-          <div className="space-y-4">
-            <h2 className="text-base font-semibold text-foreground">Custom Build</h2>
-            {slotDefinitions.map((slot) => (
-              <BuildSlot
-                key={slot.key}
-                componentType={slot.key}
-                label={slot.label}
-                helper={slot.helper}
-                item={itemsByType[slot.key]}
-                pending={upsertItemMutation.isPending}
-                onPick={() => handleSelectSlot(slot.key)}
-                onRemove={(itemId) => {
-                  if (!activeBuildId) return;
-                  deleteItemMutation.mutate({ buildId: activeBuildId, itemId });
-                }}
-              />
-            ))}
-          </div>
-        </section>
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-background px-4 text-sm font-medium text-muted">OR</span>
+              </div>
+            </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          {build ? <BuildSummary build={build} /> : null}
-          <button
-            type="button"
-            onClick={handleValidate}
-            disabled={!activeBuildId || validateMutation.isPending}
-            className="min-h-11 w-full rounded-full border border-border bg-surface text-sm font-semibold text-foreground disabled:opacity-40"
-          >
-            Validate Build
-          </button>
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={!activeBuildId || addToCartMutation.isPending}
-            className="min-h-11 w-full rounded-full bg-primary text-sm font-semibold text-primaryForeground disabled:opacity-40"
-          >
-            Add Build to Cart
-          </button>
-        </aside>
+            {/* Builder Section */}
+            <section data-section="builder" className="space-y-4">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Customize Your Build</h2>
+                <p className="mt-1 text-sm text-muted">Select each component or start from a preset</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {slotDefinitions.map((slot) => (
+                  <BuildSlot
+                    key={slot.key}
+                    componentType={slot.key}
+                    label={slot.label}
+                    helper={slot.helper}
+                    item={itemsByType[slot.key]}
+                    pending={upsertItemMutation.isPending}
+                    onPick={() => handleSelectSlot(slot.key)}
+                    onRemove={(itemId) => {
+                      if (!activeBuildId) return;
+                      deleteItemMutation.mutate({ buildId: activeBuildId, itemId });
+                    }}
+                  />
+                ))}
+              </div>
+            </section>
+          </main>
+
+          {/* Sidebar */}
+          <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+            {build ? <BuildSummary build={build} /> : null}
+            <button
+              type="button"
+              onClick={handleValidate}
+              disabled={!activeBuildId || validateMutation.isPending || !build || build.items.length === 0}
+              className="min-h-12 w-full rounded-lg border border-warning bg-warning/10 text-warning font-semibold text-sm hover:bg-warning/20 transition disabled:opacity-50"
+            >
+              {validateMutation.isPending ? '⏳ Validating...' : '✓ Validate Build'}
+            </button>
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={!activeBuildId || addToCartMutation.isPending}
+              className="min-h-12 w-full rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition disabled:opacity-50"
+            >
+              {addToCartMutation.isPending ? '⏳ Adding...' : '🛒 Add to Cart'}
+            </button>
+          </aside>
+        </div>
       </div>
 
       <BuildPartPicker
@@ -186,7 +217,6 @@ export default function BuilderPage() {
         validating={validateMutation.isPending}
         adding={addToCartMutation.isPending}
       />
-    </div>
     </>
   );
 }

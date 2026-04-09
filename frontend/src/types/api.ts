@@ -151,6 +151,8 @@ export interface BuildItem {
   compatibility_notes: Record<string, unknown> | null;
   created_at: string;
   products?: Product;
+  component_name?: string;
+  component_specs?: string;
 }
 
 export interface BuildPayload extends CustomBuild {

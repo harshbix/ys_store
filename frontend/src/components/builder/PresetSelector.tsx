@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { AlertCircle, Zap, Gamepad2, Briefcase, Award } from 'lucide-react';
 import { usePresetsQuery } from '../../hooks/usePCBuilder';
 import { formatTzs } from '../../lib/currency';
 import type { BuildPreset } from '../../types/api';
@@ -10,137 +8,134 @@ type PresetSelectorProps = {
   isLoading?: boolean;
 };
 
+const tagConfig = {
+  gaming: { icon: <Gamepad2 className="h-4 w-4" />, label: 'Gaming', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
+  editing: { icon: <Briefcase className="h-4 w-4" />, label: 'Editing', color: 'bg-purple-500/10 text-purple-600 border-purple-500/30' },
+  budget: { icon: <Zap className="h-4 w-4" />, label: 'Budget', color: 'bg-green-500/10 text-green-600 border-green-500/30' },
+  highend: { icon: <Award className="h-4 w-4" />, label: 'High-End', color: 'bg-amber-500/10 text-amber-600 border-amber-500/30' }
+};
+
+function inferTag(cpuFamily: string): keyof typeof tagConfig {
+  const family = cpuFamily?.toLowerCase() || '';
+  if (family.includes('high') || family.includes('extreme')) return 'highend';
+  if (family.includes('budget') || family.includes('entry')) return 'budget';
+  if (family.includes('gaming')) return 'gaming';
+  if (family.includes('creator') || family.includes('workstation')) return 'editing';
+  return 'gaming';
+}
+
 export function PresetSelector({ onLoadPreset, isLoading }: PresetSelectorProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const presetsQuery = usePresetsQuery();
   const presets = presetsQuery.data ?? [];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold text-foreground">Pre-Built Configurations</h3>
-        <p className="mt-1 text-xs text-muted">Browse recommended builds optimized for different use cases</p>
+        <h2 className="text-2xl font-bold text-foreground">🔥 Choose a Starting Point</h2>
+        <p className="mt-1 text-sm text-muted">Start with a ready-made build or create your own from scratch</p>
       </div>
 
       {presetsQuery.isLoading ? (
-        <div className="space-y-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={`preset-skeleton-${i}`} className="h-20 animate-pulse rounded-lg border border-border bg-surface" />
+            <div key={`preset-skeleton-${i}`} className="h-64 animate-pulse rounded-xl border border-border bg-surface" />
           ))}
         </div>
       ) : null}
 
       {presetsQuery.isError ? (
-        <div className="rounded-lg border border-danger/30 bg-danger/5 p-3 flex gap-2">
-          <AlertCircle className="h-4 w-4 text-danger shrink-0 mt-0.5" />
+        <div className="rounded-lg border border-danger/30 bg-danger/5 p-4 flex gap-3">
+          <AlertCircle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
           <p className="text-sm text-danger">Failed to load presets. Please try again.</p>
         </div>
       ) : null}
 
       {!presetsQuery.isLoading && presets.length === 0 ? (
-        <p className="text-sm text-muted">No presets available right now.</p>
+        <p className="text-sm text-muted text-center py-8">No presets available right now.</p>
       ) : null}
 
-      <div className="space-y-2">
-        {presets.map((preset) => (
-          <div
-            key={preset.id}
-            className="rounded-lg border border-border bg-surface overflow-hidden"
-          >
-            <button
-              type="button"
-              onClick={() => setExpandedId(expandedId === preset.id ? null : preset.id)}
-              className="w-full px-4 py-3 flex items-center justify-between gap-3 hover:bg-surface-hover transition"
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {presets.map((preset) => {
+          const tag = inferTag(preset.cpu_family);
+          const tagCfg = tagConfig[tag];
+          const componentCount = preset.pc_build_preset_items?.length || 0;
+
+          return (
+            <div
+              key={preset.id}
+              className="group relative rounded-xl border border-border bg-surface hover:border-accent hover:shadow-lg transition-all overflow-hidden flex flex-col"
             >
-              <div className="flex-1 text-left min-w-0">
-                <p className="font-semibold text-foreground text-sm truncate">{preset.name}</p>
-                <p className="text-xs text-muted mt-1">{preset.cpu_family} • {preset.pc_build_preset_items?.length || 0} components</p>
-              </div>
-
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="text-right">
-                  <p className="font-semibold text-foreground text-sm">{formatTzs(preset.total_tzs)}</p>
-                  <p className={`text-xs font-medium ${
-                    preset.compatibility_status === 'valid'
-                      ? 'text-success'
-                      : preset.compatibility_status === 'warning'
-                        ? 'text-warning'
-                        : 'text-muted'
-                  }`}>
-                    {preset.compatibility_status === 'valid' ? '✓ Compatible' : `• ${preset.compatibility_status}`}
-                  </p>
-                </div>
-
-                <ChevronDown
-                  className={`h-4 w-4 text-muted transition-transform ${
-                    expandedId === preset.id ? 'rotate-180' : ''
-                  }`}
-                />
-              </div>
-            </button>
-
-            <AnimatePresence>
-              {expandedId === preset.id ? (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="border-t border-border overflow-hidden"
-                >
-                  <div className="px-4 py-3 space-y-3 bg-surface/50">
-                    {/* Component breakdown */}
-                    {preset.pc_build_preset_items && preset.pc_build_preset_items.length > 0 ? (
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold text-muted uppercase tracking-wide">Components</p>
-                        <div className="space-y-1">
-                          {preset.pc_build_preset_items.map((item) => (
-                            <div
-                              key={item.id}
-                              className="text-xs flex items-center justify-between gap-2 py-1"
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="text-muted capitalize shrink-0 w-24">{item.component_type}:</span>
-                                <span className="text-foreground truncate">{item.pc_components?.name || item.component_id}</span>
-                              </div>
-                              <span className="text-muted shrink-0">{formatTzs(item.unit_price_tzs)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {/* Specs */}
-                    {(preset.estimated_system_wattage || preset.required_psu_wattage) ? (
-                      <div className="space-y-1 pt-2 border-t border-border/50">
-                        <p className="text-xs font-semibold text-muted uppercase tracking-wide">Specs</p>
-                        <div className="flex items-center gap-4 text-xs text-foreground">
-                          {preset.estimated_system_wattage ? (
-                            <span>Est. <strong>{preset.estimated_system_wattage}W</strong></span>
-                          ) : null}
-                          {preset.required_psu_wattage ? (
-                            <span>PSU: <strong>{preset.required_psu_wattage}W</strong></span>
-                          ) : null}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {/* Load button */}
-                    <button
-                      type="button"
-                      onClick={() => onLoadPreset(preset)}
-                      disabled={isLoading}
-                      className="mt-2 w-full text-xs font-semibold uppercase tracking-wide px-3 py-2 rounded-md bg-accent text-accent-foreground hover:opacity-90 transition disabled:opacity-50"
-                    >
-                      <ChevronRight className="h-3 w-3 inline mr-1" />
-                      Load This Build
-                    </button>
+              {/* Header */}
+              <div className="border-b border-border p-4">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground text-lg truncate">{preset.name}</h3>
                   </div>
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-          </div>
-        ))}
+                  {preset.compatibility_status && preset.compatibility_status !== 'valid' && (
+                    <div className={`inline-flex items-center px-2 py-1 rounded-full border text-xs font-medium gap-1 ${
+                      preset.compatibility_status === 'warning' 
+                        ? 'bg-warning/10 text-warning border-warning/30'
+                        : 'bg-danger/10 text-danger border-danger/30'
+                    }`}>
+                      {preset.compatibility_status === 'warning' ? '⚠️' : '❌'} {preset.compatibility_status}
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted">{preset.cpu_family}</p>
+              </div>
+
+              {/* Price & Tag */}
+              <div className="px-4 pt-3 pb-2 space-y-2">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-xs text-muted">Price</p>
+                  <p className="font-bold text-lg text-accent">{formatTzs(preset.total_tzs)}</p>
+                </div>
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${tagCfg.color}`}>
+                  {tagCfg.icon}
+                  <span className="text-xs font-medium">{tagCfg.label}</span>
+                </div>
+              </div>
+
+              {/* Specs */}
+              <div className="px-4 py-3 bg-surface/50 space-y-2 flex-1">
+                <p className="text-xs font-semibold text-muted uppercase tracking-wide">Specs</p>
+                <div className="space-y-1">
+                  {preset.pc_build_preset_items && preset.pc_build_preset_items.length > 0 && (
+                    <>
+                      <p className="text-xs text-foreground">
+                        <span className="text-muted">CPU:</span> {preset.pc_build_preset_items.find(i => i.component_type === 'cpu')?.pc_components?.name || '—'}
+                      </p>
+                      <p className="text-xs text-foreground">
+                        <span className="text-muted">GPU:</span> {preset.pc_build_preset_items.find(i => i.component_type === 'gpu')?.pc_components?.name || '—'}
+                      </p>
+                      <p className="text-xs text-foreground">
+                        <span className="text-muted">Components:</span> {componentCount}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="border-t border-border p-3 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => onLoadPreset(preset)}
+                  disabled={isLoading}
+                  className="w-full px-4 py-2.5 rounded-lg bg-accent text-accent-foreground font-semibold text-sm hover:bg-accent/90 transition disabled:opacity-50"
+                >
+                  ✓ Use This Build
+                </button>
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 rounded-lg border border-border text-foreground text-sm hover:bg-surface-hover transition"
+                >
+                  View Details
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
