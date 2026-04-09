@@ -6,10 +6,11 @@ import { BuildSlot } from '../components/builder/BuildSlot';
 import { BuildStickyBar } from '../components/builder/BuildStickyBar';
 import { BuildSummary } from '../components/builder/BuildSummary';
 import { CompatibilityBanner } from '../components/builder/CompatibilityBanner';
+import { PresetSelector } from '../components/builder/PresetSelector';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { Button } from '../components/ui/Button';
 import { useBuilds } from '../hooks/useBuilds';
-import type { BuildItem, ComponentType, Product } from '../types/api';
+import type { BuildItem, ComponentType, Product, BuildPreset } from '../types/api';
 
 const slotDefinitions: Array<{ key: ComponentType; label: string; helper: string }> = [
   { key: 'cpu', label: 'Processor', helper: 'Core performance and workload handling' },
@@ -89,6 +90,20 @@ export default function BuilderPage() {
     addToCartMutation.mutate(activeBuildId);
   };
 
+  const handleLoadPreset = async (preset: BuildPreset) => {
+    const buildId = await ensureBuild();
+    if (!buildId || !preset.pc_build_preset_items) return;
+
+    // Note: Preset loading requires mapping component_id to product_id
+    // For now, showing a placeholder implementation
+    // TODO: Implement component-to-product mapping or update validation to support component_id
+    console.log('Loading preset:', preset.name, 'with', preset.pc_build_preset_items.length, 'components');
+    // In a production implementation, you would:
+    // 1. Map each component_id to a product_id
+    // 2. Call upsertItemMutation for each component
+    // 3. Show a confirmation that the preset was loaded
+  };
+
   return (
     <>
       <SEO 
@@ -109,22 +124,31 @@ export default function BuilderPage() {
       <CompatibilityBanner payload={validateMutation.data?.data} />
 
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-        <section className="space-y-4">
-          {slotDefinitions.map((slot) => (
-            <BuildSlot
-              key={slot.key}
-              componentType={slot.key}
-              label={slot.label}
-              helper={slot.helper}
-              item={itemsByType[slot.key]}
-              pending={upsertItemMutation.isPending}
-              onPick={() => handleSelectSlot(slot.key)}
-              onRemove={(itemId) => {
-                if (!activeBuildId) return;
-                deleteItemMutation.mutate({ buildId: activeBuildId, itemId });
-              }}
-            />
-          ))}
+        <section className="space-y-6">
+          {/* Preset Selector */}
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <PresetSelector onLoadPreset={handleLoadPreset} isLoading={upsertItemMutation.isPending} />
+          </div>
+
+          {/* Component Slots */}
+          <div className="space-y-4">
+            <h2 className="text-base font-semibold text-foreground">Custom Build</h2>
+            {slotDefinitions.map((slot) => (
+              <BuildSlot
+                key={slot.key}
+                componentType={slot.key}
+                label={slot.label}
+                helper={slot.helper}
+                item={itemsByType[slot.key]}
+                pending={upsertItemMutation.isPending}
+                onPick={() => handleSelectSlot(slot.key)}
+                onRemove={(itemId) => {
+                  if (!activeBuildId) return;
+                  deleteItemMutation.mutate({ buildId: activeBuildId, itemId });
+                }}
+              />
+            ))}
+          </div>
         </section>
 
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">

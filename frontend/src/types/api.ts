@@ -249,3 +249,64 @@ export interface PasswordAuthPayload {
   customer_id: string;
   challenge_id?: string | null;
 }
+
+/**
+ * PC Builder - Component
+ */
+export interface PCComponent {
+  id: string;
+  type: ComponentType;
+  name: string;
+  price_tzs: number;
+  cpu_socket?: string | null;
+  motherboard_socket?: string | null;
+  motherboard_ram_type?: string | null;
+  ram_type?: string | null;
+  gpu_length_mm?: number | null;
+  case_max_gpu_length_mm?: number | null;
+  psu_wattage?: number | null;
+  estimated_wattage?: number | null;
+  storage_capacity_gb?: number | null;
+  storage_type?: string | null;
+  ram_capacity_gb?: number | null;
+  vram_gb?: number | null;
+  cooler_type?: string | null;
+  cores?: number | null;
+  threads?: number | null;
+  is_visible: boolean;
+  stock_status: string;
+}
+
+/**
+ * PC Builder - Preset Item (component in a preset)
+ */
+export interface PCBuildPresetItem {
+  id: string;
+  preset_id: string;
+  slot_order: number;
+  component_type: ComponentType;
+  component_id: string;
+  quantity: number;
+  unit_price_tzs: number;
+  line_total_tzs: number;
+  pc_components?: PCComponent;
+}
+
+/**
+ * PC Builder - Preset (pre-built configuration)
+ */
+export interface BuildPreset {
+  id: string;
+  name: string;
+  cpu_family: string;
+  build_number?: number | null;
+  subtotal_tzs: number;
+  discount_percent?: number | null;
+  total_tzs: number;
+  status: string;
+  estimated_system_wattage?: number | null;
+  required_psu_wattage?: number | null;
+  compatibility_status: string;
+  is_visible: boolean;
+  pc_build_preset_items?: PCBuildPresetItem[];
+}

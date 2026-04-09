@@ -39,6 +39,7 @@ try {
     price_tzs: comp.price_tzs,
     cpu_socket: comp.cpu_socket,
     motherboard_socket: comp.motherboard_socket,
+    motherboard_ram_type: comp.motherboard_ram_type,
     ram_type: comp.ram_type,
     gpu_length_mm: comp.gpu_length_mm,
     case_max_gpu_length_mm: comp.case_max_gpu_length_mm,

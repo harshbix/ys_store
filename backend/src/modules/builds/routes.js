@@ -16,9 +16,22 @@ import {
   validateBuildController,
   addBuildToCartController
 } from './controller.js';
+import {
+  listPresetsController,
+  getPresetController,
+  listComponentsController,
+  listComponentTypesController
+} from './pcBuilderController.js';
 
 const router = Router();
 
+// Public PC Builder data endpoints (no auth required)
+router.get('/presets', listPresetsController);
+router.get('/presets/:presetId', getPresetController);
+router.get('/components/types', listComponentTypesController);
+router.get('/components', validateRequest({ query: { type: { type: 'string' } } }, 'query'), listComponentsController);
+
+// Custom build endpoints (require guest session)
 router.use(ensureGuestSession);
 
 router.post('/', validateRequest(createBuildSchema), createBuildController);
