@@ -1,0 +1,442 @@
+{
+  "__metadata": {
+    "source": "pc_builds_master_populated.xlsx",
+    "sheet": "Spec_Overrides",
+    "date_generated": "2026-04-09T20:54:03.203Z",
+    "total_records": 54
+  },
+  "data": [
+    {
+      "component_id": "acc_001",
+      "component_type": "accessory_bundle",
+      "component_name": "Free mouse and mousepad bundle",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 0}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cas_001",
+      "component_type": "case",
+      "component_name": "ATX black/white chassis",
+      "overrides": {},
+      "confidence": "{\"case_max_gpu_length_mm\": 310, \"estimated_wattage\": 5}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "cas_002",
+      "component_type": "case",
+      "component_name": "ATX black/white chassis",
+      "overrides": {},
+      "confidence": "{\"case_max_gpu_length_mm\": 330, \"estimated_wattage\": 5}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "cas_003",
+      "component_type": "case",
+      "component_name": "ATX black/white chassis",
+      "overrides": {},
+      "confidence": "{\"case_max_gpu_length_mm\": 340, \"estimated_wattage\": 5}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "coo_001",
+      "component_type": "cooler",
+      "component_name": "Air cooler with temp display",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 5, \"cooler_type\": \"air\"}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "coo_002",
+      "component_type": "cooler",
+      "component_name": "Air cooler with temp display",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 5, \"cooler_type\": \"air\"}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "coo_003",
+      "component_type": "cooler",
+      "component_name": "Liquid cooler 1-fan with temp display",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 10, \"cooler_type\": \"liquid_120mm\"}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "coo_004",
+      "component_type": "cooler",
+      "component_name": "Liquid cooler 2-fan with temp display",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 15, \"cooler_type\": \"liquid_240mm\"}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "coo_005",
+      "component_type": "cooler",
+      "component_name": "Liquid cooler 3-fan with temp display",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 20, \"cooler_type\": \"liquid_360mm\"}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_001",
+      "component_type": "cpu",
+      "component_name": "AMD Ryzen 5 5600 3.5GHz 6C/12T up to 4.4GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"AM4\", \"estimated_wattage\": 65, \"cores\": 6, \"threads\": 12}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_002",
+      "component_type": "cpu",
+      "component_name": "AMD Ryzen 5 5600X 3.7GHz 6C/12T up to 4.6GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"AM4\", \"estimated_wattage\": 65, \"cores\": 6, \"threads\": 12}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_003",
+      "component_type": "cpu",
+      "component_name": "AMD Ryzen 7 7700X 4.5GHz 8C/16T up to 5.4GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"AM5\", \"estimated_wattage\": 105, \"cores\": 8, \"threads\": 16}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_004",
+      "component_type": "cpu",
+      "component_name": "AMD Ryzen 7 7800X3D 4.2GHz 8C/16T up to 5.0GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"AM5\", \"estimated_wattage\": 120, \"cores\": 8, \"threads\": 16}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_005",
+      "component_type": "cpu",
+      "component_name": "AMD Ryzen 9 9950X 4.3GHz 16C/32T up to 5.7GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"AM5\", \"estimated_wattage\": 170, \"cores\": 16, \"threads\": 32}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_006",
+      "component_type": "cpu",
+      "component_name": "Intel Core Ultra 7 265KF 3.9GHz 20C/20T up to 5.5GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"LGA1851\", \"estimated_wattage\": 180, \"cores\": 20, \"threads\": 20}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_007",
+      "component_type": "cpu",
+      "component_name": "Intel Core i5-10500 10th 3.1GHz 6C/12T up to 4.5GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"LGA1200\", \"estimated_wattage\": 65, \"cores\": 6, \"threads\": 12}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_008",
+      "component_type": "cpu",
+      "component_name": "Intel Core i7-11700 8C/16T up to 4.6GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"LGA1200\", \"estimated_wattage\": 100, \"cores\": 8, \"threads\": 16}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_009",
+      "component_type": "cpu",
+      "component_name": "Intel Core i7-12700 12th Gen 12C/20T up to 4.7GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"LGA1700\", \"estimated_wattage\": 125, \"cores\": 12, \"threads\": 20}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_010",
+      "component_type": "cpu",
+      "component_name": "Intel Core i7-13700 16C/24T up to 5.2GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"LGA1700\", \"estimated_wattage\": 150, \"cores\": 16, \"threads\": 24}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_011",
+      "component_type": "cpu",
+      "component_name": "Intel Core i7-14700F 20C/28T up to 5.4GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"LGA1700\", \"estimated_wattage\": 170, \"cores\": 20, \"threads\": 28}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_012",
+      "component_type": "cpu",
+      "component_name": "Intel Core i7-7700 7th Gen 3.6GHz 4C/8T up to 4.2GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"LGA1151\", \"estimated_wattage\": 65, \"cores\": 4, \"threads\": 8}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_013",
+      "component_type": "cpu",
+      "component_name": "Intel Core i9-10900KF 10th 3.7GHz 10C/20T up to 5.3GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"LGA1200\", \"estimated_wattage\": 125, \"cores\": 10, \"threads\": 20}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_014",
+      "component_type": "cpu",
+      "component_name": "Intel Core i9-12900KF 12th Gen 18C/24T up to 5.2GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"LGA1700\", \"estimated_wattage\": 190, \"cores\": 18, \"threads\": 24}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "cpu_015",
+      "component_type": "cpu",
+      "component_name": "Intel Core i9-14900KF 24C/32T up to 6.0GHz",
+      "overrides": {},
+      "confidence": "{\"cpu_socket\": \"LGA1700\", \"estimated_wattage\": 220, \"cores\": 24, \"threads\": 32}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "gpu_001",
+      "component_type": "gpu",
+      "component_name": "AMD Radeon RX 580 8GB GDDR5",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 241, \"estimated_wattage\": 185, \"vram_gb\": 8}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_002",
+      "component_type": "gpu",
+      "component_name": "AMD Radeon RX 6700 XT 12GB GDDR6",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 280, \"estimated_wattage\": 230, \"vram_gb\": 12}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_003",
+      "component_type": "gpu",
+      "component_name": "EVGA NVIDIA GeForce GTX 1070 Ti 8GB GDDR5",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 267, \"estimated_wattage\": 180, \"vram_gb\": 8}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_004",
+      "component_type": "gpu",
+      "component_name": "EVGA NVIDIA GeForce RTX 2070 8GB GDDR6",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 267, \"estimated_wattage\": 175, \"vram_gb\": 8}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_005",
+      "component_type": "gpu",
+      "component_name": "MSI NVIDIA GeForce RTX 3060 12GB GDDR6",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 242, \"estimated_wattage\": 170, \"vram_gb\": 12}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_006",
+      "component_type": "gpu",
+      "component_name": "MSI NVIDIA GeForce RTX 4070 12GB GDDR6X",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 260, \"estimated_wattage\": 200, \"vram_gb\": 12}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_007",
+      "component_type": "gpu",
+      "component_name": "NVIDIA GeForce GTX 1070 Ti 8GB GDDR5",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 267, \"estimated_wattage\": 180, \"vram_gb\": 8}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_008",
+      "component_type": "gpu",
+      "component_name": "NVIDIA GeForce GTX 1660 Super GDDR6",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 229, \"estimated_wattage\": 125, \"vram_gb\": 6}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_009",
+      "component_type": "gpu",
+      "component_name": "NVIDIA GeForce RTX 2070 8GB GDDR6",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 267, \"estimated_wattage\": 175, \"vram_gb\": 8}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_010",
+      "component_type": "gpu",
+      "component_name": "NVIDIA GeForce RTX 3060 12GB GDDR6",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 242, \"estimated_wattage\": 170, \"vram_gb\": 12}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_011",
+      "component_type": "gpu",
+      "component_name": "NVIDIA GeForce RTX 4060 8GB GDDR6X",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 245, \"estimated_wattage\": 115, \"vram_gb\": 8}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_012",
+      "component_type": "gpu",
+      "component_name": "PNY NVIDIA GeForce RTX 5070 12GB GDDR7",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 300, \"estimated_wattage\": 250, \"vram_gb\": 12}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_013",
+      "component_type": "gpu",
+      "component_name": "PNY NVIDIA GeForce RTX 5070 Ti 16GB GDDR7",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 320, \"estimated_wattage\": 300, \"vram_gb\": 16}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "gpu_014",
+      "component_type": "gpu",
+      "component_name": "Palit NVIDIA GeForce RTX 5060 Ti 16GB GDDR7",
+      "overrides": {},
+      "confidence": "{\"gpu_length_mm\": 300, \"estimated_wattage\": 180, \"vram_gb\": 16}",
+      "rationale": "medium"
+    },
+    {
+      "component_id": "mot_001",
+      "component_type": "motherboard",
+      "component_name": "ASUS PRIME B250M D4",
+      "overrides": {},
+      "confidence": "{\"motherboard_socket\": \"LGA1151\", \"estimated_wattage\": 45}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "mot_002",
+      "component_type": "motherboard",
+      "component_name": "Colorful CVN Z590M Gaming Pro V2",
+      "overrides": {},
+      "confidence": "{\"motherboard_socket\": \"LGA1200\", \"estimated_wattage\": 60}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "mot_003",
+      "component_type": "motherboard",
+      "component_name": "Gigabyte Z890M AORUS ELITE WIFI7 D5",
+      "overrides": {},
+      "confidence": "{\"motherboard_socket\": \"LGA1851\", \"estimated_wattage\": 60}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "mot_004",
+      "component_type": "motherboard",
+      "component_name": "MSI MAG B450M Mortar AM4",
+      "overrides": {},
+      "confidence": "{\"motherboard_socket\": \"AM4\", \"estimated_wattage\": 45}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "mot_005",
+      "component_type": "motherboard",
+      "component_name": "MSI MAG B660M D4 WIFI 6 ,LGA 1700",
+      "overrides": {},
+      "confidence": "{\"motherboard_socket\": \"LGA1700\", \"estimated_wattage\": 55}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "mot_006",
+      "component_type": "motherboard",
+      "component_name": "MSI PRO B650M-P AM5",
+      "overrides": {},
+      "confidence": "{\"motherboard_socket\": \"AM5\", \"estimated_wattage\": 55}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "psu_001",
+      "component_type": "psu",
+      "component_name": "700W 80+ Gold PSU",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 0}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "psu_002",
+      "component_type": "psu",
+      "component_name": "750W 80+ Gold PSU",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 0}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "psu_003",
+      "component_type": "psu",
+      "component_name": "850W 80+ Gold PSU",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 0}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "ram_001",
+      "component_type": "ram",
+      "component_name": "16GB DDR4 3200MHz",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 7}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "ram_002",
+      "component_type": "ram",
+      "component_name": "16GB DDR5 6000MHz",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 7}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "ram_003",
+      "component_type": "ram",
+      "component_name": "32GB DDR4 3200MHz",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 10}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "ram_004",
+      "component_type": "ram",
+      "component_name": "32GB DDR5 6000MHz",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 10}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "ser_001",
+      "component_type": "service",
+      "component_name": "Assembly service",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 0}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "sto_001",
+      "component_type": "storage",
+      "component_name": "1TB NVMe SSD with heatsink",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 5, \"storage_type\": \"NVMe SSD\"}",
+      "rationale": "high"
+    },
+    {
+      "component_id": "sto_002",
+      "component_type": "storage",
+      "component_name": "512GB NVMe SSD with heatsink",
+      "overrides": {},
+      "confidence": "{\"estimated_wattage\": 5, \"storage_type\": \"NVMe SSD\"}",
+      "rationale": "high"
+    }
+  ]
+}
