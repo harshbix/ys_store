@@ -76,7 +76,7 @@ export async function setBuildComponent(buildId, payload, identity = null) {
     component_type: payload.component_type,
     product_id: payload.product_id,
     quantity: 1,
-    unit_estimated_price_tzs: productRes.data.estimated_price_tzs,
+    unit_estimated_price_tzs: productRes.data.price_tzs,
     is_auto_replaced: false,
     compatibility_notes: null
   });

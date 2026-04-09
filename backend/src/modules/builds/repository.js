@@ -145,7 +145,7 @@ export async function findCompatibilityRules() {
 }
 
 export async function findProductPrice(productId) {
-  return supabase.from('products').select('id,title,estimated_price_tzs').eq('id', productId).single();
+  return supabase.from('pc_components').select('id,name,price_tzs').eq('id', productId).single();
 }
 
 export async function findComponentBySpecText(componentType, specKey, value) {
