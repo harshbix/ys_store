@@ -71,24 +71,38 @@ export async function generateWhatsAppMessage(cartPayload: CartPayload, customer
     const build = items[0];
     const customBuildId = build.custom_build_id;
 
-    // Fetch the actual build components to get full names & prices.
+    // Fetch the actual build components using RPC to bypass RLS for custom build items.
     let fetchedParts: Record<string, { name: string; price: number }> = {};
     if (customBuildId) {
       try {
-        const { data: buildItems } = await supabase
-          .from('custom_build_items')
-          .select('component_type, pc_components(name, price_tzs)')
-          .eq('custom_build_id', customBuildId);
+        const { data } = await supabase.rpc('get_custom_build_with_items', {
+          p_build_id: customBuildId
+        });
         
-        if (buildItems) {
-          buildItems.forEach((bItem: any) => {
-            if (bItem.pc_components) {
-              fetchedParts[bItem.component_type.toLowerCase()] = {
-                name: bItem.pc_components.name,
-                price: bItem.pc_components.price_tzs || 0
-              };
+        let buildData = Array.isArray(data) ? data[0] : data;
+        
+        if (buildData && Array.isArray(buildData.items) && buildData.items.length > 0) {
+          const productIds = buildData.items.map((i: any) => i.product_id).filter(Boolean);
+          
+          if (productIds.length > 0) {
+            const { data: pcComps } = await supabase
+              .from('pc_components')
+              .select('id, name, price_tzs')
+              .in('id', productIds);
+              
+            if (pcComps) {
+              const compMap = new Map(pcComps.map((c: any) => [c.id, c]));
+              buildData.items.forEach((bItem: any) => {
+                const comp = compMap.get(bItem.product_id);
+                if (comp) {
+                  fetchedParts[bItem.component_type.toLowerCase()] = {
+                    name: comp.name,
+                    price: comp.price_tzs || 0
+                  };
+                }
+              });
             }
-          });
+          }
         }
       } catch (err) {
         console.error('Failed to fetch custom build items for WhatsApp message', err);
