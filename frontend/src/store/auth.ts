@@ -6,8 +6,9 @@ interface CustomerAuthStore {
   accessToken: string | null;
   customerId: string | null;
   email: string | null;
+  fullName: string | null;
   authBootstrapReady: boolean;
-  completeLogin: (accessToken: string, customerId: string, email?: string | null) => void;
+  completeLogin: (accessToken: string, customerId: string, email?: string | null, fullName?: string | null) => void;
   setAuthBootstrapReady: (ready: boolean) => void;
   logout: () => void;
 }
@@ -25,10 +26,11 @@ export const useAuthStore = create<CustomerAuthStore>()(
       accessToken: null,
       customerId: null,
       email: null,
+      fullName: null,
       authBootstrapReady: false,
-      completeLogin: (accessToken, customerId, email = null) => set({ accessToken, customerId, email }),
+      completeLogin: (accessToken, customerId, email = null, fullName = null) => set({ accessToken, customerId, email, fullName }),
       setAuthBootstrapReady: (ready) => set({ authBootstrapReady: ready }),
-      logout: () => set({ accessToken: null, customerId: null, email: null })
+      logout: () => set({ accessToken: null, customerId: null, email: null, fullName: null })
     }),
     {
       name: 'ys-customer-auth'

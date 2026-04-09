@@ -9,6 +9,7 @@ import type {
 export interface RegisterWithPasswordResult {
   access_token: string | null;
   customer_id: string;
+  full_name?: string | null;
   challenge_id: null;
   requires_email_verification: boolean;
 }
@@ -84,6 +85,7 @@ export async function registerWithPassword(
     return {
       access_token: null,
       customer_id: data.user.id,
+      full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || null,
       challenge_id: null,
       requires_email_verification: true
     };
@@ -92,6 +94,7 @@ export async function registerWithPassword(
   return {
     access_token: session.access_token,
     customer_id: data.user.id,
+    full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || null,
     challenge_id: null,
     requires_email_verification: false
   };
@@ -114,6 +117,7 @@ export async function loginWithPassword(email: string, password: string): Promis
   return {
     access_token: data.session.access_token,
     customer_id: data.user.id,
+    full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || null,
     challenge_id: null
   };
 }

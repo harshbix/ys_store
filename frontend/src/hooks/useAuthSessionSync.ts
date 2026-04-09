@@ -22,14 +22,18 @@ export function useAuthSessionSync(): void {
         if (!mounted) return;
 
         if (session?.user?.id && session.access_token) {
-          completeLogin(session.access_token, session.user.id, session.user.email || null);
+          const userMeta = session.user.user_metadata || {};
+          const fullName = userMeta.full_name || userMeta.name || null;
+          completeLogin(session.access_token, session.user.id, session.user.email || null, fullName);
         } else {
           logout();
         }
 
         const { data: authSubscription } = supabase.auth.onAuthStateChange((_event, currentSession) => {
           if (currentSession?.user?.id && currentSession.access_token) {
-            completeLogin(currentSession.access_token, currentSession.user.id, currentSession.user.email || null);
+            const currentMeta = currentSession.user.user_metadata || {};
+            const currentFullName = currentMeta.full_name || currentMeta.name || null;
+            completeLogin(currentSession.access_token, currentSession.user.id, currentSession.user.email || null, currentFullName);
           } else {
             logout();
           }

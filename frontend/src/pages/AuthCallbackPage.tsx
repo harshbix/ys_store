@@ -47,6 +47,7 @@ export default function AuthCallbackPage() {
         // For customer OAuth, associate with the customer
         const customerId = session.user.id;
         const email = session.user.email;
+        const fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || null;
 
         if (!customerId) {
           console.warn('[AuthCallback] Session has no user id.');
@@ -57,7 +58,7 @@ export default function AuthCallbackPage() {
         console.log('[AuthCallback] OAuth session established for customer:', email);
         
         // Complete the customer login
-        completeLogin(session.access_token, customerId, email);
+        completeLogin(session.access_token, customerId, email, fullName);
         
         // Redirect to original location or checkout
         navigate(returnTo, { replace: true });

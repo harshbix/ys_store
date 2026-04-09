@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -14,22 +15,30 @@ const schema = z.object({
 
 type CustomerInfoFormProps = {
   disabled?: boolean;
+  defaultName?: string;
   onSubmit: (values: QuoteFormInput) => void;
 };
 
-export function CustomerInfoForm({ disabled, onSubmit }: CustomerInfoFormProps) {
+export function CustomerInfoForm({ disabled, defaultName = '', onSubmit }: CustomerInfoFormProps) {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors }
   } = useForm<QuoteFormInput>({
     resolver: zodResolver(schema),
     defaultValues: {
-      customer_name: '',
+      customer_name: defaultName,
       notes: '',
       quote_type: 'general'
     }
   });
+
+  useEffect(() => {
+    if (defaultName) {
+      setValue('customer_name', defaultName, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [defaultName, setValue]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-2xl border border-border bg-surface p-5">

@@ -249,6 +249,7 @@ export interface OtpVerifyPayload {
 export interface PasswordAuthPayload {
   access_token: string;
   customer_id: string;
+  full_name?: string | null;
   challenge_id?: string | null;
 }
 

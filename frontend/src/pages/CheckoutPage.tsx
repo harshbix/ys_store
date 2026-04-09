@@ -10,6 +10,7 @@ import { PageLoader } from '../components/feedback/PageLoader';
 import { useCart } from '../hooks/useCart';
 import { clearCart } from '../api/cart';
 import { useQuote } from '../hooks/useQuote';
+import { useAuth } from '../hooks/useAuth';
 import { queryKeys } from '../lib/queryKeys';
 import type { QuoteFormInput } from '../types/ui';
 import { generateWhatsAppMessage } from '../utils/generateWhatsAppMessage';
@@ -17,6 +18,7 @@ import { buildWhatsAppUrl } from '../utils/whatsapp';
 
 export default function CheckoutPage() {
   const queryClient = useQueryClient();
+  const { fullName, email } = useAuth();
   const { cartQuery } = useCart();
   const { createQuoteMutation, trackWhatsappMutation } = useQuote();
   const [quoteCodeTracked, setQuoteCodeTracked] = useState<string | null>(null);
@@ -120,7 +122,11 @@ export default function CheckoutPage() {
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <section className="space-y-4">
           <QuoteSummary cart={cartPayload} />
-          <CustomerInfoForm disabled={createQuoteMutation.isPending || isRedirectingToWhatsapp} onSubmit={submitQuote} />
+          <CustomerInfoForm 
+            disabled={createQuoteMutation.isPending || isRedirectingToWhatsapp} 
+            defaultName={fullName || email?.split('@')[0] || ''}
+            onSubmit={submitQuote} 
+          />
           {isRedirectingToWhatsapp ? (
             <p className="text-sm text-secondary">Quote saved. Redirecting to WhatsApp...</p>
           ) : null}

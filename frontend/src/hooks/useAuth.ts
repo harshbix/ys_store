@@ -19,6 +19,7 @@ export function useAuth() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const customerId = useAuthStore((state) => state.customerId);
   const email = useAuthStore((state) => state.email);
+  const fullName = useAuthStore((state) => state.fullName);
   const completeLogin = useAuthStore((state) => state.completeLogin);
   const logoutStore = useAuthStore((state) => state.logout);
 
@@ -41,8 +42,8 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: ({ inputEmail, password }: { inputEmail: string; password: string }) => loginWithPassword(inputEmail, password),
     onSuccess: async (response, variables) => {
-      const { access_token, customer_id } = response;
-      completeLogin(access_token, customer_id, variables.inputEmail.trim());
+      const { access_token, customer_id, full_name } = response;
+      completeLogin(access_token, customer_id, variables.inputEmail.trim(), full_name);
       showToast({ title: 'Welcome back', description: 'You are signed in.', variant: 'success' });
       await syncGuestCartToCustomer(access_token);
     },
@@ -64,8 +65,8 @@ export function useAuth() {
         return;
       }
 
-      const { access_token, customer_id } = response;
-      completeLogin(access_token, customer_id, variables.inputEmail.trim());
+      const { access_token, customer_id, full_name } = response;
+      completeLogin(access_token, customer_id, variables.inputEmail.trim(), full_name);
       showToast({ title: 'Account created', description: 'Your account is ready.', variant: 'success' });
       await syncGuestCartToCustomer(access_token);
     },
@@ -100,6 +101,7 @@ export function useAuth() {
     accessToken,
     customerId,
     email,
+    fullName,
     isAuthenticated: Boolean(accessToken && customerId),
     loginMutation,
     registerMutation,
