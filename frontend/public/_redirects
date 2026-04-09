@@ -1,1 +1,3 @@
-/* /index.html 200
+# Vercel uses vercel.json instead of _redirects
+# This file is ignored by Vercel and kept for Netlify compatibility if needed.
+# See ../vercel.json for Vercel routing configuration
