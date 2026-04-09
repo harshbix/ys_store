@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Heart, LogIn, ShoppingCart, Wrench, X } from 'lucide-react';
+import { Heart, LogIn, LogOut, ShoppingCart, Wrench, X } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useShowToast } from '../../hooks/useToast';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
@@ -28,6 +28,8 @@ export function MobileNav() {
   const close = useUiStore((state) => state.closeMobileNav);
   const customerAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
   const adminAuthenticated = useAdminAuthStore((state) => Boolean(state.token));
+  const { logout: customerLogout } = useAuthStore();
+  const { clearSession: adminLogout } = useAdminAuthStore();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEscapeKey(close, isOpen);
@@ -50,6 +52,22 @@ export function MobileNav() {
         from: location.pathname,
         returnTo: '/cart'
       }
+    });
+  };
+
+  const handleLogout = () => {
+    if (customerAuthenticated) {
+      customerLogout();
+    }
+    if (adminAuthenticated) {
+      adminLogout();
+    }
+    close();
+    navigate('/');
+    showToast({
+      title: 'Signed out',
+      description: 'You have been signed out successfully.',
+      variant: 'default'
     });
   };
 
@@ -123,6 +141,16 @@ export function MobileNav() {
                 <Link to="/admin" onClick={close} className="flex min-h-10 items-center gap-2 px-1 text-[13px] text-secondary">
                   Admin Dashboard
                 </Link>
+              ) : null}
+              {(customerAuthenticated || adminAuthenticated) ? (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex min-h-10 w-full items-center gap-2 px-1 text-[13px] text-secondary hover:text-foreground transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </button>
               ) : null}
             </div>
           </motion.aside>
