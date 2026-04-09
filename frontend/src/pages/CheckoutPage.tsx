@@ -61,7 +61,7 @@ export default function CheckoutPage() {
         void queryClient.invalidateQueries({ queryKey: queryKeys.cart.current });
         
         // Use frontend-generated WhatsApp message instead of backend's generated URL.
-        const message = generateWhatsAppMessage(cartPayload, values.customer_name);
+        const message = await generateWhatsAppMessage(cartPayload, values.customer_name);
         const urlToOpen = buildWhatsAppUrl(message);
         
         console.log('[WHATSAPP REDIRECT SOURCE]', {

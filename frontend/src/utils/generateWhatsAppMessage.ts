@@ -1,4 +1,5 @@
 import type { CartPayload } from '../types/api';
+import { supabase } from '../lib/supabase';
 
 /**
  * Format a number as TZS currency.
@@ -53,7 +54,7 @@ function extractBuildParts(specs: Record<string, unknown> | null): Record<string
 /**
  * Generates an appropriate WhatsApp message based on the Cart payload.
  */
-export function generateWhatsAppMessage(cartPayload: CartPayload, customerName: string): string {
+export async function generateWhatsAppMessage(cartPayload: CartPayload, customerName: string): Promise<string> {
   const items = cartPayload.items || [];
   const total = cartPayload.estimated_total_tzs || 0;
   const name = customerName.trim();
@@ -68,7 +69,36 @@ export function generateWhatsAppMessage(cartPayload: CartPayload, customerName: 
   // 2. Custom build
   if (isCustomBuild) {
     const build = items[0];
-    const parts = extractBuildParts(build.specs_snapshot);
+    const customBuildId = build.custom_build_id;
+
+    // Fetch the actual build components to get full names & prices.
+    let fetchedParts: Record<string, { name: string; price: number }> = {};
+    if (customBuildId) {
+      try {
+        const { data: buildItems } = await supabase
+          .from('custom_build_items')
+          .select('component_type, pc_components(name, price_tzs)')
+          .eq('custom_build_id', customBuildId);
+        
+        if (buildItems) {
+          buildItems.forEach((bItem: any) => {
+            if (bItem.pc_components) {
+              fetchedParts[bItem.component_type.toLowerCase()] = {
+                name: bItem.pc_components.name,
+                price: bItem.pc_components.price_tzs || 0
+              };
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch custom build items for WhatsApp message', err);
+      }
+    }
+
+    // Fallback if network fails: try to extract from snapshot but without price
+    const fallbackParts = extractBuildParts(build.specs_snapshot);
+    const buildingCost = 50000;
+    const buildTotal = total + buildingCost;
     
     const lines: string[] = [];
     lines.push(`Hello, my name is ${name}.`);
@@ -77,15 +107,31 @@ export function generateWhatsAppMessage(cartPayload: CartPayload, customerName: 
     lines.push('');
     
     // Ordered as specified
-    const orderedLabels = ['CPU', 'GPU', 'Motherboard', 'RAM', 'Storage', 'Power Supply', 'Case', 'Cooling'];
-    for (const label of orderedLabels) {
-      if (parts[label]) {
-        lines.push(`${label}: ${parts[label]}`);
+    const orderedLabels = [
+      { key: 'cpu', label: 'CPU' },
+      { key: 'gpu', label: 'GPU' },
+      { key: 'motherboard', label: 'Motherboard' },
+      { key: 'ram', label: 'RAM' },
+      { key: 'storage', label: 'Storage' },
+      { key: 'psu', label: 'Power Supply' },
+      { key: 'case', label: 'Case' },
+      { key: 'cooler', label: 'Cooling' }
+    ];
+
+    for (const { key, label } of orderedLabels) {
+      if (fetchedParts[key]) {
+        lines.push(`- *${label}*: ${fetchedParts[key].name} _(TZS ${formatPrice(fetchedParts[key].price)})_`);
+      } else if (fallbackParts[label] || fallbackParts[key]) {
+        const val = fallbackParts[label] || fallbackParts[key];
+        lines.push(`- *${label}*: ${val}`);
       }
     }
     
     lines.push('');
-    lines.push(`Estimated Total: TZS ${formatPrice(total)}`);
+    lines.push(`- *Build Fee*: _TZS ${formatPrice(buildingCost)}_`);
+    lines.push('----------------------------------');
+    lines.push(`*Estimated Total*: *TZS ${formatPrice(buildTotal)}*`);
+    lines.push('----------------------------------');
     lines.push('');
     lines.push('Please assist me with confirmation and availability.');
 
