@@ -1,33 +1,22 @@
-import { forwardRef, type TextareaHTMLAttributes } from 'react';
-import { cn } from '../../lib/cn';
+import * as React from "react"
 
-export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
-  error?: string;
-  label?: string;
-  hint?: string;
-}
+import { cn } from "@/lib/utils"
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { className, error, label, hint, id, ...props },
-  ref
-) {
-  const inputId = id || props.name;
-
+const Textarea = React.forwardRef<
+  HTMLTextAreaElement,
+  React.ComponentProps<"textarea">
+>(({ className, ...props }, ref) => {
   return (
-    <label className="block space-y-1.5">
-      {label ? <span className="label-11 text-secondary">{label}</span> : null}
-      <textarea
-        id={inputId}
-        ref={ref}
-        className={cn(
-          'min-h-28 w-full rounded-[2px] border bg-inputBg px-3 py-2.5 text-[13px] text-foreground placeholder:text-muted transition focus-visible:border-ring focus-visible:outline-none',
-          error ? 'border-danger' : 'border-border',
-          className
-        )}
-        {...props}
-      />
-      {error ? <p className="text-[12px] text-danger">{error}</p> : null}
-      {!error && hint ? <p className="text-[12px] text-muted">{hint}</p> : null}
-    </label>
-  );
-});
+    <textarea
+      className={cn(
+        "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        className
+      )}
+      ref={ref}
+      {...props}
+    />
+  )
+})
+Textarea.displayName = "Textarea"
+
+export { Textarea }

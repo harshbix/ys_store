@@ -1,13 +1,10 @@
-import { AnimatePresence, motion } from 'framer-motion';
 import { Heart, LogIn, LogOut, ShoppingCart, Wrench, X } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useShowToast } from '../../hooks/useToast';
-import { useEscapeKey } from '../../hooks/useEscapeKey';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useAdminAuthStore, useAuthStore } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
 import { ThemeToggle } from '../ui/ThemeToggle';
-import { useRef } from 'react';
+import { Sheet, SheetContent, SheetTitle } from '../ui/sheet';
 
 const links = [
   { to: '/', label: 'Home' },
@@ -16,7 +13,6 @@ const links = [
   { to: '/shop?type=desktop', label: 'Gaming Desktops' },
   { to: '/shop?type=accessory', label: 'Accessories' },
   { to: '/builder', label: 'Custom PC Build' },
-  { to: '/blog', label: 'Blog' },
   { to: '/contact', label: 'Contact' }
 ];
 
@@ -30,10 +26,6 @@ export function MobileNav() {
   const adminAuthenticated = useAdminAuthStore((state) => Boolean(state.token));
   const { logout: customerLogout } = useAuthStore();
   const { clearSession: adminLogout } = useAdminAuthStore();
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEscapeKey(close, isOpen);
-  useFocusTrap(containerRef, isOpen);
 
   const handleCartClick = () => {
     close();
@@ -72,90 +64,74 @@ export function MobileNav() {
   };
 
   return (
-    <AnimatePresence>
-      {isOpen ? (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+    <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+      <SheetContent side="left" className="w-80 max-w-[85vw] p-0 flex flex-col pt-0 [&>button]:hidden overflow-y-auto border-r border-border bg-background">
+        <SheetTitle className="sr-only">Mobile Navigation</SheetTitle>
+        <div className="mb-5 flex h-14 items-center justify-between px-4 border-b border-border">
+          <p className="text-[12px] font-semibold tracking-[0.2em] text-foreground">YS STORE</p>
+          <button
+            type="button"
             onClick={close}
-            className="fixed inset-0 z-40 bg-overlay/70"
-          />
-          <motion.aside id="mobile-nav" ref={containerRef as any} aria-label="Mobile Navigation"
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] overflow-y-auto border-r border-border bg-background px-4 py-3"
+            aria-label="Close menu"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
           >
-            <div className="mb-5 flex h-10 items-center justify-between">
-              <p className="text-[12px] font-light tracking-[0.2em]">YS STORE</p>
-              <button
-                type="button"
-                onClick={close}
-                aria-label="Close menu"
-                className="inline-flex h-9 w-9 items-center justify-center text-secondary"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
-            <nav aria-label="Mobile Main Navigation" className="space-y-1">
-              {links.map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  onClick={close}
-                  className={({ isActive }) =>
-                    `flex min-h-10 items-center px-1 text-[13px] ${isActive ? 'text-foreground' : 'text-secondary'}`
-                  }
-                >
-                  {link.label}
-                </NavLink>
-              ))}
-            </nav>
+        <nav aria-label="Mobile Main Navigation" className="space-y-1 px-4">
+          {links.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              onClick={close}
+              className={({ isActive }) =>
+                `flex min-h-10 items-center px-2 text-[13px] rounded-md transition-colors ${isActive ? 'bg-accent text-accent-foreground font-medium' : 'text-secondary hover:bg-accent/50 hover:text-foreground'}`
+              }
+            >
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
 
-            <div className="mt-6 space-y-1 border-t border-border pt-4">
-              <div className="px-1 py-2">
-                <ThemeToggle />
-              </div>
+        <div className="mt-6 space-y-1 border-t border-border pt-4 px-4 pb-4 flex-1">
+          <div className="px-2 py-2 mb-2">
+            <ThemeToggle />
+          </div>
 
-              <Link to="/wishlist" onClick={close} className="flex min-h-10 items-center gap-2 px-1 text-[13px] text-secondary">
-                <Heart className="h-4 w-4" />
-                Wishlist
-              </Link>
-              <button type="button" onClick={handleCartClick} className="flex min-h-10 w-full items-center gap-2 px-1 text-[13px] text-secondary">
-                <ShoppingCart className="h-4 w-4" />
-                Cart
-              </button>
-              <Link to="/builder" onClick={close} className="flex min-h-10 items-center gap-2 px-1 text-[13px] text-secondary">
-                <Wrench className="h-4 w-4" />
-                Build Your PC
-              </Link>
-              <Link to="/login" onClick={close} className="flex min-h-10 items-center gap-2 px-1 text-[13px] text-secondary">
-                <LogIn className="h-4 w-4" />
-                {customerAuthenticated ? 'Account' : 'Login'}
-              </Link>
-              {adminAuthenticated ? (
-                <Link to="/admin" onClick={close} className="flex min-h-10 items-center gap-2 px-1 text-[13px] text-secondary">
-                  Admin Dashboard
-                </Link>
-              ) : null}
-              {(customerAuthenticated || adminAuthenticated) ? (
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex min-h-10 w-full items-center gap-2 px-1 text-[13px] text-secondary hover:text-foreground transition-colors"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </button>
-              ) : null}
-            </div>
-          </motion.aside>
-        </>
-      ) : null}
-    </AnimatePresence>
+          <Link to="/wishlist" onClick={close} className="flex min-h-10 items-center gap-2 px-2 text-[13px] text-secondary hover:bg-accent/50 rounded-md hover:text-foreground transition-colors">
+            <Heart className="h-4 w-4" />
+            Wishlist
+          </Link>
+          <button type="button" onClick={handleCartClick} className="flex min-h-10 w-full items-center gap-2 px-2 text-[13px] text-secondary hover:bg-accent/50 rounded-md hover:text-foreground transition-colors">
+            <ShoppingCart className="h-4 w-4" />
+            Cart
+          </button>
+          <Link to="/builder" onClick={close} className="flex min-h-10 items-center gap-2 px-2 text-[13px] text-secondary hover:bg-accent/50 rounded-md hover:text-foreground transition-colors">
+            <Wrench className="h-4 w-4" />
+            Build Your PC
+          </Link>
+          <Link to="/login" onClick={close} className="flex min-h-10 items-center gap-2 px-2 text-[13px] text-secondary hover:bg-accent/50 rounded-md hover:text-foreground transition-colors">
+            <LogIn className="h-4 w-4" />
+            {customerAuthenticated ? 'Account' : 'Login'}
+          </Link>
+          {adminAuthenticated ? (
+            <Link to="/admin" onClick={close} className="flex min-h-10 items-center gap-2 px-2 text-[13px] text-secondary hover:bg-accent/50 rounded-md hover:text-foreground transition-colors">
+              Admin Dashboard
+            </Link>
+          ) : null}
+          {(customerAuthenticated || adminAuthenticated) ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex min-h-10 w-full items-center gap-2 px-2 text-[13px] text-secondary hover:bg-accent/50 rounded-md hover:text-foreground transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </button>
+          ) : null}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

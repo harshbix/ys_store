@@ -1,51 +1,22 @@
-import { forwardRef, type InputHTMLAttributes } from 'react';
-import { cn } from '../../lib/cn';
+import * as React from "react"
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  error?: string;
-  label?: string;
-  hint?: string;
-}
+import { cn } from "@/lib/utils"
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { className, error, label, hint, id, ...props },
-  ref
-) {
-  const inputId = id || props.name || Math.random().toString(36).substring(7);
-  const errorId = `${inputId}-error`;
-  const hintId = `${inputId}-hint`;
-
-  return (
-    <div className="space-y-1.5">
-      {label ? (
-        <label htmlFor={inputId} className="block label-11 text-secondary">
-          {label}
-        </label>
-      ) : null}
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, type, ...props }, ref) => {
+    return (
       <input
-        id={inputId}
-        ref={ref}
-        aria-invalid={!!error}
-        aria-describedby={
-          error ? errorId : hint ? hintId : undefined
-        }
+        type={type}
         className={cn(
-          'h-10 w-full block rounded-[2px] border bg-inputBg px-3 text-[13px] text-foreground placeholder-muted transition focus-visible:border-ring focus-visible:outline-none focus:ring-1 focus:ring-ring',
-          error ? 'border-danger' : 'border-border',
+          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
           className
         )}
+        ref={ref}
         {...props}
       />
-      {error ? (
-        <p id={errorId} className="text-[12px] text-danger" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {!error && hint ? (
-        <p id={hintId} className="text-[12px] text-muted">
-          {hint}
-        </p>
-      ) : null}
-    </div>
-  );
-});
+    )
+  }
+)
+Input.displayName = "Input"
+
+export { Input }

@@ -5,7 +5,10 @@ import { useCart } from '../../hooks/useCart';
 import { useShowToast } from '../../hooks/useToast';
 import { useAdminAuthStore, useAuthStore, useIsAdmin } from '../../store/auth';
 import { useUiStore } from '../../store/ui';
-import { SearchResultsOverlay } from '../ui/SearchResultsOverlay.tsx';
+import { SearchResultsOverlay } from '../ui/SearchResultsOverlay';
+import { Button } from '../ui/Button';
+import { Badge } from '../ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 const navLinks = [
   { label: 'Home', to: '/' },
@@ -14,7 +17,6 @@ const navLinks = [
   { label: 'Gaming Desktops', to: '/shop?type=desktop' },
   { label: 'Accessories', to: '/shop?type=accessory' },
   { label: 'Custom PC Build', to: '/builder' },
-  { label: 'Blog', to: '/blog' },
   { label: 'Contact', to: '/contact' }
 ];
 
@@ -90,49 +92,52 @@ export function Header() {
     <header className={`sticky top-0 z-30 transition ${isScrolled ? 'border-b border-border bg-background/95 backdrop-blur' : 'border-b border-border/30 bg-background'}`}>
       <div className="mx-auto h-14 w-full max-w-[1440px] px-4 sm:px-6 lg:px-8">
         <div className="relative flex h-full items-center justify-between lg:hidden">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={openMobileNav} aria-expanded={mobileNavOpen} aria-controls="mobile-nav"
-            className="inline-flex h-9 w-9 items-center justify-center text-secondary"
+            className="text-secondary hover:text-foreground"
             aria-label="Open menu"
           >
             <Menu className="h-[18px] w-[18px]" />
-          </button>
+          </Button>
 
-          <Link to="/" aria-label="Home" className="absolute left-1/2 -translate-x-1/2">
+          <Link to="/" aria-label="Home" className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
             <span className="text-[12px] font-semibold tracking-[0.2em] text-foreground">
               YS STORE
             </span>
           </Link>
 
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              type="button"
+          <div className="ml-auto flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={openSearchOverlay} aria-expanded={searchOverlayOpen} aria-controls="search-overlay"
-              className="inline-flex h-9 w-9 items-center justify-center text-secondary"
+              className="text-secondary hover:text-foreground"
               aria-label="Open product search"
             >
               <Search className="h-[18px] w-[18px]" />
-            </button>
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleCartIntent} aria-expanded={cartDrawerOpen} aria-controls="cart-drawer"
-              className="relative inline-flex h-9 w-9 items-center justify-center text-secondary"
+              className="relative text-secondary hover:text-foreground"
               aria-label="Cart"
             >
               <ShoppingBag className="h-[18px] w-[18px]" />
               {cartCount > 0 ? (
-                <span className="absolute right-0 top-0 inline-flex min-h-4 min-w-4 animate-pulse-soft items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] font-medium text-primaryForeground" aria-live="polite">
+                <Badge className="absolute min-w-4 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] font-medium text-primaryForeground hover:bg-accent -right-1 -top-1 border-0" aria-live="polite">
                   {cartCount}
-                </span>
+                </Badge>
               ) : null}
-            </button>
+            </Button>
           </div>
         </div>
 
         <div className="hidden h-full items-center gap-12 lg:flex">
-          <Link to="/" aria-label="Home" className="shrink-0">
+          <Link to="/" aria-label="Home" className="shrink-0 flex items-center justify-center">
             <span className="text-[12px] font-semibold tracking-[0.2em] text-foreground">
               YS STORE
             </span>
@@ -152,52 +157,61 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center gap-5">
-            <button
-              type="button"
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={openSearchOverlay} aria-expanded={searchOverlayOpen} aria-controls="search-overlay"
-              className="inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground"
+              className="text-secondary hover:text-foreground rounded-full"
               aria-label="Search"
             >
               <Search className="h-[18px] w-[18px]" />
-            </button>
+            </Button>
 
-            <Link to="/wishlist" className="inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground" aria-label="Wishlist">
-              <Heart className="h-[18px] w-[18px]" />
-            </Link>
+            <Button variant="ghost" size="icon" asChild className="text-secondary hover:text-foreground rounded-full">
+              <Link to="/wishlist" aria-label="Wishlist">
+                <Heart className="h-[18px] w-[18px]" />
+              </Link>
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleCartIntent} aria-expanded={cartDrawerOpen} aria-controls="cart-drawer"
-              className="relative inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground"
+              className="relative text-secondary hover:text-foreground rounded-full"
               aria-label="Open cart"
             >
               <ShoppingBag className="h-[18px] w-[18px]" />
               {cartCount > 0 ? (
-                <span className="absolute right-0 top-0 inline-flex min-h-4 min-w-4 animate-pulse-soft items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] font-medium text-primaryForeground" aria-live="polite">
+                <Badge className="absolute min-w-4 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] font-medium text-primaryForeground hover:bg-accent -right-1 -top-1 border-0" aria-live="polite">
                   {cartCount}
-                </span>
+                </Badge>
               ) : null}
-            </button>
+            </Button>
 
-            <Link
-              to={accountHref}
-              className="inline-flex h-9 w-9 items-center justify-center text-secondary transition hover:text-foreground"
-              aria-label={customerAuthenticated ? 'Account' : 'Login'}
-            >
-              <UserCircle2 className="h-[18px] w-[18px]" />
-            </Link>
-
-            {customerAuthenticated && !adminAuthenticated ? (
-              <button
-                type="button"
-                onClick={handleCustomerLogout}
-                className="inline-flex min-h-9 items-center rounded-full border border-border px-3 text-[11px] font-semibold tracking-[0.08em] text-foreground transition hover:border-foreground"
-                aria-label="Sign out"
-              >
-                Sign out
-              </button>
-            ) : null}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-secondary hover:text-foreground rounded-full">
+                  <UserCircle2 className="h-[18px] w-[18px]" />
+                  <span className="sr-only">{customerAuthenticated ? 'Account' : 'Login'}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link to={accountHref} className="cursor-pointer w-full">
+                    {adminAuthenticated || isAdmin ? 'Admin Dashboard' : customerAuthenticated ? 'My Account' : 'Sign in'}
+                  </Link>
+                </DropdownMenuItem>
+                {customerAuthenticated && !adminAuthenticated && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleCustomerLogout} className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive">
+                      Sign out
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

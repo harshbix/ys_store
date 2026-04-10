@@ -4,6 +4,9 @@ import { useMemo, useState } from 'react';
 import { useComponentsQuery } from '../../hooks/usePCBuilder';
 import type { ComponentType, PCComponent } from '../../types/api';
 import { formatTzs } from '../../lib/currency';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Card } from '../ui/card';
 
 type BuildPartPickerProps = {
   componentType: ComponentType | null;
@@ -70,28 +73,29 @@ export function BuildPartPicker({ componentType, open, onClose, onSelect }: Buil
             <div className="border-b border-border p-4 flex items-center justify-between shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-foreground">Select {componentType ? componentType.toUpperCase() : 'Component'}</h2>
-                <p className="text-xs text-muted mt-1">{filtered.length} options available</p>
+                <p className="text-xs text-muted-foreground mt-1">{filtered.length} options available</p>
               </div>
-              <button 
+              <Button 
+                variant="outline"
+                size="icon"
                 onClick={onClose} 
-                type="button" 
-                className="rounded-lg border border-border p-2 hover:bg-surface transition"
+                className="h-9 w-9 rounded-lg"
                 aria-label="Close"
               >
-                <X className="h-5 w-5" />
-              </button>
+                <X className="h-4 w-4" />
+              </Button>
             </div>
 
             {/* Search */}
             <div className="border-b border-border p-4 shrink-0">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-5 w-5 text-muted pointer-events-none" />
-                <input
+                <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground pointer-events-none" />
+                <Input
                   type="text"
                   placeholder="Search components..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-surface text-foreground placeholder-muted focus:outline-none focus:border-accent"
+                  className="pl-10 h-11"
                 />
               </div>
             </div>
@@ -101,23 +105,23 @@ export function BuildPartPicker({ componentType, open, onClose, onSelect }: Buil
               {componentsQuery.isLoading ? (
                 <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={`skeleton-${i}`} className="h-24 animate-pulse rounded-xl border border-border bg-surface" />
+                    <div key={`skeleton-${i}`} className="h-24 animate-pulse rounded-xl border border-border bg-muted" />
                   ))}
                 </div>
               ) : null}
 
               {componentsQuery.isError ? (
                 <div className="p-4">
-                  <div className="rounded-lg border border-danger/30 bg-danger/5 p-4 flex gap-3">
-                    <AlertCircle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
-                    <p className="text-sm text-danger">Failed to load components. Please try again.</p>
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 flex gap-3">
+                    <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                    <p className="text-sm text-destructive">Failed to load components. Please try again.</p>
                   </div>
                 </div>
               ) : null}
 
               {!componentsQuery.isLoading && filtered.length === 0 ? (
                 <div className="p-4">
-                  <p className="text-sm text-muted text-center py-8">
+                  <p className="text-sm text-muted-foreground text-center py-8">
                     {searchTerm ? 'No components match your search' : 'No components available'}
                   </p>
                 </div>
@@ -135,14 +139,14 @@ export function BuildPartPicker({ componentType, open, onClose, onSelect }: Buil
                           onSelect(component);
                           onClose();
                         }}
-                        className="rounded-xl border border-border bg-surface p-4 text-left transition hover:border-accent hover:bg-accent/5 active:scale-95"
+                        className="rounded-xl border border-border bg-card text-card-foreground p-4 text-left transition hover:border-primary hover:bg-primary/5 active:scale-95 shadow-sm"
                       >
                         <div className="space-y-2">
                           <p className="font-semibold text-foreground truncate text-sm">{component.name}</p>
                           {spec && (
-                            <p className="text-xs text-muted">{spec}</p>
+                            <p className="text-xs text-muted-foreground">{spec}</p>
                           )}
-                          <p className="text-sm font-bold text-accent">{formatTzs(component.price_tzs || 0)}</p>
+                          <p className="text-sm font-bold text-primary">{formatTzs(component.price_tzs || 0)}</p>
                         </div>
                       </button>
                     );

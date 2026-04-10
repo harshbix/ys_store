@@ -6,6 +6,8 @@ import { EmptyState } from '../components/feedback/EmptyState';
 import { SkeletonGrid } from '../components/feedback/SkeletonGrid';
 import { ProductGrid } from '../components/ui/ProductGrid';
 import { Button } from '../components/ui/Button';
+import { Card, CardContent } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
 import { Image } from '../components/ui/Image';
 import { SEO } from '../components/seo/SEO';
 import { useCart } from '../hooks/useCart';
@@ -106,13 +108,15 @@ export default function HomePage() {
             animate="visible"
             className="space-y-5 lg:pl-4"
           >
-            <motion.p
-              variants={fadeInUp}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-200 backdrop-blur"
-            >
-              <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(125,211,252,0.8)]" />
-              New arrivals in stock
-            </motion.p>
+            <motion.div variants={fadeInUp}>
+              <Badge
+                variant="outline"
+                className="gap-2 border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-200 backdrop-blur"
+              >
+                <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(125,211,252,0.8)]" />
+                New arrivals in stock
+              </Badge>
+            </motion.div>
 
             <motion.h1
               variants={fadeInUp}
@@ -195,18 +199,17 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
             >
-              <Link
-                to={item.href}
-                className="group relative flex h-32 items-end justify-start overflow-hidden rounded-xl border border-white/10 bg-gradient-to-tr from-slate-900/45 to-slate-900/10 p-6 transition duration-300 hover:border-white/20 hover:from-slate-800/50 hover:to-slate-900/25"
-              >
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/25" />
-                <div className="relative">
-                  <h3 className="text-[16px] font-medium text-foreground">{item.label}</h3>
-                  <div className="mt-2 flex items-center gap-1.5 text-[12px] text-sky-300 opacity-0 transition group-hover:opacity-100">
-                    Explore
-                    <ArrowRight className="h-3 w-3" />
-                  </div>
-                </div>
+              <Link to={item.href} className="group block">
+                <Card className="relative flex h-32 items-end justify-start overflow-hidden rounded-xl border-white/10 bg-gradient-to-tr from-slate-900/45 to-slate-900/10 transition duration-300 hover:border-white/20 hover:from-slate-800/50 hover:to-slate-900/25">
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/25" />
+                  <CardContent className="relative p-6">
+                    <h3 className="text-[16px] font-medium text-foreground">{item.label}</h3>
+                    <div className="mt-2 flex items-center gap-1.5 text-[12px] text-sky-300 opacity-0 transition group-hover:opacity-100">
+                      Explore
+                      <ArrowRight className="h-3 w-3" />
+                    </div>
+                  </CardContent>
+                </Card>
               </Link>
             </motion.div>
           ))}
@@ -219,27 +222,30 @@ export default function HomePage() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="rounded-2xl border border-border/30 bg-surface/35 px-6 py-10 backdrop-blur-lg md:px-8"
         >
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {trustSignals.map((signal, idx) => {
-              const Icon = signal.icon;
-              return (
-                <motion.div
-                  key={signal.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  className="space-y-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className="h-5 w-5 text-sky-300" />
-                    <h3 className="text-[14px] font-medium text-foreground">{signal.title}</h3>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+          <Card className="rounded-2xl border-border/30 bg-surface/35 backdrop-blur-lg">
+            <CardContent className="px-6 py-10 md:px-8">
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                {trustSignals.map((signal, idx) => {
+                  const Icon = signal.icon;
+                  return (
+                    <motion.div
+                      key={signal.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: idx * 0.1 }}
+                      className="space-y-2"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className="h-5 w-5 text-sky-300" />
+                        <h3 className="text-[14px] font-medium text-foreground">{signal.title}</h3>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
       </section>
 
@@ -263,14 +269,16 @@ export default function HomePage() {
             >
               Products
             </Button>
-            <a
-              href={buildWhatsAppUrl()}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-12 items-center rounded-lg border border-white/30 bg-white/5 px-6 text-[14px] font-medium text-foreground backdrop-blur transition hover:bg-white/10"
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="min-h-12 border-white/30 bg-white/5 text-[14px] text-foreground backdrop-blur hover:bg-white/10"
             >
-              Chat on WhatsApp
-            </a>
+              <a href={buildWhatsAppUrl()} target="_blank" rel="noreferrer">
+                Chat on WhatsApp
+              </a>
+            </Button>
           </div>
         </motion.div>
       </section>

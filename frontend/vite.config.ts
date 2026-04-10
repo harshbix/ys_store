@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 function normalizeApiBase(value: string): string {
 	const trimmed = value.trim().replace(/\/+$/, '');
@@ -20,6 +21,11 @@ export default defineConfig(({ mode }) => {
 
 	return {
 		plugins: [react()],
+		resolve: {
+			alias: {
+				'@': path.resolve(__dirname, './src')
+			}
+		},
 		server: {
 			host: true,
 			port: 5173,

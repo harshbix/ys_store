@@ -4,10 +4,12 @@ import { Link } from 'react-router-dom';
 import type { Product } from '../../types/api';
 import { compactText, titleCase } from '../../lib/format';
 import { getProductImage, placeholderForProduct } from '../../utils/imageFallback';
-import { Button } from './Button';
 import { ConditionBadge } from './ConditionBadge';
 import { PriceDisplay } from './PriceDisplay';
 import { Image } from './Image';
+import { Card, CardContent, CardFooter } from './card';
+import { Button } from './button';
+import { Badge } from './badge';
 
 type ProductCardProps = {
   product: Product;
@@ -28,7 +30,7 @@ export function ProductCard({ product, inWishlist, onToggleWishlist, onQuickAdd,
   }, [product]);
 
   return (
-    <article className="group flex h-full flex-col bg-surface">
+    <Card className="group flex h-full flex-col overflow-hidden border-none shadow-none bg-surface rounded-none">
       <Link to={`/products/${product.slug}`} className="relative block overflow-hidden bg-surface">
         <div className="relative aspect-[4/5] overflow-hidden bg-surface">
           <Image
@@ -41,47 +43,47 @@ export function ProductCard({ product, inWishlist, onToggleWishlist, onQuickAdd,
           <div className="absolute left-2 top-2">
             <ConditionBadge condition={product.condition} />
           </div>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
             onClick={(event) => {
               event.preventDefault();
               onToggleWishlist?.(product);
             }}
-            className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center border border-border bg-background/90 text-secondary opacity-0 transition hover:text-foreground group-hover:opacity-100"
+            className="absolute right-2 top-2 h-8 w-8 rounded-full border border-border bg-background/90 text-secondary opacity-0 transition hover:text-foreground group-hover:opacity-100 hover:bg-background/90"
           >
-            <Heart className={`h-3.5 w-3.5 ${inWishlist ? 'fill-current text-accent' : ''}`} />
-          </button>
+            <Heart className={`h-3.5 w-3.5 ${inWishlist ? 'fill-current text-destructive' : ''}`} />
+          </Button>
           <span className="label-11 absolute bottom-2 left-2 text-[10px] text-secondary opacity-0 transition group-hover:opacity-100">Quick View</span>
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col px-2 pb-3 pt-3">
-        <p className="font-mono text-[11px] uppercase tracking-[0.09em] text-muted">{specLine || titleCase(product.product_type)}</p>
+      <CardContent className="flex flex-1 flex-col p-2! pt-3!">
+        <p className="text-[11px] font-mono uppercase tracking-[0.09em] text-muted-foreground">{specLine || titleCase(product.product_type)}</p>
 
-        <h3 className="mt-2 text-[14px] font-normal leading-5 text-foreground">
-          <Link to={`/products/${product.slug}`} className="product-name-clamp focus-visible:outline-none focus:ring-1 focus:ring-ring">
+        <h3 className="mt-2 text-[14px] font-normal leading-5">
+          <Link to={`/products/${product.slug}`} className="line-clamp-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
             {product.title}
           </Link>
         </h3>
 
-        <p className="mt-1 text-[12px] text-secondary">{compactText(product.short_description, product.brand)}</p>
+        <p className="mt-1 text-[12px] text-muted-foreground">{compactText(product.short_description, product.brand)}</p>
+      </CardContent>
 
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <PriceDisplay amount={product.estimated_price_tzs} className="font-mono text-[14px] font-medium text-foreground" />
-          <Button
-            size="sm"
-            variant="secondary"
-            loading={addingToCart}
-            disabled={soldOut || addingToCart}
-            onClick={() => onQuickAdd?.(product.id)}
-            className="h-8 w-8 px-0"
-            aria-label="Add to cart"
-          >
-            <ShoppingBag className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div>
-    </article>
+      <CardFooter className="p-2! pt-0! flex items-center justify-between gap-2 mt-auto">
+        <PriceDisplay amount={product.estimated_price_tzs} className="font-mono text-[14px] font-medium" />
+        <Button
+          size="icon"
+          variant="secondary"
+          disabled={soldOut || addingToCart}
+          onClick={() => onQuickAdd?.(product.id)}
+          className="h-8 w-8 shrink-0"
+          aria-label="Add to cart"
+        >
+          <ShoppingBag className="h-4 w-4" />
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

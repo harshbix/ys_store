@@ -1,6 +1,8 @@
 import { X } from 'lucide-react';
 import type { ProductFilters } from '../../types/ui';
 import { titleCase } from '../../lib/format';
+import { Badge } from './badge';
+import { Button } from './button';
 
 type ActiveFiltersProps = {
   filters: Partial<ProductFilters>;
@@ -20,19 +22,19 @@ export function ActiveFilters({ filters, onClearOne, onClearAll }: ActiveFilters
   return (
     <div className="flex flex-wrap items-center gap-2">
       {entries.map(([key, value]) => (
-        <button
+        <Badge
           key={key}
-          type="button"
+          variant="secondary"
+          className="cursor-pointer gap-1 px-2 py-1 text-xs font-normal"
           onClick={() => onClearOne(key as keyof ProductFilters)}
-          className="inline-flex min-h-7 items-center gap-1 rounded-[2px] border border-border bg-surface px-2 text-[11px] font-normal text-secondary"
         >
           {titleCase(key)}: {String(value)}
           <X className="h-3 w-3" />
-        </button>
+        </Badge>
       ))}
-      <button type="button" onClick={onClearAll} className="min-h-7 rounded-[2px] border border-border px-2 text-[11px] text-secondary">
+      <Button variant="outline" size="sm" onClick={onClearAll} className="h-7 text-xs px-2">
         Clear all
-      </button>
+      </Button>
     </div>
   );
 }
