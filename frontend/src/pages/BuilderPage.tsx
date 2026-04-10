@@ -87,7 +87,11 @@ export default function BuilderPage() {
 
   const handleAddToCart = () => {
     if (!activeBuildId) return;
-    addToCartMutation.mutate(activeBuildId);
+    addToCartMutation.mutate(activeBuildId, {
+      onSuccess: () => {
+        navigate('/cart');
+      }
+    });
   };
 
   const handleLoadPreset = async (preset: BuildPreset) => {

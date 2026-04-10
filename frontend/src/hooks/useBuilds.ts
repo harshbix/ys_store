@@ -104,6 +104,7 @@ export function useBuilds() {
   const addToCartMutation = useMutation({
     mutationFn: (buildId: string) => addBuildToCart(buildId),
     onSuccess: () => {
+      setActiveBuildId(null);
       showToast({ title: 'Build added to cart', variant: 'success' });
       void queryClient.invalidateQueries({ queryKey: queryKeys.cart.current });
     },
