@@ -215,7 +215,7 @@ export default function BuilderPage() {
       />
 
       <BuildStickyBar
-        total={build?.total_estimated_price_tzs || 0}
+        total={(build?.total_estimated_price_tzs || 0) + 50000}
         onValidate={handleValidate}
         onAddToCart={handleAddToCart}
         validating={validateMutation.isPending}

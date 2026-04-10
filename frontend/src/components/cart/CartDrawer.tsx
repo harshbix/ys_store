@@ -95,7 +95,7 @@ export function CartDrawer() {
             </div>
 
             <div className="border-t border-border p-4">
-              <CartSummary itemCount={items.length} estimatedTotal={estimatedTotal} />
+              <CartSummary itemCount={items.length} estimatedTotal={estimatedTotal} hasCustomBuild={items.some(i => i.item_type === 'custom_build')} />
             </div>
           </motion.aside>
         </>

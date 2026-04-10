@@ -10,6 +10,12 @@ type QuoteConfirmationProps = {
 };
 
 export function QuoteConfirmation({ quote, whatsappUrl, onTrackAndOpen }: QuoteConfirmationProps) {
+  // If the quote items specify a custom_build, add the 50000 build service fee. 
+  // Note: the backend SQL does not inject this into estimated_total_tzs at the DB level.
+  const hasCustomBuild = Array.isArray(quote.items) ? quote.items.some((i: any) => i.item_type === 'custom_build') : false;
+  const buildingFee = hasCustomBuild ? 50000 : 0;
+  const finalTotal = (quote.estimated_total_tzs || 0) + buildingFee;
+
   return (
     <section className="rounded-2xl border border-success/40 bg-success/10 p-5 text-foreground">
       <div className="flex items-start gap-3">
@@ -22,7 +28,7 @@ export function QuoteConfirmation({ quote, whatsappUrl, onTrackAndOpen }: QuoteC
 
       <div className="mt-4 grid gap-3 rounded-xl border border-border bg-background p-4 sm:grid-cols-2">
         <p className="text-sm text-muted">Quote Code: <span className="font-semibold text-foreground">{quote.quote_code}</span></p>
-        <p className="text-sm text-muted">Estimated Total: <span className="font-semibold text-foreground">{formatTzs(quote.estimated_total_tzs)}</span></p>
+        <p className="text-sm text-muted">Estimated Total: <span className="font-semibold text-foreground">{formatTzs(finalTotal)}</span></p>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">

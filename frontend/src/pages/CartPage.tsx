@@ -69,7 +69,7 @@ export default function CartPage() {
             ))}
           </section>
           <aside className="lg:sticky lg:top-20 lg:self-start">
-            <CartSummary itemCount={items.length} estimatedTotal={total} />
+            <CartSummary itemCount={items.length} estimatedTotal={total} hasCustomBuild={items.some(i => i.item_type === 'custom_build')} />
           </aside>
         </div>
       ) : null}

@@ -5,14 +5,18 @@ import { useAuthStore } from '../../store/auth';
 type CartSummaryProps = {
   itemCount: number;
   estimatedTotal: number;
+  hasCustomBuild?: boolean;
   ctaHref?: string;
   ctaLabel?: string;
 };
 
-export function CartSummary({ itemCount, estimatedTotal, ctaHref = '/checkout', ctaLabel = 'Proceed to Quote' }: CartSummaryProps) {
+export function CartSummary({ itemCount, estimatedTotal, hasCustomBuild = false, ctaHref = '/checkout', ctaLabel = 'Proceed to Quote' }: CartSummaryProps) {
   const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken && state.customerId));
   const resolvedHref = isAuthenticated ? ctaHref : '/login';
   const resolvedLabel = isAuthenticated ? ctaLabel : 'Sign In to Continue';
+
+  const buildingFee = hasCustomBuild ? 50000 : 0;
+  const finalTotal = estimatedTotal + buildingFee;
 
   return (
     <aside className="space-y-4 rounded-2xl border border-border bg-surface p-4">
@@ -27,12 +31,16 @@ export function CartSummary({ itemCount, estimatedTotal, ctaHref = '/checkout', 
           <dd>{itemCount}</dd>
         </div>
         <div className="flex items-center justify-between text-secondary">
+          <dt>Parts Subtotal</dt>
+          <dd>{formatTzs(estimatedTotal)}</dd>
+        </div>
+        <div className="flex items-center justify-between text-secondary">
           <dt>Service fee</dt>
-          <dd>Included</dd>
+          <dd className={buildingFee > 0 ? 'text-foreground font-medium' : ''}>{buildingFee > 0 ? formatTzs(buildingFee) : 'Included'}</dd>
         </div>
         <div className="flex items-center justify-between border-t border-border pt-2 text-foreground">
           <dt className="font-semibold">Estimated Total</dt>
-          <dd className="font-mono text-[16px] font-semibold">{formatTzs(estimatedTotal)}</dd>
+          <dd className="font-mono text-[16px] font-semibold">{formatTzs(finalTotal)}</dd>
         </div>
       </dl>
 

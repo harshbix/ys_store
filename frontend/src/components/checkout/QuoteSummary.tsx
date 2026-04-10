@@ -6,6 +6,10 @@ type QuoteSummaryProps = {
 };
 
 export function QuoteSummary({ cart }: QuoteSummaryProps) {
+  const hasCustomBuild = cart.items.some(i => i.item_type === 'custom_build');
+  const buildingFee = hasCustomBuild ? 50000 : 0;
+  const finalTotal = cart.estimated_total_tzs + buildingFee;
+
   return (
     <section className="rounded-2xl border border-border bg-surface p-5">
       <h2 className="text-base font-semibold text-foreground">Cart Review</h2>
@@ -20,9 +24,20 @@ export function QuoteSummary({ cart }: QuoteSummaryProps) {
           </article>
         ))}
       </div>
-      <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-sm">
-        <p className="font-semibold text-foreground">Estimated Total</p>
-        <p className="font-semibold text-foreground">{formatTzs(cart.estimated_total_tzs)}</p>
+      
+      <div className="mt-4 border-t border-border pt-3 space-y-2">
+        <div className="flex items-center justify-between text-sm text-secondary">
+          <p>Parts Subtotal</p>
+          <p>{formatTzs(cart.estimated_total_tzs)}</p>
+        </div>
+        <div className="flex items-center justify-between text-sm text-secondary">
+          <p>Service Fee</p>
+          <p className={buildingFee > 0 ? "font-medium text-foreground" : ""}>{buildingFee > 0 ? formatTzs(buildingFee) : "Included"}</p>
+        </div>
+        <div className="flex items-center justify-between pt-2 text-base">
+          <p className="font-semibold text-foreground">Estimated Total</p>
+          <p className="font-semibold text-foreground">{formatTzs(finalTotal)}</p>
+        </div>
       </div>
     </section>
   );
