@@ -6,7 +6,7 @@ import { BuildSlot } from '../components/builder/BuildSlot';
 import { BuildStickyBar } from '../components/builder/BuildStickyBar';
 import { BuildSummary } from '../components/builder/BuildSummary';
 import { CompatibilityBanner } from '../components/builder/CompatibilityBanner';
-import { PresetSelector } from '../components/builder/PresetSelector';
+  // import { PresetSelector } from '../components/builder/PresetSelector';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { Button } from '../components/ui/Button';
 import { useBuilds } from '../hooks/useBuilds';
@@ -145,18 +145,20 @@ export default function BuilderPage() {
         {/* Main Grid */}
         <div className="grid gap-8 lg:grid-cols-[1fr_360px] items-start">
           <main className="space-y-8 min-w-0 w-full overflow-hidden">
-            {/* Presets Section */}
-            <PresetSelector onLoadPreset={handleLoadPreset} isLoading={upsertItemMutation.isPending} />
+              {/* Presets Section - Hidden for now */}
+              {/* <PresetSelector onLoadPreset={handleLoadPreset} isLoading={upsertItemMutation.isPending} /> */}
 
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
+              {/* Divider - Hidden for now */}
+              {/* 
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-background px-4 text-sm font-medium text-muted">OR</span>
+                </div>
               </div>
-              <div className="relative flex justify-center">
-                <span className="bg-background px-4 text-sm font-medium text-muted">OR</span>
-              </div>
-            </div>
+              */}
 
             {/* Builder Section */}
             <section data-section="builder" className="space-y-4">
