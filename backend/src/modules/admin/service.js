@@ -172,6 +172,7 @@ async function fetchAuthUsersOrThrow() {
 }
 
 function mapAuthUser(user, adminEmails = new Set()) {
+  const adminEmailSet = adminEmails instanceof Set ? adminEmails : new Set();
   const normalizedEmail = String(user.email || '').toLowerCase();
   return {
     id: user.id,
@@ -181,7 +182,7 @@ function mapAuthUser(user, adminEmails = new Set()) {
     created_at: user.created_at,
     last_active_at: user.last_sign_in_at || null,
     is_email_confirmed: Boolean(user.email_confirmed_at),
-    is_admin_account: Boolean(normalizedEmail && adminEmails.has(normalizedEmail))
+    is_admin_account: Boolean(normalizedEmail && adminEmailSet.has(normalizedEmail))
   };
 }
 
