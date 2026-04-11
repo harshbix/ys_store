@@ -2,7 +2,7 @@ import { X } from 'lucide-react';
 import type { ProductFilters } from '../../types/ui';
 import { titleCase } from '../../lib/format';
 import { Badge } from './badge';
-import { Button } from './button';
+import { Button } from './Button';
 
 type ActiveFiltersProps = {
   filters: Partial<ProductFilters>;

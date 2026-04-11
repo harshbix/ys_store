@@ -62,7 +62,7 @@
         "vitest": "^4.1.2"
     },
     "scripts": {
-        "serve": "vite preview",
+        "preview": "vite preview",
         "build": "vite build",
         "dev": "vite",
         "typecheck": "tsc --noEmit",

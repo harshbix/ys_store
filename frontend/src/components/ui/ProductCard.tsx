@@ -8,7 +8,7 @@ import { ConditionBadge } from './ConditionBadge';
 import { PriceDisplay } from './PriceDisplay';
 import { Image } from './Image';
 import { Card, CardContent, CardFooter } from './card';
-import { Button } from './button';
+import { Button } from './Button';
 import { Badge } from './badge';
 
 type ProductCardProps = {
