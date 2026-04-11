@@ -18,9 +18,9 @@ export function AdminProductTile({ product, onEdit, onDelete }: AdminProductTile
   const imageUrl = primary?.thumb_url || primary?.full_url || primary?.original_url || null;
 
   return (
-    <motion.div variants={fadeInUp} whileHover={{ y: -2, scale: 1.005 }} transition={TRANSITIONS.FAST_EASE}>
-      <Card className="h-full overflow-hidden border-border/80 bg-surface/90">
-        <div className="h-36 w-full bg-background">
+    <motion.div variants={fadeInUp} whileHover={{ y: -2, scale: 1.003 }} transition={TRANSITIONS.FAST_EASE}>
+      <Card className="flex h-full flex-col overflow-hidden border-border/80 bg-surface/90 shadow-sm">
+        <div className="h-40 w-full bg-background">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -36,21 +36,21 @@ export function AdminProductTile({ product, onEdit, onDelete }: AdminProductTile
           )}
         </div>
 
-        <CardContent className="flex h-[220px] flex-col gap-2 p-4">
+        <CardContent className="flex min-h-[212px] flex-1 flex-col gap-2.5 p-4">
           <div className="flex items-start justify-between gap-2">
-            <p className="line-clamp-2 text-sm font-semibold text-foreground">{product.title}</p>
+            <p className="line-clamp-2 min-h-[2.4rem] text-sm font-semibold leading-5 text-foreground">{product.title}</p>
             {product.is_featured ? <Badge>Featured</Badge> : null}
           </div>
-          <p className="text-sm text-foreground">{formatTzs(product.estimated_price_tzs)}</p>
+          <p className="text-sm font-medium text-foreground">{formatTzs(product.estimated_price_tzs)}</p>
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary">{product.stock_status.replace(/_/g, ' ')}</Badge>
             {!product.is_visible ? <Badge variant="outline">Hidden</Badge> : null}
           </div>
-          <div className="mt-auto flex flex-wrap gap-2 pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => onEdit(product.id)}>
+          <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
+            <Button className="w-full" type="button" variant="outline" size="sm" onClick={() => onEdit(product.id)}>
               Edit
             </Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => onDelete(product.id)}>
+            <Button className="w-full" type="button" variant="outline" size="sm" onClick={() => onDelete(product.id)}>
               Delete
             </Button>
           </div>

@@ -135,6 +135,8 @@ const sections: Array<{ key: AdminSectionKey; label: string; description: string
   { key: 'settings', label: 'Settings', description: 'Storefront and admin controls' }
 ];
 
+const sectionTransition = { duration: 0.2, ease: [0.22, 1, 0.36, 1] } as const;
+
 const defaultProductForm: ProductFormState = {
   title: '',
   category: 'gaming_pc',
@@ -1315,8 +1317,8 @@ export default function AdminDashboardPage() {
     <>
       <SEO title="Admin Dashboard" description="YS Store Admin" noindex={true} />
 
-      <div className="mx-auto max-w-[1240px] space-y-5 px-3 pb-12 pt-4 sm:px-4 lg:px-6">
-        <header className="rounded-2xl border border-border bg-surface/90 p-4 shadow-sm sm:p-5">
+      <div className="mx-auto max-w-[1260px] space-y-4 px-3 pb-10 pt-3 sm:space-y-5 sm:px-4 sm:pt-4 lg:px-6">
+        <header className="rounded-2xl border border-border bg-surface/90 p-4 shadow-sm sm:p-5 lg:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-secondary">YS Store Admin</p>
@@ -1330,7 +1332,7 @@ export default function AdminDashboardPage() {
               <Link to="/shop" className="inline-flex min-h-10 items-center rounded-md border border-border px-3 text-sm font-medium text-foreground hover:bg-secondary/60">
                 View storefront
               </Link>
-              <Button type="button" variant="outline" onClick={() => void logout()}>
+              <Button type="button" variant="ghost" onClick={() => void logout()}>
                 Sign out
               </Button>
             </div>
@@ -1343,7 +1345,7 @@ export default function AdminDashboardPage() {
           </div>
         </header>
 
-        <div className="grid gap-4 lg:grid-cols-[230px,1fr] lg:items-start">
+        <div className="grid gap-4 lg:grid-cols-[236px,1fr] lg:items-start">
           <aside className="hidden lg:block">
             <Card className="sticky top-4 border-border/90 bg-surface/85">
               <CardContent className="space-y-2 p-3">
@@ -1355,10 +1357,10 @@ export default function AdminDashboardPage() {
                       type="button"
                       onClick={() => setActiveSection(section.key)}
                       className={cn(
-                        'w-full rounded-md px-3 py-2 text-left transition',
+                        'w-full rounded-lg border px-3 py-2.5 text-left transition',
                         isActive
-                          ? 'bg-primary/15 text-foreground'
-                          : 'text-secondary hover:bg-secondary/40 hover:text-foreground'
+                          ? 'border-primary/40 bg-primary/12 text-foreground shadow-sm'
+                          : 'border-transparent text-secondary hover:border-border hover:bg-secondary/35 hover:text-foreground'
                       )}
                     >
                       <p className="text-sm font-medium">{section.label}</p>
@@ -1370,15 +1372,15 @@ export default function AdminDashboardPage() {
             </Card>
           </aside>
 
-          <main className="space-y-6 overflow-x-hidden">
+          <main className="space-y-5 overflow-x-hidden">
             <AnimatePresence mode="wait" initial={false}>
             {activeSection === 'dashboard' ? (
               <motion.section
                 key="dashboard"
-                className="space-y-4 xl:h-[calc(100vh-220px)] xl:overflow-hidden"
+                className="space-y-3 xl:h-[calc(100vh-210px)] xl:overflow-hidden"
                 initial="hidden"
                 animate="visible"
-                exit={{ opacity: 0, y: 6, transition: TRANSITIONS.FAST_EASE }}
+                exit={{ opacity: 0, y: 4, transition: sectionTransition }}
                 variants={fadeInUp}
               >
                 <AdminSectionHeader
@@ -1386,7 +1388,7 @@ export default function AdminDashboardPage() {
                   description="Core business health in a focused, no-clutter command view."
                   action={
                     <div className="flex flex-wrap gap-2">
-                      <Button type="button" variant="outline" onClick={() => { setActiveSection('products'); openCreateProductPanel(); }}>
+                      <Button type="button" onClick={() => { setActiveSection('products'); openCreateProductPanel(); }}>
                         Upload product
                       </Button>
                       <Button type="button" variant="outline" onClick={() => { setActiveSection('builds'); openCreateBuildPanel(); }}>
@@ -1413,8 +1415,8 @@ export default function AdminDashboardPage() {
                       <AdminStatCard label="WhatsApp Checkout Clicks" value={dashboard.stats.whatsapp_checkout_clicks.toLocaleString()} />
                     </motion.div>
 
-                    <div className="grid gap-4 xl:grid-cols-5 xl:grid-rows-[1fr,auto]">
-                      <Card className="xl:col-span-3 overflow-hidden">
+                    <div className="grid gap-4 xl:grid-cols-5 xl:grid-rows-[minmax(0,1fr),auto]">
+                      <Card className="xl:col-span-3 overflow-hidden xl:min-h-0">
                         <CardHeader>
                           <div className="flex items-center justify-between gap-2">
                             <CardTitle className="text-base">Recent activity</CardTitle>
@@ -1422,9 +1424,9 @@ export default function AdminDashboardPage() {
                               View all
                             </Button>
                           </div>
-                          <CardDescription>Only the latest three high-signal updates are shown here.</CardDescription>
+                          <CardDescription>Only the latest high-signal updates are shown here.</CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-2 xl:max-h-[236px] xl:overflow-auto">
                           {dashboard.recent_activity.length === 0 ? (
                             <EmptyState
                               title="No activity yet"
@@ -1432,8 +1434,8 @@ export default function AdminDashboardPage() {
                             />
                           ) : (
                             <div className="space-y-2">
-                              {dashboard.recent_activity.slice(0, 3).map((item) => (
-                                <div key={item.id} className="flex items-start justify-between gap-3 rounded-lg border border-border/80 bg-background p-3">
+                              {dashboard.recent_activity.slice(0, 2).map((item) => (
+                                <div key={item.id} className="flex items-start justify-between gap-3 rounded-lg border border-border/80 bg-background p-2.5">
                                   <div>
                                     <p className="line-clamp-1 text-sm font-medium text-foreground">{item.title}</p>
                                     {item.description ? <p className="text-xs text-secondary">{item.description}</p> : null}
@@ -1446,7 +1448,7 @@ export default function AdminDashboardPage() {
                         </CardContent>
                       </Card>
 
-                      <Card className="xl:col-span-2 overflow-hidden">
+                      <Card className="xl:col-span-2 overflow-hidden xl:min-h-0">
                         <CardHeader>
                           <CardTitle className="text-base">Top products and builds</CardTitle>
                           <CardDescription>Most selected assets, compressed for fast scanning.</CardDescription>
@@ -1487,7 +1489,7 @@ export default function AdminDashboardPage() {
                       <Card className="xl:col-span-5">
                         <CardHeader>
                           <CardTitle className="text-base">Quick actions</CardTitle>
-                          <CardDescription>Most frequent admin actions without context switching.</CardDescription>
+                          <CardDescription>Primary creation actions first, operational controls second.</CardDescription>
                         </CardHeader>
                         <CardContent>
                           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -1497,7 +1499,7 @@ export default function AdminDashboardPage() {
                               </Button>
                             </motion.div>
                             <motion.div whileTap={tapScale} transition={TRANSITIONS.FAST_EASE}>
-                              <Button className="w-full" type="button" variant="outline" onClick={() => { setActiveSection('builds'); openCreateBuildPanel(); }}>
+                              <Button className="w-full" type="button" variant="secondary" onClick={() => { setActiveSection('builds'); openCreateBuildPanel(); }}>
                                 Add build
                               </Button>
                             </motion.div>
@@ -1527,7 +1529,7 @@ export default function AdminDashboardPage() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                transition={TRANSITIONS.FAST_EASE}
+                transition={sectionTransition}
               >
                 <AdminSectionHeader
                   title="Products"
@@ -1550,7 +1552,7 @@ export default function AdminDashboardPage() {
                 </Card>
 
                 {productsQuery.isLoading ? (
-                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                     {Array.from({ length: 6 }).map((_, index) => (
                       <Skeleton key={index} className="h-48 rounded-xl" />
                     ))}
@@ -1566,7 +1568,7 @@ export default function AdminDashboardPage() {
                 ) : null}
 
                 {filteredProducts.length > 0 ? (
-                  <motion.div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-4" variants={gridStagger}>
+                  <motion.div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" variants={gridStagger}>
                     {filteredProducts.map((product) => (
                       <AdminProductTile
                         key={product.id}
@@ -1587,7 +1589,7 @@ export default function AdminDashboardPage() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                transition={TRANSITIONS.FAST_EASE}
+                transition={sectionTransition}
               >
                 <AdminSectionHeader
                   title="Builds"
@@ -1596,7 +1598,7 @@ export default function AdminDashboardPage() {
                 />
 
                 {buildsQuery.isLoading ? (
-                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                     {Array.from({ length: 4 }).map((_, index) => (
                       <Skeleton key={index} className="h-40 rounded-xl" />
                     ))}
@@ -1612,7 +1614,7 @@ export default function AdminDashboardPage() {
                 ) : null}
 
                 {filteredBuilds.length > 0 ? (
-                  <motion.div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-4" variants={gridStagger}>
+                  <motion.div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" variants={gridStagger}>
                     {filteredBuilds.map((build) => (
                       <AdminBuildTile
                         key={build.id}
@@ -1633,7 +1635,7 @@ export default function AdminDashboardPage() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                transition={TRANSITIONS.FAST_EASE}
+                transition={sectionTransition}
               >
                 <AdminSectionHeader
                   title="Users"
@@ -1714,7 +1716,7 @@ export default function AdminDashboardPage() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                transition={TRANSITIONS.FAST_EASE}
+                transition={sectionTransition}
               >
                 <AdminSectionHeader
                   title="Activity"
@@ -1758,7 +1760,7 @@ export default function AdminDashboardPage() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                transition={TRANSITIONS.FAST_EASE}
+                transition={sectionTransition}
               >
                 <AdminSectionHeader
                   title="Settings"

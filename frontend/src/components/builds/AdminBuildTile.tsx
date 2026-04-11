@@ -14,13 +14,13 @@ interface AdminBuildTileProps {
 
 export function AdminBuildTile({ build, onEdit, onDelete }: AdminBuildTileProps) {
   return (
-    <motion.div variants={fadeInUp} whileHover={{ y: -2, scale: 1.005 }} transition={TRANSITIONS.FAST_EASE}>
-      <Card className="h-full border-border/80 bg-surface/90">
-        <CardContent className="flex h-[220px] flex-col gap-3 p-4">
+    <motion.div variants={fadeInUp} whileHover={{ y: -2, scale: 1.003 }} transition={TRANSITIONS.FAST_EASE}>
+      <Card className="h-full border-border/80 bg-surface/90 shadow-sm">
+        <CardContent className="flex min-h-[252px] flex-col gap-3 p-4">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="text-sm font-semibold text-foreground">{build.name}</p>
-              <p className="text-xs text-secondary">{build.cpu_family}</p>
+              <p className="line-clamp-2 min-h-[2.4rem] text-sm font-semibold leading-5 text-foreground">{build.name}</p>
+              <p className="text-xs text-secondary">{build.cpu_family || 'CPU family not set'}</p>
             </div>
             <Badge variant={build.status === 'featured' ? 'default' : 'secondary'}>{build.status}</Badge>
           </div>
@@ -35,11 +35,11 @@ export function AdminBuildTile({ build, onEdit, onDelete }: AdminBuildTileProps)
             {!build.is_visible ? <Badge variant="outline">Hidden</Badge> : <Badge variant="secondary">Visible</Badge>}
           </div>
 
-          <div className="mt-auto flex flex-wrap gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => onEdit(build)}>
+          <div className="mt-auto grid grid-cols-2 gap-2">
+            <Button className="w-full" type="button" variant="outline" size="sm" onClick={() => onEdit(build)}>
               Edit
             </Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => onDelete(build.id)}>
+            <Button className="w-full" type="button" variant="outline" size="sm" onClick={() => onDelete(build.id)}>
               Delete
             </Button>
           </div>

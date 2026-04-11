@@ -106,6 +106,27 @@ function adminStorageState() {
   return { state: { token: adminToken, admin: adminUser }, version: 0 };
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function sectionTitlePattern(sectionName) {
+  return new RegExp(`^${escapeRegExp(sectionName)}$`, 'i');
+}
+
+function sectionRootLocator(page, sectionName) {
+  const heading = page.getByRole('heading', { level: 2, name: sectionTitlePattern(sectionName) }).first();
+  return page.locator('main section', { has: heading }).first();
+}
+
+async function waitForSectionVisible(page, sectionName, timeout = 15000) {
+  const heading = page.getByRole('heading', { level: 2, name: sectionTitlePattern(sectionName) }).first();
+  await heading.waitFor({ state: 'visible', timeout });
+  const section = sectionRootLocator(page, sectionName);
+  await section.waitFor({ state: 'visible', timeout });
+  return section;
+}
+
 async function checkEndpointRead({
   name,
   method,
@@ -607,9 +628,15 @@ async function verifyApi() {
 }
 
 async function selectSection(page, sectionName) {
+  const targetHeading = page.getByRole('heading', { level: 2, name: sectionTitlePattern(sectionName) }).first();
+  if (await targetHeading.isVisible().catch(() => false)) {
+    return true;
+  }
+
   const sidebarButton = page.locator('aside button', { hasText: sectionName }).first();
   if (await sidebarButton.isVisible().catch(() => false)) {
     await sidebarButton.click();
+    await waitForSectionVisible(page, sectionName);
     return true;
   }
 
@@ -617,6 +644,15 @@ async function selectSection(page, sectionName) {
   if (await topSelect.isVisible().catch(() => false)) {
     await topSelect.click();
     await page.getByRole('option', { name: sectionName }).click();
+    await waitForSectionVisible(page, sectionName);
+    return true;
+  }
+
+  const drawerTrigger = page.getByRole('button', { name: 'Open sections' }).first();
+  if (await drawerTrigger.isVisible().catch(() => false)) {
+    await drawerTrigger.click();
+    await page.getByRole('button', { name: new RegExp(escapeRegExp(sectionName), 'i') }).first().click();
+    await waitForSectionVisible(page, sectionName);
     return true;
   }
 
@@ -660,37 +696,62 @@ async function verifyRuntimeUi() {
       }
     });
 
-    await page.getByText('Total Registered Users').first().waitFor({ state: 'visible', timeout: 15000 });
-    const dashboardStatsVisible = await page.getByText('Total Registered Users').first().isVisible();
+    const dashboardSection = await waitForSectionVisible(page, 'Dashboard');
+    const dashboardStatLocator = dashboardSection.getByText(/Total Users|Total Registered Users/).first();
+    await dashboardStatLocator.waitFor({ state: 'visible', timeout: 15000 });
+    const dashboardStatsVisible = await dashboardStatLocator.isVisible();
     recordFlow('dashboard stats load', {
       passed: dashboardStatsVisible,
       reason: dashboardStatsVisible ? undefined : 'Dashboard stat cards not visible.'
     });
 
-    await selectSection(page, 'Users');
-    await page.getByText('Total Registered Users').first().waitFor({ state: 'visible', timeout: 15000 });
-    const usersCountText = await page.locator('section').filter({ hasText: 'Users' }).first().textContent();
-    const usersCountLoaded = /Total Registered Users/i.test(String(usersCountText || ''));
+    const usersNavWorked = await selectSection(page, 'Users');
+    const usersSection = usersNavWorked ? await waitForSectionVisible(page, 'Users') : null;
+    const usersTotalStat = usersSection?.getByText(/Total Registered Users|Total Users/).first();
+    if (usersTotalStat) {
+      await usersTotalStat.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    }
+    const usersCountLoaded = usersTotalStat ? await usersTotalStat.isVisible().catch(() => false) : false;
     recordFlow('registered users count loads', {
-      passed: usersCountLoaded,
-      reason: usersCountLoaded ? undefined : 'Users count card not rendered in Users section.'
+      passed: usersNavWorked && usersCountLoaded,
+      details: { navigation_works: usersNavWorked },
+      reason: usersNavWorked && usersCountLoaded
+        ? undefined
+        : 'Users section stats did not render after section navigation.'
     });
 
-    await selectSection(page, 'Products');
-    await page.getByPlaceholder('Search products by title or SKU').waitFor({ state: 'visible', timeout: 15000 });
+    const productsNavWorked = await selectSection(page, 'Products');
+    const productsSection = productsNavWorked ? await waitForSectionVisible(page, 'Products') : null;
+    if (productsSection) {
+      await productsSection.getByPlaceholder('Search products by title or SKU').first().waitFor({ state: 'visible', timeout: 15000 });
+    }
 
-    const hasProductsCard = await page.locator('section').filter({ hasText: 'Products' }).getByRole('button', { name: 'Edit' }).count();
-    const hasProductsEmpty = await page.getByText('No products yet').count();
+    const productsEditButtons = productsSection?.getByRole('button', { name: 'Edit' });
+    const productsEmptyState = productsSection?.getByText('No products yet').first();
+
+    await Promise.race([
+      productsEditButtons?.first().waitFor({ state: 'visible', timeout: 15000 }) || Promise.reject(new Error('Missing products edit locator')),
+      productsEmptyState?.waitFor({ state: 'visible', timeout: 15000 }) || Promise.reject(new Error('Missing products empty locator'))
+    ]).catch(() => undefined);
+
+    const hasProductsCard = productsEditButtons ? await productsEditButtons.count() : 0;
+    const hasProductsEmpty = productsEmptyState ? await productsEmptyState.isVisible().catch(() => false) : false;
     recordFlow('products list loads', {
-      passed: hasProductsCard > 0 || hasProductsEmpty > 0,
+      passed: productsNavWorked && (hasProductsCard > 0 || hasProductsEmpty),
       details: {
+        navigation_works: productsNavWorked,
         edit_buttons: hasProductsCard,
-        empty_state: hasProductsEmpty > 0
+        empty_state: hasProductsEmpty
       },
-      reason: hasProductsCard > 0 || hasProductsEmpty > 0 ? undefined : 'Neither products cards nor empty state appeared.'
+      reason: productsNavWorked && (hasProductsCard > 0 || hasProductsEmpty)
+        ? undefined
+        : 'Neither product tiles nor empty state appeared after navigation.'
     });
 
-    await page.getByRole('button', { name: 'Upload new product' }).click();
+    const uploadNewProductButton = productsSection
+      ? productsSection.getByRole('button', { name: /Upload new product|Upload product/ }).first()
+      : page.getByRole('button', { name: /Upload new product|Upload product/ }).first();
+    await uploadNewProductButton.click();
     await page.getByPlaceholder('Gaming PC RTX 4060').fill(runtimeProductTitle);
     await page.getByPlaceholder('850000').fill('999999');
     await page.setInputFiles('input[type="file"]', uploadPath);
@@ -763,13 +824,28 @@ async function verifyRuntimeUi() {
       reason: productDeletePassed ? undefined : 'Product visibility archive endpoint failed.'
     });
 
-    await selectSection(page, 'Builds');
-    const hasBuildCards = await page.getByRole('button', { name: 'Edit' }).count();
-    const hasBuildEmpty = await page.getByText('No builds yet').count();
+    const buildsNavWorked = await selectSection(page, 'Builds');
+    const buildsSection = buildsNavWorked ? await waitForSectionVisible(page, 'Builds') : null;
+    const buildEditButtons = buildsSection?.getByRole('button', { name: 'Edit' });
+    const buildsEmptyState = buildsSection?.getByText('No builds yet').first();
+
+    await Promise.race([
+      buildEditButtons?.first().waitFor({ state: 'visible', timeout: 15000 }) || Promise.reject(new Error('Missing builds edit locator')),
+      buildsEmptyState?.waitFor({ state: 'visible', timeout: 15000 }) || Promise.reject(new Error('Missing builds empty locator'))
+    ]).catch(() => undefined);
+
+    const hasBuildCards = buildEditButtons ? await buildEditButtons.count() : 0;
+    const hasBuildEmpty = buildsEmptyState ? await buildsEmptyState.isVisible().catch(() => false) : false;
     recordFlow('builds list loads', {
-      passed: hasBuildCards > 0 || hasBuildEmpty > 0,
-      details: { edit_buttons: hasBuildCards, empty_state: hasBuildEmpty > 0 },
-      reason: hasBuildCards > 0 || hasBuildEmpty > 0 ? undefined : 'Neither build cards nor empty state rendered.'
+      passed: buildsNavWorked && (hasBuildCards > 0 || hasBuildEmpty),
+      details: {
+        navigation_works: buildsNavWorked,
+        edit_buttons: hasBuildCards,
+        empty_state: hasBuildEmpty
+      },
+      reason: buildsNavWorked && (hasBuildCards > 0 || hasBuildEmpty)
+        ? undefined
+        : 'Neither build tiles nor empty state rendered after navigation.'
     });
 
     await page.getByRole('button', { name: 'Create build' }).click();
@@ -850,14 +926,27 @@ async function verifyRuntimeUi() {
       });
     }
 
-    await selectSection(page, 'Activity');
-    const hasActivityList = await page.locator('section').filter({ hasText: 'Activity' }).locator('div.rounded-lg').count();
-    const hasActivityEmpty = await page.getByText('No activity yet').count();
-    const activityPassed = hasActivityList > 0 || hasActivityEmpty > 0;
+    const activityNavWorked = await selectSection(page, 'Activity');
+    const activitySection = activityNavWorked ? await waitForSectionVisible(page, 'Activity') : null;
+    const activityListContainer = activitySection?.locator('div[class*="h-[500px]"]').first();
+    const activityEmptyState = activitySection?.getByText('No activity yet').first();
+
+    await Promise.race([
+      activityListContainer?.waitFor({ state: 'visible', timeout: 15000 }) || Promise.reject(new Error('Missing activity list locator')),
+      activityEmptyState?.waitFor({ state: 'visible', timeout: 15000 }) || Promise.reject(new Error('Missing activity empty locator'))
+    ]).catch(() => undefined);
+
+    const hasActivityList = activityListContainer ? await activityListContainer.isVisible().catch(() => false) : false;
+    const hasActivityEmpty = activityEmptyState ? await activityEmptyState.isVisible().catch(() => false) : false;
+    const activityPassed = activityNavWorked && (hasActivityList || hasActivityEmpty);
 
     recordFlow('activity feed loads', {
       passed: activityPassed,
-      details: { activity_items: hasActivityList, empty_state: hasActivityEmpty > 0 },
+      details: {
+        navigation_works: activityNavWorked,
+        activity_list_visible: hasActivityList,
+        empty_state: hasActivityEmpty
+      },
       reason: activityPassed ? undefined : 'Activity section did not render list or empty state.'
     });
 
@@ -921,7 +1010,7 @@ async function verifyRuntimeUi() {
         });
       });
 
-      await emptyContext.route('**/api/admin/products', async (route) => {
+      await emptyContext.route('**/api/admin/products*', async (route) => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -929,7 +1018,7 @@ async function verifyRuntimeUi() {
         });
       });
 
-      await emptyContext.route('**/api/admin/builds', async (route) => {
+      await emptyContext.route('**/api/admin/builds*', async (route) => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -937,7 +1026,7 @@ async function verifyRuntimeUi() {
         });
       });
 
-      await emptyContext.route('**/api/admin/build-components', async (route) => {
+      await emptyContext.route('**/api/admin/build-components*', async (route) => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -945,7 +1034,7 @@ async function verifyRuntimeUi() {
         });
       });
 
-      await emptyContext.route('**/api/admin/users?*', async (route) => {
+      await emptyContext.route('**/api/admin/users*', async (route) => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -961,7 +1050,7 @@ async function verifyRuntimeUi() {
         });
       });
 
-      await emptyContext.route('**/api/admin/activity?*', async (route) => {
+      await emptyContext.route('**/api/admin/activity*', async (route) => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -971,13 +1060,26 @@ async function verifyRuntimeUi() {
 
       const emptyPage = await emptyContext.newPage();
       await emptyPage.goto(`${FRONTEND_BASE}/admin`, { waitUntil: 'networkidle' });
-      const dashboardEmptyVisible = await emptyPage.getByText('No activity yet').first().isVisible().catch(() => false);
+      const dashboardSection = await waitForSectionVisible(emptyPage, 'Dashboard');
+      const dashboardEmptyVisible = await dashboardSection.getByText('No activity yet').first().isVisible().catch(() => false);
+
       await selectSection(emptyPage, 'Products');
-      const productsEmptyVisible = await emptyPage.getByText('No products yet').first().isVisible().catch(() => false);
+      const emptyProductsSection = await waitForSectionVisible(emptyPage, 'Products');
+      const productsEmpty = emptyProductsSection.getByText('No products yet').first();
+      await productsEmpty.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+      const productsEmptyVisible = await productsEmpty.isVisible().catch(() => false);
+
       await selectSection(emptyPage, 'Builds');
-      const buildsEmptyVisible = await emptyPage.getByText('No builds yet').first().isVisible().catch(() => false);
+      const emptyBuildsSection = await waitForSectionVisible(emptyPage, 'Builds');
+      const buildsEmpty = emptyBuildsSection.getByText('No builds yet').first();
+      await buildsEmpty.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+      const buildsEmptyVisible = await buildsEmpty.isVisible().catch(() => false);
+
       await selectSection(emptyPage, 'Users');
-      const usersEmptyVisible = await emptyPage.getByText('No registered users').first().isVisible().catch(() => false);
+      const emptyUsersSection = await waitForSectionVisible(emptyPage, 'Users');
+      const usersEmpty = emptyUsersSection.getByText('No registered users').first();
+      await usersEmpty.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+      const usersEmptyVisible = await usersEmpty.isVisible().catch(() => false);
 
       const emptyStatesPassed = dashboardEmptyVisible && productsEmptyVisible && buildsEmptyVisible && usersEmptyVisible;
       recordFlow('empty states render properly', {
@@ -1073,16 +1175,17 @@ async function verifyResponsive() {
       });
 
       const navWorks = await selectSection(page, 'Products');
+      const productsSection = navWorks ? await waitForSectionVisible(page, 'Products').catch(() => null) : null;
       let panelFits = false;
       let touchFriendly = false;
       let primaryActionVisible = false;
 
-      if (navWorks) {
-        const uploadButton = page.getByRole('button', { name: 'Upload new product' }).first();
+      if (navWorks && productsSection) {
+        const uploadButton = productsSection.getByRole('button', { name: /Upload new product|Upload product/ }).first();
         primaryActionVisible = await uploadButton.isVisible().catch(() => false);
         if (primaryActionVisible) {
           await uploadButton.click();
-          const panel = page.locator('[role="dialog"]').first();
+          const panel = page.getByRole('dialog').filter({ hasText: /Upload product|Edit product/i }).first();
           await panel.waitFor({ state: 'visible', timeout: 15000 });
           const box = await panel.boundingBox();
           panelFits = Boolean(box && box.width <= size.width + 4 && box.height <= size.height + 16);
