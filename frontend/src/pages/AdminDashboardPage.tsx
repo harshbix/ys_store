@@ -1,15 +1,62 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { getAdminProductById } from '../api/admin';
+import { getAdminProductById, getAdminUsersSummary } from '../api/admin';
+import { SEO } from '../components/seo/SEO';
 import { Button } from '../components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/Input';
+import { Textarea } from '../components/ui/Textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '../components/ui/Select';
+import { Skeleton } from '../components/ui/Skeleton';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle
+} from '../components/ui/sheet';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle
+} from '../components/ui/Drawer';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '../components/ui/dialog';
+import { ScrollArea } from '../components/ui/scroll-area';
+import { Switch } from '../components/ui/switch';
 import { useAdmin } from '../hooks/useAdmin';
 import { useShowToast } from '../hooks/useToast';
 import { formatTzs } from '../lib/currency';
+import { cn } from '../lib/utils';
 import { queryKeys } from '../lib/queryKeys';
-import type { AdminFinalizeUploadPayload, AdminProductPayload, AdminProductSpecInput, AdminSignedUploadPayload } from '../types/admin';
-import type { ProductCondition, ProductType } from '../types/api';
+import type {
+  AdminBuild,
+  AdminBuildPayload,
+  AdminFinalizeUploadPayload,
+  AdminProductPayload,
+  AdminSignedUploadPayload,
+  AdminUsersSummaryPayload
+} from '../types/admin';
+import type { ProductCondition, ProductType, StockStatus } from '../types/api';
 import { toUserMessage } from '../utils/errors';
+
+type AdminSectionKey = 'dashboard' | 'products' | 'builds' | 'users' | 'activity' | 'settings';
 
 type SimpleCategory = 'gaming_pc' | 'laptop' | 'desktop' | 'accessories';
 type SimpleCondition = 'new' | 'used' | 'refurbished';
@@ -20,13 +67,39 @@ interface LocalPhoto {
   previewUrl: string;
 }
 
-interface ProductPostForm {
+interface ProductFormState {
   title: string;
-  price: string;
   category: SimpleCategory;
   condition: SimpleCondition;
+  listPrice: string;
+  salePrice: string;
+  stockStatus: StockStatus;
+  featured: boolean;
+  visible: boolean;
   keyInfo: string;
   description: string;
+}
+
+interface BuildItemDraft {
+  id: string;
+  slot_order: number;
+  component_type: string;
+  component_id: string;
+  quantity: number;
+}
+
+interface BuildFormState {
+  id: string;
+  name: string;
+  cpu_family: string;
+  build_number: string;
+  discount_percent: string;
+  status: string;
+  visible: boolean;
+  estimated_system_wattage: string;
+  required_psu_wattage: string;
+  compatibility_status: string;
+  items: BuildItemDraft[];
 }
 
 interface UploadProgressState {
@@ -41,51 +114,57 @@ interface ImageDimensions {
   height: number;
 }
 
-const defaultForm: ProductPostForm = {
+const sections: Array<{ key: AdminSectionKey; label: string; description: string }> = [
+  { key: 'dashboard', label: 'Dashboard', description: 'Business overview' },
+  { key: 'products', label: 'Products', description: 'Upload and manage catalog' },
+  { key: 'builds', label: 'Builds', description: 'Preset PC build management' },
+  { key: 'users', label: 'Users', description: 'Registered customer snapshots' },
+  { key: 'activity', label: 'Activity', description: 'Recent storefront intent' },
+  { key: 'settings', label: 'Settings', description: 'Storefront and admin controls' }
+];
+
+const defaultProductForm: ProductFormState = {
   title: '',
-  price: '',
   category: 'gaming_pc',
   condition: 'new',
+  listPrice: '',
+  salePrice: '',
+  stockStatus: 'in_stock',
+  featured: false,
+  visible: true,
   keyInfo: '',
   description: ''
 };
 
-const keyInfoSuggestions: Array<{ needle: string; suggestion: string }> = [
-  { needle: 'i7', suggestion: 'Intel Core i7' },
-  { needle: 'i5', suggestion: 'Intel Core i5' },
-  { needle: 'i9', suggestion: 'Intel Core i9' },
-  { needle: 'ryzen 5', suggestion: 'AMD Ryzen 5' },
-  { needle: 'ryzen 7', suggestion: 'AMD Ryzen 7' },
-  { needle: 'rtx 3060', suggestion: 'NVIDIA RTX 3060' },
-  { needle: 'rtx 4060', suggestion: 'NVIDIA RTX 4060' }
-];
+const defaultBuildForm: BuildFormState = {
+  id: '',
+  name: '',
+  cpu_family: '',
+  build_number: '',
+  discount_percent: '0',
+  status: 'draft',
+  visible: true,
+  estimated_system_wattage: '',
+  required_psu_wattage: '',
+  compatibility_status: 'unknown',
+  items: [{ id: cryptoRandomId(), slot_order: 0, component_type: 'cpu', component_id: '', quantity: 1 }]
+};
 
-function createLocalId() {
+function cryptoRandomId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID();
   }
   return `local-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
 function parsePrice(value: string): number {
-  const onlyDigits = value.replace(/\D/g, '');
-  return onlyDigits ? Number.parseInt(onlyDigits, 10) : 0;
+  const digits = value.replace(/\D/g, '');
+  return digits ? Number.parseInt(digits, 10) : 0;
 }
 
-function formatPricePreview(value: string): string {
+function formatPriceInput(value: string): string {
   const parsed = parsePrice(value);
-  if (!parsed) return '';
-  return parsed.toLocaleString('en-US');
+  return parsed ? parsed.toLocaleString('en-US') : '';
 }
 
 function mapCategoryToProductType(category: SimpleCategory): ProductType {
@@ -111,6 +190,16 @@ function mapConditionFromApi(condition: ProductCondition): SimpleCondition {
   return condition === 'new' ? 'new' : 'used';
 }
 
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 function resolveImageContentType(file: File): string {
   if (file.type?.startsWith('image/')) return file.type;
 
@@ -134,6 +223,7 @@ function resolveImageContentType(file: File): string {
 
 async function readImageDimensions(file: File): Promise<ImageDimensions | null> {
   let objectUrl: string | null = null;
+
   try {
     objectUrl = URL.createObjectURL(file);
     const localUrl = objectUrl;
@@ -154,40 +244,6 @@ async function readImageDimensions(file: File): Promise<ImageDimensions | null> 
   }
 }
 
-function buildSpecsFromKeyInfo(keyInfo: string): AdminProductSpecInput[] {
-  // Backend validates spec keys against seeded definitions; keep key info in descriptions only.
-  void keyInfo;
-  return [];
-}
-
-function buildPayload(form: ProductPostForm, existingId?: string): AdminProductPayload {
-  const title = form.title.trim();
-  const slugBase = slugify(title) || slugify(`product-${Date.now()}`);
-  const skuSeed = existingId ? existingId.slice(0, 6).toUpperCase() : Date.now().toString().slice(-6);
-
-  const longDescription = form.description.trim();
-  const shortDescription = form.keyInfo.trim();
-
-  return {
-    sku: `YS-${skuSeed}`,
-    slug: slugBase,
-    title,
-    product_type: mapCategoryToProductType(form.category),
-    brand: 'Unknown',
-    model_name: title,
-    condition: mapConditionToApi(form.condition),
-    stock_status: 'in_stock',
-    estimated_price_tzs: parsePrice(form.price),
-    short_description: shortDescription || undefined,
-    long_description: longDescription || undefined,
-    warranty_text: null,
-    is_visible: true,
-    is_featured: false,
-    featured_tag: null,
-    specs: buildSpecsFromKeyInfo(form.keyInfo)
-  };
-}
-
 async function uploadToSignedUrl(url: string, file: File, onProgress?: (percent: number) => void) {
   await new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -197,7 +253,7 @@ async function uploadToSignedUrl(url: string, file: File, onProgress?: (percent:
     xhr.upload.onprogress = (event) => {
       if (!event.lengthComputable) return;
       const percent = Math.round((event.loaded / event.total) * 100);
-      onProgress?.(Math.min(100, Math.max(0, percent)));
+      onProgress?.(Math.max(0, Math.min(100, percent)));
     };
 
     xhr.onerror = () => reject(new Error('Upload request failed'));
@@ -229,44 +285,194 @@ async function uploadToSignedUrlWithRetry(url: string, file: File, onProgress?: 
   }
 }
 
-function getMatchedSuggestions(value: string): string[] {
-  const normalized = value.toLowerCase();
-  if (!normalized.trim()) return [];
+function formatTimestamp(value: string): string {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleString();
+}
 
-  return keyInfoSuggestions
-    .filter((entry) => normalized.includes(entry.needle))
-    .map((entry) => entry.suggestion)
-    .filter((suggestion, index, arr) => arr.indexOf(suggestion) === index);
+function formatRelativeTime(value: string): string {
+  if (!value) return 'Unknown';
+
+  const diffMs = Date.now() - new Date(value).getTime();
+  if (Number.isNaN(diffMs)) return 'Unknown';
+
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (diffMs < minute) return 'just now';
+  if (diffMs < hour) return `${Math.floor(diffMs / minute)}m ago`;
+  if (diffMs < day) return `${Math.floor(diffMs / hour)}h ago`;
+  return `${Math.floor(diffMs / day)}d ago`;
+}
+
+function useDebouncedValue<T>(value: T, delayMs = 250): T {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebounced(value);
+    }, delayMs);
+
+    return () => window.clearTimeout(timer);
+  }, [value, delayMs]);
+
+  return debounced;
+}
+
+function useIsNarrowScreen(maxWidth = 900) {
+  const [isNarrow, setIsNarrow] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= maxWidth;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const onResize = () => setIsNarrow(window.innerWidth <= maxWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [maxWidth]);
+
+  return isNarrow;
+}
+
+function SectionHeader({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h2 className="text-xl font-semibold tracking-tight text-foreground">{title}</h2>
+        <p className="mt-1 text-sm text-secondary">{description}</p>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function EmptyState({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) {
+  return (
+    <Card className="border-dashed bg-surface/70">
+      <CardContent className="flex flex-col items-start gap-3 p-6">
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        <p className="text-sm text-secondary">{description}</p>
+        {action}
+      </CardContent>
+    </Card>
+  );
+}
+
+function StatCard({ label, value, helper }: { label: string; value: string; helper?: string }) {
+  return (
+    <Card className="border-border/80 bg-surface/90 shadow-sm">
+      <CardContent className="space-y-2 p-5">
+        <p className="text-xs font-medium uppercase tracking-[0.12em] text-secondary">{label}</p>
+        <p className="text-3xl font-semibold tracking-tight text-foreground">{value}</p>
+        {helper ? <p className="text-xs text-muted">{helper}</p> : null}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function AdminDashboardPage() {
   const queryClient = useQueryClient();
   const showToast = useShowToast();
+  const isNarrowScreen = useIsNarrowScreen();
+
   const {
     admin,
     token,
+    dashboardSummaryQuery,
+    activityQuery,
     productsQuery,
+    buildsQuery,
+    buildComponentsQuery,
     createProductMutation,
     updateProductMutation,
     archiveProductMutation,
     createUploadUrlMutation,
     finalizeUploadMutation,
+    createBuildMutation,
+    updateBuildMutation,
+    deleteBuildMutation,
     logout
   } = useAdmin();
 
-  const products = productsQuery.data || [];
+  const [activeSection, setActiveSection] = useState<AdminSectionKey>('dashboard');
 
-  const [form, setForm] = useState<ProductPostForm>(defaultForm);
-  const [photos, setPhotos] = useState<LocalPhoto[]>([]);
+  const [productSearch, setProductSearch] = useState('');
+  const [usersSearch, setUsersSearch] = useState('');
+  const debouncedUsersSearch = useDebouncedValue(usersSearch, 250);
+
+  const [isProductPanelOpen, setIsProductPanelOpen] = useState(false);
+  const [isBuildPanelOpen, setIsBuildPanelOpen] = useState(false);
+
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
-  const [isDropzoneActive, setIsDropzoneActive] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingEdit, setIsLoadingEdit] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(null);
-  const [cardImages, setCardImages] = useState<Record<string, string>>({});
+  const [editingBuildId, setEditingBuildId] = useState<string | null>(null);
 
-  const activeProducts = useMemo(() => products.filter((product) => product.is_visible), [products]);
-  const matchedSuggestions = useMemo(() => getMatchedSuggestions(form.keyInfo), [form.keyInfo]);
+  const [productForm, setProductForm] = useState<ProductFormState>(defaultProductForm);
+  const [buildForm, setBuildForm] = useState<BuildFormState>(defaultBuildForm);
+
+  const [photos, setPhotos] = useState<LocalPhoto[]>([]);
+  const [isDropzoneActive, setIsDropzoneActive] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(null);
+
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [buildToDelete, setBuildToDelete] = useState<string | null>(null);
+
+  const usersQuery = useQuery<AdminUsersSummaryPayload>({
+    queryKey: queryKeys.admin.users(debouncedUsersSearch),
+    queryFn: () => getAdminUsersSummary(token || '', { q: debouncedUsersSearch || undefined, limit: 40 }),
+    enabled: Boolean(token),
+    staleTime: 30_000,
+    retry: 1
+  });
+
+  const products = productsQuery.data || [];
+  const builds = buildsQuery.data || [];
+  const buildComponents = buildComponentsQuery.data || [];
+  const dashboard = dashboardSummaryQuery.data;
+
+  const componentById = useMemo(
+    () => new Map(buildComponents.map((component) => [component.id, component])),
+    [buildComponents]
+  );
+
+  const filteredProducts = useMemo(() => {
+    const q = productSearch.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter((product) => {
+      const title = product.title.toLowerCase();
+      const sku = product.sku.toLowerCase();
+      return title.includes(q) || sku.includes(q);
+    });
+  }, [productSearch, products]);
+
+  const filteredBuilds = useMemo(() => {
+    return builds.filter((preset) => Boolean(preset));
+  }, [builds]);
+
+  const featuredProducts = useMemo(() => {
+    return products.filter((product) => product.is_featured).slice(0, 8);
+  }, [products]);
+
+  const buildDraftSubtotal = useMemo(() => {
+    return buildForm.items.reduce((sum, item) => {
+      const component = componentById.get(item.component_id);
+      return sum + (component?.price_tzs || 0) * Math.max(1, Number(item.quantity || 1));
+    }, 0);
+  }, [buildForm.items, componentById]);
+
+  const buildDraftDiscount = useMemo(() => {
+    const raw = Number(buildForm.discount_percent || 0);
+    if (!Number.isFinite(raw)) return 0;
+    return Math.min(99.99, Math.max(0, raw));
+  }, [buildForm.discount_percent]);
+
+  const buildDraftTotal = useMemo(() => {
+    return Math.max(0, Math.round(buildDraftSubtotal - (buildDraftSubtotal * buildDraftDiscount) / 100));
+  }, [buildDraftDiscount, buildDraftSubtotal]);
 
   useEffect(() => {
     return () => {
@@ -274,35 +480,34 @@ export default function AdminDashboardPage() {
     };
   }, [photos]);
 
-  useEffect(() => {
-    if (products.length === 0) return;
+  function resetProductForm() {
+    photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
+    setPhotos([]);
+    setUploadProgress(null);
+    setEditingProductId(null);
+    setProductForm(defaultProductForm);
+  }
 
-    const nextEntries = products
-      .filter((product) => product.is_visible)
-      .map((product) => {
-        const media = Array.isArray(product.media) ? product.media : [];
-        const primary = media.find((item) => item.is_primary) || media[0];
-        const url = primary?.thumb_url || primary?.full_url || primary?.original_url || null;
-        return url ? [product.id, url] : null;
-      })
-      .filter(Boolean) as Array<[string, string]>;
+  function resetBuildForm() {
+    setEditingBuildId(null);
+    setBuildForm(defaultBuildForm);
+  }
 
-    if (nextEntries.length === 0) return;
+  function openCreateProductPanel() {
+    resetProductForm();
+    setIsProductPanelOpen(true);
+  }
 
-    setCardImages((previous) => {
-      const next = { ...previous };
-      for (const [productId, url] of nextEntries) {
-        next[productId] = url;
-      }
-      return next;
-    });
-  }, [products]);
+  function openCreateBuildPanel() {
+    resetBuildForm();
+    setIsBuildPanelOpen(true);
+  }
 
-  const updateForm = <K extends keyof ProductPostForm>(key: K, value: ProductPostForm[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
+  function updateProductField<K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) {
+    setProductForm((prev) => ({ ...prev, [key]: value }));
+  }
 
-  const addPhotos = (files: File[]) => {
+  function addPhotos(files: File[]) {
     const accepted: LocalPhoto[] = [];
 
     for (const file of files) {
@@ -318,7 +523,7 @@ export default function AdminDashboardPage() {
       }
 
       accepted.push({
-        id: createLocalId(),
+        id: cryptoRandomId(),
         file,
         previewUrl: URL.createObjectURL(file)
       });
@@ -327,35 +532,34 @@ export default function AdminDashboardPage() {
     if (accepted.length > 0) {
       setPhotos((prev) => [...prev, ...accepted]);
     }
-  };
+  }
 
-  const handlePhotoInput = (event: ChangeEvent<HTMLInputElement>) => {
+  function handlePhotoInput(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files || []);
     event.target.value = '';
     addPhotos(files);
-  };
+  }
 
-  const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
+  function handleDrop(event: DragEvent<HTMLLabelElement>) {
     event.preventDefault();
     setIsDropzoneActive(false);
     const files = Array.from(event.dataTransfer.files || []);
     addPhotos(files);
-  };
+  }
 
-  const removePhoto = (id: string) => {
+  function removePhoto(id: string) {
     setPhotos((prev) => {
       const target = prev.find((photo) => photo.id === id);
-      if (target) {
-        URL.revokeObjectURL(target.previewUrl);
-      }
+      if (target) URL.revokeObjectURL(target.previewUrl);
       return prev.filter((photo) => photo.id !== id);
     });
-  };
+  }
 
-  const movePhoto = (id: string, direction: 'left' | 'right') => {
+  function movePhoto(id: string, direction: 'left' | 'right') {
     setPhotos((prev) => {
       const index = prev.findIndex((photo) => photo.id === id);
       if (index < 0) return prev;
+
       const nextIndex = direction === 'left' ? index - 1 : index + 1;
       if (nextIndex < 0 || nextIndex >= prev.length) return prev;
 
@@ -364,9 +568,9 @@ export default function AdminDashboardPage() {
       copy.splice(nextIndex, 0, item);
       return copy;
     });
-  };
+  }
 
-  const uploadPhotosForProduct = async (productId: string, title: string) => {
+  async function uploadPhotosForProduct(productId: string, title: string) {
     if (!photos.length) return;
 
     let completedCount = 0;
@@ -432,32 +636,87 @@ export default function AdminDashboardPage() {
       completedCount += 1;
       setUploadProgress({ current: completedCount, total: photos.length, percent: 100, fileName: file.name });
     }
-  };
+  }
 
-  const resetForm = () => {
-    photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
-    setPhotos([]);
-    setForm(defaultForm);
-    setEditingProductId(null);
-    setUploadProgress(null);
-  };
+  async function handleEditProduct(productId: string) {
+    if (!token) return;
 
-  const handlePostProduct = async (event: FormEvent<HTMLFormElement>) => {
+    try {
+      const detail = await getAdminProductById(productId, token);
+      const shortDescription = detail.short_description || '';
+      const listPriceMatch = shortDescription.match(/List price\s*:?\s*([0-9]+)/i);
+
+      setEditingProductId(productId);
+      setProductForm({
+        title: detail.title,
+        category: mapProductTypeToCategory(detail.product_type, detail.title),
+        condition: mapConditionFromApi(detail.condition),
+        listPrice: String(listPriceMatch ? Number.parseInt(listPriceMatch[1], 10) : detail.estimated_price_tzs),
+        salePrice: '',
+        stockStatus: detail.stock_status,
+        featured: detail.is_featured,
+        visible: detail.is_visible,
+        keyInfo: shortDescription.replace(/List price.*$/i, '').trim(),
+        description: detail.long_description || ''
+      });
+
+      photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
+      setPhotos([]);
+      setUploadProgress(null);
+      setIsProductPanelOpen(true);
+      setActiveSection('products');
+    } catch (error) {
+      showToast({
+        title: 'Could not load product',
+        description: toUserMessage(error, 'Please try again.'),
+        variant: 'error'
+      });
+    }
+  }
+
+  async function handleSubmitProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!form.title.trim()) {
-      showToast({ title: 'Please enter product name', variant: 'error' });
+    const title = productForm.title.trim();
+    const listPrice = parsePrice(productForm.listPrice);
+    const salePrice = parsePrice(productForm.salePrice);
+
+    if (!title) {
+      showToast({ title: 'Product title is required', variant: 'error' });
       return;
     }
 
-    if (parsePrice(form.price) <= 0) {
-      showToast({ title: 'Please enter price', variant: 'error' });
+    if (listPrice <= 0) {
+      showToast({ title: 'List price is required', variant: 'error' });
       return;
     }
 
-    setIsSubmitting(true);
+    const effectivePrice = salePrice > 0 && salePrice < listPrice ? salePrice : listPrice;
+    const shortParts = [productForm.keyInfo.trim()];
+    if (salePrice > 0 && salePrice < listPrice) {
+      shortParts.push(`List price ${listPrice} TZS`);
+    }
+
+    const payload: AdminProductPayload = {
+      sku: `YS-${Date.now().toString().slice(-6)}`,
+      slug: slugify(title) || `product-${Date.now()}`,
+      title,
+      product_type: mapCategoryToProductType(productForm.category),
+      brand: 'Unknown',
+      model_name: title,
+      condition: mapConditionToApi(productForm.condition),
+      stock_status: productForm.stockStatus,
+      estimated_price_tzs: effectivePrice,
+      short_description: shortParts.filter(Boolean).join(' • ') || undefined,
+      long_description: productForm.description.trim() || undefined,
+      warranty_text: null,
+      is_visible: productForm.visible,
+      is_featured: productForm.featured,
+      featured_tag: productForm.featured ? (salePrice > 0 && salePrice < listPrice ? 'hot_deal' : 'recommended') : null,
+      specs: []
+    };
+
     try {
-      const payload = buildPayload(form, editingProductId || undefined);
       let productId = editingProductId;
 
       if (editingProductId) {
@@ -468,327 +727,1142 @@ export default function AdminDashboardPage() {
       }
 
       if (productId && photos.length > 0) {
-        try {
-          await uploadPhotosForProduct(productId, form.title.trim());
-        } catch (uploadError) {
-          await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
-          await queryClient.invalidateQueries({ queryKey: queryKeys.products.list({ page: 1, limit: 16, sort: 'newest' }) });
-          showToast({
-            title: 'Product posted, but image upload failed',
-            description: toUserMessage(uploadError, 'You can edit this product and retry image upload.'),
-            variant: 'error'
-          });
-          setUploadProgress(null);
-          return;
-        }
+        await uploadPhotosForProduct(productId, title);
       }
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
-      if (productId) {
-        await queryClient.invalidateQueries({ queryKey: queryKeys.admin.productDetail(productId) });
-      }
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.activity(40) });
 
       showToast({
-        title: editingProductId ? 'Your product has been updated' : 'Your product has been posted',
+        title: editingProductId ? 'Product updated' : 'Product uploaded',
+        description: editingProductId
+          ? 'Your product changes were saved.'
+          : 'Your product is now available in the admin catalog.',
         variant: 'success'
       });
 
-      resetForm();
+      resetProductForm();
+      setIsProductPanelOpen(false);
     } catch (error) {
       showToast({
-        title: 'Could not post product',
-        description: toUserMessage(error, 'Please try again.'),
+        title: 'Could not save product',
+        description: toUserMessage(error, 'Please check the fields and try again.'),
         variant: 'error'
       });
     } finally {
-      setIsSubmitting(false);
+      setUploadProgress(null);
     }
-  };
+  }
 
-  const handleEditProduct = async (productId: string) => {
-    if (!token) return;
-
-    setIsLoadingEdit(true);
-    try {
-      const detail = await getAdminProductById(productId, token);
-      const product = detail;
-
-      setForm({
-        title: product.title,
-        price: String(product.estimated_price_tzs),
-        category: mapProductTypeToCategory(product.product_type, product.title),
-        condition: mapConditionFromApi(product.condition),
-        keyInfo: product.specs.find((spec) => spec.spec_key === 'highlights')?.value_text || product.short_description || '',
-        description: product.long_description || ''
-      });
-
-      photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
-      setPhotos([]);
-      setEditingProductId(productId);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (error) {
-      showToast({
-        title: 'Could not load product',
-        description: toUserMessage(error, 'Please try again.'),
-        variant: 'error'
-      });
-    } finally {
-      setIsLoadingEdit(false);
-    }
-  };
-
-  const handleDeleteProduct = async (productId: string) => {
+  async function handleDeleteProduct(productId: string) {
     try {
       await archiveProductMutation.mutateAsync(productId);
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
-      if (editingProductId === productId) {
-        resetForm();
-      }
-      showToast({ title: 'Product deleted', variant: 'success' });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+      showToast({ title: 'Product removed', description: 'The product has been hidden from the store.', variant: 'info' });
     } catch (error) {
       showToast({
         title: 'Could not delete product',
         description: toUserMessage(error, 'Please try again.'),
         variant: 'error'
       });
+    } finally {
+      setProductToDelete(null);
     }
-  };
+  }
 
-  return (
-    <div className="space-y-6 pb-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Post Products</h1>
-          <p className="mt-1 text-sm text-secondary">Signed in as {admin?.full_name || admin?.email || 'Admin'}</p>
-        </div>
+  function updateBuildField<K extends keyof BuildFormState>(key: K, value: BuildFormState[K]) {
+    setBuildForm((prev) => ({ ...prev, [key]: value }));
+  }
 
-        <div className="flex items-center gap-2">
-          <Link to="/shop" className="inline-flex min-h-11 items-center rounded-full border border-border px-5 text-sm font-semibold text-foreground">
-            View Store
-          </Link>
-          <Button type="button" onClick={() => void logout()}>
-            Sign Out
-          </Button>
-        </div>
-      </header>
+  function addBuildItem() {
+    setBuildForm((prev) => {
+      const nextSlot = prev.items.length ? Math.max(...prev.items.map((item) => item.slot_order)) + 1 : 0;
+      return {
+        ...prev,
+        items: [...prev.items, { id: cryptoRandomId(), slot_order: nextSlot, component_type: 'cpu', component_id: '', quantity: 1 }]
+      };
+    });
+  }
 
-      <section className="rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-5">
-        <form className="space-y-5" onSubmit={(event) => void handlePostProduct(event)}>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-foreground">1. Add photos of your product</p>
-            <label
-              onDragOver={(event) => {
-                event.preventDefault();
-                if (!isDropzoneActive) setIsDropzoneActive(true);
-              }}
-              onDragLeave={() => setIsDropzoneActive(false)}
-              onDrop={handleDrop}
-              className={`block cursor-pointer rounded-2xl border-2 border-dashed p-6 text-center transition ${isDropzoneActive ? 'border-primary bg-primary/10' : 'border-border bg-background'}`}
-            >
-              <p className="text-base font-semibold text-foreground">Add photos of your product</p>
-              <p className="mt-1 text-sm text-secondary">Drag and drop or click to upload</p>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handlePhotoInput}
-                disabled={isSubmitting}
-                className="sr-only"
-              />
-            </label>
+  function removeBuildItem(itemId: string) {
+    setBuildForm((prev) => ({
+      ...prev,
+      items: prev.items.filter((item) => item.id !== itemId)
+    }));
+  }
 
-            {photos.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {photos.map((photo, index) => (
-                  <div key={photo.id} className="overflow-hidden rounded-xl border border-border bg-background">
-                    <img src={photo.previewUrl} alt={`Upload ${index + 1}`} className="h-28 w-full object-cover" />
-                    <div className="grid grid-cols-3 gap-1 p-2 text-xs">
-                      <button
-                        type="button"
-                        onClick={() => movePhoto(photo.id, 'left')}
-                        className="rounded border border-border px-2 py-1 text-foreground"
-                      >
-                        Left
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => movePhoto(photo.id, 'right')}
-                        className="rounded border border-border px-2 py-1 text-foreground"
-                      >
-                        Right
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removePhoto(photo.id)}
-                        className="rounded border border-border px-2 py-1 text-danger"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
+  function updateBuildItem(itemId: string, patch: Partial<BuildItemDraft>) {
+    setBuildForm((prev) => ({
+      ...prev,
+      items: prev.items.map((item) => {
+        if (item.id !== itemId) return item;
 
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-foreground">2. What are you selling?</label>
-            <input
-              value={form.title}
-              onChange={(event) => updateForm('title', event.target.value)}
-              placeholder="Gaming PC RTX 3060"
-              className="h-12 w-full rounded-xl border border-border bg-background px-4 text-base text-foreground outline-none transition focus:border-primary"
-            />
-          </div>
+        const next = { ...item, ...patch };
+        if (patch.component_type && patch.component_type !== item.component_type) {
+          next.component_id = '';
+        }
+        return next;
+      })
+    }));
+  }
 
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-foreground">3. Price (TZS)</label>
-            <input
-              inputMode="numeric"
-              value={form.price}
-              onChange={(event) => updateForm('price', event.target.value.replace(/\D/g, ''))}
-              placeholder="850000"
-              className="h-12 w-full rounded-xl border border-border bg-background px-4 text-base text-foreground outline-none transition focus:border-primary"
-            />
-            {formatPricePreview(form.price) ? <p className="text-xs text-secondary">{formatPricePreview(form.price)} TZS</p> : null}
-          </div>
+  function openEditBuildPanel(build: AdminBuild) {
+    const mappedItems: BuildItemDraft[] = (build.pc_build_preset_items || []).map((item, index) => ({
+      id: `${item.id || index}`,
+      slot_order: item.slot_order,
+      component_type: item.component_type,
+      component_id: item.component_id,
+      quantity: item.quantity
+    }));
 
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-foreground">4. Category</label>
-            <select
-              value={form.category}
-              onChange={(event) => updateForm('category', event.target.value as SimpleCategory)}
-              className="h-12 w-full rounded-xl border border-border bg-background px-4 text-base text-foreground outline-none transition focus:border-primary"
-            >
-              <option value="gaming_pc">Gaming PC</option>
-              <option value="laptop">Laptop</option>
-              <option value="desktop">Desktop</option>
-              <option value="accessories">Accessories</option>
-            </select>
-          </div>
+    setEditingBuildId(build.id);
+    setBuildForm({
+      id: build.id,
+      name: build.name,
+      cpu_family: build.cpu_family,
+      build_number: build.build_number != null ? String(build.build_number) : '',
+      discount_percent: build.discount_percent != null ? String(build.discount_percent) : '0',
+      status: build.status || 'draft',
+      visible: build.is_visible,
+      estimated_system_wattage: build.estimated_system_wattage != null ? String(build.estimated_system_wattage) : '',
+      required_psu_wattage: build.required_psu_wattage != null ? String(build.required_psu_wattage) : '',
+      compatibility_status: build.compatibility_status || 'unknown',
+      items: mappedItems.length > 0 ? mappedItems : defaultBuildForm.items
+    });
 
-          <div className="space-y-3">
-            <p className="text-sm font-semibold text-foreground">5. Condition</p>
+    setIsBuildPanelOpen(true);
+    setActiveSection('builds');
+  }
 
-            <label className="space-y-1">
-              <span className="text-sm text-foreground">Condition</span>
-              <select
-                value={form.condition}
-                onChange={(event) => updateForm('condition', event.target.value as SimpleCondition)}
-                className="h-12 w-full rounded-xl border border-border bg-background px-4 text-base text-foreground outline-none transition focus:border-primary"
-              >
-                <option value="new">New</option>
-                <option value="used">Used</option>
-                <option value="refurbished">Refurbished</option>
-              </select>
-            </label>
+  async function handleSubmitBuild(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
-            <label className="space-y-1">
-              <span className="text-sm text-foreground">6. Key details</span>
-              <input
-                value={form.keyInfo}
-                onChange={(event) => updateForm('keyInfo', event.target.value)}
-                placeholder="Example: Core i7, 16GB RAM, 512GB SSD"
-                className="h-12 w-full rounded-xl border border-border bg-background px-4 text-base text-foreground outline-none transition focus:border-primary"
-              />
-            </label>
+    if (!buildForm.name.trim()) {
+      showToast({ title: 'Build name is required', variant: 'error' });
+      return;
+    }
 
-            {matchedSuggestions.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {matchedSuggestions.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => {
-                      if (form.keyInfo.includes(suggestion)) return;
-                      const separator = form.keyInfo.trim() ? ', ' : '';
-                      updateForm('keyInfo', `${form.keyInfo}${separator}${suggestion}`);
-                    }}
-                    className="rounded-full border border-border bg-background px-3 py-1 text-xs text-foreground"
-                  >
-                    Add {suggestion}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
+    if (!buildForm.cpu_family.trim()) {
+      showToast({ title: 'CPU family is required', variant: 'error' });
+      return;
+    }
 
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-foreground">7. Add more details (optional)</label>
-            <textarea
-              rows={4}
-              value={form.description}
-              onChange={(event) => updateForm('description', event.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base text-foreground outline-none transition focus:border-primary"
-            />
-          </div>
+    const invalidItem = buildForm.items.find((item) => !item.component_id || !item.component_type);
+    if (invalidItem) {
+      showToast({ title: 'Each build item needs a type and component', variant: 'error' });
+      return;
+    }
 
-          {uploadProgress ? (
-            <p className="text-sm text-secondary" aria-live="polite">
-              Uploading {uploadProgress.current} of {uploadProgress.total}
-              {uploadProgress.fileName ? ` (${uploadProgress.fileName})` : ''} - {uploadProgress.percent}%
-            </p>
-          ) : null}
+    const payload: AdminBuildPayload = {
+      id: buildForm.id.trim() || undefined,
+      name: buildForm.name.trim(),
+      cpu_family: buildForm.cpu_family.trim(),
+      build_number: buildForm.build_number ? Number(buildForm.build_number) : null,
+      discount_percent: Number(buildForm.discount_percent || 0),
+      status: buildForm.status || 'draft',
+      estimated_system_wattage: buildForm.estimated_system_wattage ? Number(buildForm.estimated_system_wattage) : null,
+      required_psu_wattage: buildForm.required_psu_wattage ? Number(buildForm.required_psu_wattage) : null,
+      compatibility_status: buildForm.compatibility_status || 'unknown',
+      is_visible: buildForm.visible,
+      items: buildForm.items.map((item) => ({
+        slot_order: item.slot_order,
+        component_type: item.component_type,
+        component_id: item.component_id,
+        quantity: Math.max(1, Number(item.quantity || 1))
+      }))
+    };
 
-          <div className="flex flex-wrap gap-2">
-            <Button type="submit" size="lg" loading={isSubmitting} disabled={isSubmitting || isLoadingEdit}>
-              {editingProductId ? 'Save Product' : '8. Post Product'}
-            </Button>
-            {editingProductId ? (
-              <Button type="button" variant="secondary" size="lg" onClick={resetForm}>
-                Cancel Edit
-              </Button>
-            ) : null}
-          </div>
-        </form>
-      </section>
+    try {
+      if (editingBuildId) {
+        await updateBuildMutation.mutateAsync({ buildId: editingBuildId, payload });
+      } else {
+        await createBuildMutation.mutateAsync(payload);
+      }
 
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold text-foreground">Your products</h2>
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.builds });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.activity(40) });
 
-        {productsQuery.isLoading ? <p className="text-sm text-secondary">Loading products...</p> : null}
-        {productsQuery.isError ? <p className="text-sm text-danger">Could not load products.</p> : null}
-        {!productsQuery.isLoading && activeProducts.length === 0 ? (
-          <p className="text-sm text-secondary">No products yet.</p>
-        ) : null}
+      resetBuildForm();
+      setIsBuildPanelOpen(false);
+    } catch {
+      // Toasts already emitted in hook-level mutation handlers.
+    }
+  }
 
-        {activeProducts.length > 0 ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {activeProducts.map((product) => (
-              <article key={product.id} className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
-                <div className="h-40 w-full bg-background">
-                  {cardImages[product.id] ? (
-                    <img
-                      src={cardImages[product.id]}
-                      alt={product.title}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                      onError={(event) => {
-                        event.currentTarget.src = '/placeholders/desktop.svg';
-                      }}
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-muted">No image</div>
-                  )}
+  async function handleDeleteBuild(buildId: string) {
+    try {
+      await deleteBuildMutation.mutateAsync(buildId);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.builds });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.activity(40) });
+    } catch {
+      // Toasts already emitted in hook-level mutation handlers.
+    } finally {
+      setBuildToDelete(null);
+    }
+  }
+
+  const productFormBody = (
+    <form className="space-y-5" onSubmit={(event) => void handleSubmitProduct(event)}>
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-foreground">Photos</p>
+        <label
+          onDragOver={(event) => {
+            event.preventDefault();
+            if (!isDropzoneActive) setIsDropzoneActive(true);
+          }}
+          onDragLeave={() => setIsDropzoneActive(false)}
+          onDrop={handleDrop}
+          className={cn(
+            'block cursor-pointer rounded-xl border-2 border-dashed p-5 text-center transition',
+            isDropzoneActive ? 'border-primary bg-primary/10' : 'border-border bg-background'
+          )}
+        >
+          <p className="text-sm font-semibold text-foreground">Drag files here or tap to upload</p>
+          <p className="mt-1 text-xs text-secondary">PNG, JPG, WEBP up to 8MB each</p>
+          <input type="file" accept="image/*" multiple onChange={handlePhotoInput} className="sr-only" />
+        </label>
+
+        {photos.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {photos.map((photo, index) => (
+              <div key={photo.id} className="overflow-hidden rounded-lg border border-border bg-background">
+                <img src={photo.previewUrl} alt={`Upload ${index + 1}`} className="h-24 w-full object-cover" />
+                <div className="grid grid-cols-3 gap-1 p-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => movePhoto(photo.id, 'left')}>Left</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => movePhoto(photo.id, 'right')}>Right</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => removePhoto(photo.id)}>Remove</Button>
                 </div>
-
-                <div className="space-y-2 p-3">
-                  <p className="text-sm font-semibold text-foreground">{product.title}</p>
-                  <p className="text-sm text-secondary">{formatTzs(product.estimated_price_tzs)}</p>
-                  <div className="flex gap-2">
-                    <Button type="button" variant="secondary" size="sm" onClick={() => void handleEditProduct(product.id)} disabled={isSubmitting || isLoadingEdit}>
-                      Edit
-                    </Button>
-                    <Button type="button" variant="secondary" size="sm" onClick={() => void handleDeleteProduct(product.id)} disabled={isSubmitting}>
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </article>
+              </div>
             ))}
           </div>
         ) : null}
-      </section>
-    </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2 sm:col-span-2">
+          <label className="text-sm font-medium text-foreground">Product title</label>
+          <Input
+            value={productForm.title}
+            onChange={(event) => updateProductField('title', event.target.value)}
+            placeholder="Gaming PC RTX 4060"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Category</label>
+          <Select value={productForm.category} onValueChange={(value) => updateProductField('category', value as SimpleCategory)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="gaming_pc">Gaming PC</SelectItem>
+              <SelectItem value="desktop">Desktop</SelectItem>
+              <SelectItem value="laptop">Laptop</SelectItem>
+              <SelectItem value="accessories">Accessories</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Condition</label>
+          <Select value={productForm.condition} onValueChange={(value) => updateProductField('condition', value as SimpleCondition)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Condition" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="new">New</SelectItem>
+              <SelectItem value="used">Used</SelectItem>
+              <SelectItem value="refurbished">Refurbished</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">List price (TZS)</label>
+          <Input
+            inputMode="numeric"
+            value={productForm.listPrice}
+            onChange={(event) => updateProductField('listPrice', event.target.value.replace(/\D/g, ''))}
+            placeholder="850000"
+          />
+          {formatPriceInput(productForm.listPrice) ? <p className="text-xs text-muted">{formatPriceInput(productForm.listPrice)} TZS</p> : null}
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Sale price (optional)</label>
+          <Input
+            inputMode="numeric"
+            value={productForm.salePrice}
+            onChange={(event) => updateProductField('salePrice', event.target.value.replace(/\D/g, ''))}
+            placeholder="790000"
+          />
+          {formatPriceInput(productForm.salePrice) ? <p className="text-xs text-muted">{formatPriceInput(productForm.salePrice)} TZS</p> : null}
+        </div>
+
+        <div className="space-y-2 sm:col-span-2">
+          <label className="text-sm font-medium text-foreground">Stock / availability</label>
+          <Select value={productForm.stockStatus} onValueChange={(value) => updateProductField('stockStatus', value as StockStatus)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Stock status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="in_stock">In stock</SelectItem>
+              <SelectItem value="low_stock">Low stock</SelectItem>
+              <SelectItem value="build_on_request">Build on request</SelectItem>
+              <SelectItem value="incoming_stock">Incoming stock</SelectItem>
+              <SelectItem value="sold_out">Sold out</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2 sm:col-span-2">
+          <label className="text-sm font-medium text-foreground">Highlights</label>
+          <Input
+            value={productForm.keyInfo}
+            onChange={(event) => updateProductField('keyInfo', event.target.value)}
+            placeholder="Core i7, 16GB RAM, 1TB SSD"
+          />
+        </div>
+
+        <div className="space-y-2 sm:col-span-2">
+          <label className="text-sm font-medium text-foreground">Description</label>
+          <Textarea
+            rows={5}
+            value={productForm.description}
+            onChange={(event) => updateProductField('description', event.target.value)}
+            placeholder="Describe condition, warranty, and who this machine is best for."
+          />
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-border p-3 sm:col-span-2">
+          <div>
+            <p className="text-sm font-medium text-foreground">Featured product</p>
+            <p className="text-xs text-secondary">Show this product in featured storefront sections.</p>
+          </div>
+          <Switch checked={productForm.featured} onCheckedChange={(checked) => updateProductField('featured', checked)} />
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-border p-3 sm:col-span-2">
+          <div>
+            <p className="text-sm font-medium text-foreground">Visible in storefront</p>
+            <p className="text-xs text-secondary">Hidden products stay available in admin only.</p>
+          </div>
+          <Switch checked={productForm.visible} onCheckedChange={(checked) => updateProductField('visible', checked)} />
+        </div>
+      </div>
+
+      {uploadProgress ? (
+        <p className="text-xs text-secondary" aria-live="polite">
+          Uploading {uploadProgress.current} of {uploadProgress.total}
+          {uploadProgress.fileName ? ` (${uploadProgress.fileName})` : ''} - {uploadProgress.percent}%
+        </p>
+      ) : null}
+
+      <div className="sticky bottom-0 z-10 -mx-1 border-t border-border bg-background/95 px-1 pt-3 backdrop-blur sm:static sm:border-none sm:bg-transparent sm:px-0 sm:pt-0">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="submit"
+            disabled={
+              createProductMutation.isPending
+              || updateProductMutation.isPending
+              || createUploadUrlMutation.isPending
+              || finalizeUploadMutation.isPending
+            }
+          >
+            {editingProductId ? 'Save product' : 'Upload product'}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => { resetProductForm(); setIsProductPanelOpen(false); }}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </form>
+  );
+
+  const buildFormBody = (
+    <form className="space-y-5" onSubmit={(event) => void handleSubmitBuild(event)}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2 sm:col-span-2">
+          <label className="text-sm font-medium text-foreground">Build name</label>
+          <Input value={buildForm.name} onChange={(event) => updateBuildField('name', event.target.value)} placeholder="Creator Pro Build" />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Build ID (optional)</label>
+          <Input value={buildForm.id} onChange={(event) => updateBuildField('id', event.target.value)} placeholder="creator-pro-build" disabled={Boolean(editingBuildId)} />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">CPU family</label>
+          <Input value={buildForm.cpu_family} onChange={(event) => updateBuildField('cpu_family', event.target.value)} placeholder="Intel Core i7" />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Build number</label>
+          <Input
+            inputMode="numeric"
+            value={buildForm.build_number}
+            onChange={(event) => updateBuildField('build_number', event.target.value.replace(/\D/g, ''))}
+            placeholder="12"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Discount %</label>
+          <Input
+            inputMode="decimal"
+            value={buildForm.discount_percent}
+            onChange={(event) => updateBuildField('discount_percent', event.target.value.replace(/[^\d.]/g, ''))}
+            placeholder="0"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Status</label>
+          <Select value={buildForm.status} onValueChange={(value) => updateBuildField('status', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Build status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="featured">Featured</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Estimated system wattage</label>
+          <Input
+            inputMode="numeric"
+            value={buildForm.estimated_system_wattage}
+            onChange={(event) => updateBuildField('estimated_system_wattage', event.target.value.replace(/\D/g, ''))}
+            placeholder="450"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Required PSU wattage</label>
+          <Input
+            inputMode="numeric"
+            value={buildForm.required_psu_wattage}
+            onChange={(event) => updateBuildField('required_psu_wattage', event.target.value.replace(/\D/g, ''))}
+            placeholder="650"
+          />
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-border p-3 sm:col-span-2">
+          <div>
+            <p className="text-sm font-medium text-foreground">Visible in builder</p>
+            <p className="text-xs text-secondary">Only visible builds are shown in the public preset picker.</p>
+          </div>
+          <Switch checked={buildForm.visible} onCheckedChange={(checked) => updateBuildField('visible', checked)} />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-foreground">Build components</p>
+          <Button type="button" variant="outline" size="sm" onClick={addBuildItem}>Add part</Button>
+        </div>
+
+        {buildForm.items.map((item) => {
+          const optionsForType = buildComponents.filter((component) => component.type === item.component_type);
+          return (
+            <Card key={item.id} className="bg-surface/60">
+              <CardContent className="grid gap-3 p-4 sm:grid-cols-12">
+                <div className="space-y-1 sm:col-span-2">
+                  <label className="text-xs font-medium text-secondary">Slot</label>
+                  <Input
+                    inputMode="numeric"
+                    value={String(item.slot_order)}
+                    onChange={(event) => updateBuildItem(item.id, { slot_order: Number(event.target.value.replace(/\D/g, '')) || 0 })}
+                  />
+                </div>
+
+                <div className="space-y-1 sm:col-span-3">
+                  <label className="text-xs font-medium text-secondary">Type</label>
+                  <Input
+                    value={item.component_type}
+                    onChange={(event) => updateBuildItem(item.id, { component_type: event.target.value.trim().toLowerCase() })}
+                    placeholder="cpu"
+                  />
+                </div>
+
+                <div className="space-y-1 sm:col-span-5">
+                  <label className="text-xs font-medium text-secondary">Component</label>
+                  <Select value={item.component_id || '__empty'} onValueChange={(value) => updateBuildItem(item.id, { component_id: value === '__empty' ? '' : value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose component" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__empty">Select component</SelectItem>
+                      {optionsForType.map((component) => (
+                        <SelectItem key={component.id} value={component.id}>
+                          {component.name} - {formatTzs(component.price_tzs)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1 sm:col-span-2">
+                  <label className="text-xs font-medium text-secondary">Qty</label>
+                  <Input
+                    inputMode="numeric"
+                    value={String(item.quantity)}
+                    onChange={(event) => updateBuildItem(item.id, { quantity: Math.max(1, Number(event.target.value.replace(/\D/g, '')) || 1) })}
+                  />
+                </div>
+
+                <div className="sm:col-span-12 flex items-center justify-between rounded-md border border-border px-3 py-2">
+                  <p className="text-xs text-secondary">
+                    Line total: {formatTzs((componentById.get(item.component_id)?.price_tzs || 0) * Math.max(1, item.quantity || 1))}
+                  </p>
+                  <Button type="button" variant="outline" size="sm" onClick={() => removeBuildItem(item.id)} disabled={buildForm.items.length <= 1}>
+                    Remove
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <Card className="bg-background">
+        <CardContent className="space-y-2 p-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-secondary">Subtotal</span>
+            <span className="font-medium text-foreground">{formatTzs(buildDraftSubtotal)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-secondary">Discount</span>
+            <span className="font-medium text-foreground">{buildDraftDiscount}%</span>
+          </div>
+          <div className="flex items-center justify-between border-t border-border pt-2 text-sm">
+            <span className="font-semibold text-foreground">Total build price</span>
+            <span className="text-base font-semibold text-foreground">{formatTzs(buildDraftTotal)}</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="sticky bottom-0 z-10 -mx-1 border-t border-border bg-background/95 px-1 pt-3 backdrop-blur sm:static sm:border-none sm:bg-transparent sm:px-0 sm:pt-0">
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" disabled={createBuildMutation.isPending || updateBuildMutation.isPending}>
+            {editingBuildId ? 'Save build' : 'Create build'}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => { resetBuildForm(); setIsBuildPanelOpen(false); }}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </form>
+  );
+
+  return (
+    <>
+      <SEO title="Admin Dashboard" description="YS Store Admin" noindex={true} />
+
+      <div className="mx-auto max-w-[1240px] space-y-5 px-3 pb-12 pt-4 sm:px-4 lg:px-6">
+        <header className="rounded-2xl border border-border bg-surface/90 p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-secondary">YS Store Admin</p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Commerce Control Center</h1>
+              <p className="mt-1 text-sm text-secondary">
+                Signed in as {admin?.full_name || admin?.email || 'Admin'}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Link to="/shop" className="inline-flex min-h-10 items-center rounded-md border border-border px-3 text-sm font-medium text-foreground hover:bg-secondary/60">
+                View storefront
+              </Link>
+              <Button type="button" variant="outline" onClick={() => void logout()}>
+                Sign out
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 lg:hidden">
+            <Select value={activeSection} onValueChange={(value) => setActiveSection(value as AdminSectionKey)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select section" />
+              </SelectTrigger>
+              <SelectContent>
+                {sections.map((section) => (
+                  <SelectItem key={section.key} value={section.key}>{section.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </header>
+
+        <div className="grid gap-4 lg:grid-cols-[230px,1fr] lg:items-start">
+          <aside className="hidden lg:block">
+            <Card className="sticky top-4 border-border/90 bg-surface/85">
+              <CardContent className="space-y-2 p-3">
+                {sections.map((section) => {
+                  const isActive = activeSection === section.key;
+                  return (
+                    <button
+                      key={section.key}
+                      type="button"
+                      onClick={() => setActiveSection(section.key)}
+                      className={cn(
+                        'w-full rounded-md px-3 py-2 text-left transition',
+                        isActive
+                          ? 'bg-primary/15 text-foreground'
+                          : 'text-secondary hover:bg-secondary/40 hover:text-foreground'
+                      )}
+                    >
+                      <p className="text-sm font-medium">{section.label}</p>
+                      <p className="text-xs text-muted">{section.description}</p>
+                    </button>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </aside>
+
+          <main className="space-y-6 overflow-x-hidden">
+            {activeSection === 'dashboard' ? (
+              <section className="space-y-4">
+                <SectionHeader
+                  title="Dashboard"
+                  description="Track business health, customer momentum, and catalog risk at a glance."
+                  action={
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" onClick={() => { setActiveSection('products'); openCreateProductPanel(); }}>
+                        Upload product
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => { setActiveSection('builds'); openCreateBuildPanel(); }}>
+                        Create build
+                      </Button>
+                    </div>
+                  }
+                />
+
+                {dashboardSummaryQuery.isLoading ? (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <Skeleton key={index} className="h-28 rounded-xl" />
+                    ))}
+                  </div>
+                ) : null}
+
+                {!dashboardSummaryQuery.isLoading && dashboard ? (
+                  <>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      <StatCard label="Total Registered Users" value={dashboard.stats.total_registered_users.toLocaleString()} helper="Real auth-backed count" />
+                      <StatCard label="New Users This Week" value={dashboard.stats.new_users_this_week.toLocaleString()} helper="Last 7 days" />
+                      <StatCard label="Total Products" value={dashboard.stats.total_products.toLocaleString()} />
+                      <StatCard label="Total Builds" value={dashboard.stats.total_builds.toLocaleString()} />
+                      <StatCard label="WhatsApp Checkout Clicks" value={dashboard.stats.whatsapp_checkout_clicks.toLocaleString()} />
+                      <StatCard label="Low Stock Items" value={dashboard.stats.low_stock_items.toLocaleString()} helper="Needs replenishment" />
+                    </div>
+
+                    <div className="grid gap-4 xl:grid-cols-3">
+                      <Card className="xl:col-span-2">
+                        <CardHeader>
+                          <CardTitle className="text-base">Recent activity</CardTitle>
+                          <CardDescription>Latest intent from users, quotes, and catalog changes.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {dashboard.recent_activity.length === 0 ? (
+                            <EmptyState
+                              title="No activity yet"
+                              description="As users browse, register, and click WhatsApp checkout, activity will show here."
+                            />
+                          ) : (
+                            <div className="space-y-2">
+                              {dashboard.recent_activity.slice(0, 8).map((item) => (
+                                <div key={item.id} className="flex items-start justify-between gap-3 rounded-lg border border-border/80 bg-background p-3">
+                                  <div>
+                                    <p className="text-sm font-medium text-foreground">{item.title}</p>
+                                    {item.description ? <p className="text-xs text-secondary">{item.description}</p> : null}
+                                  </div>
+                                  <p className="whitespace-nowrap text-xs text-muted">{formatRelativeTime(item.occurred_at)}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Top viewed products</CardTitle>
+                          <CardDescription>Most browsed products from recent analytics events.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {dashboard.top_viewed_products.length === 0 ? (
+                            <p className="text-sm text-secondary">No product views tracked yet.</p>
+                          ) : (
+                            dashboard.top_viewed_products.map((item) => (
+                              <div key={item.product_id} className="flex items-center justify-between rounded-lg border border-border/80 p-3">
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">{item.title}</p>
+                                  <p className="text-xs text-secondary">{formatTzs(item.estimated_price_tzs)}</p>
+                                </div>
+                                <Badge variant="secondary">{item.views} views</Badge>
+                              </div>
+                            ))
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Most selected builds</CardTitle>
+                        <CardDescription>Custom builds with the highest selection activity.</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {dashboard.top_selected_builds.length === 0 ? (
+                          <p className="text-sm text-secondary">No build selection activity yet.</p>
+                        ) : (
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {dashboard.top_selected_builds.map((item) => (
+                              <div key={item.build_id} className="rounded-lg border border-border/80 bg-background p-3">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className="text-sm font-medium text-foreground">{item.name}</p>
+                                  <Badge variant="outline">{item.selections} picks</Badge>
+                                </div>
+                                <p className="mt-1 text-xs text-secondary">{item.build_code || item.build_id}</p>
+                                <p className="mt-2 text-sm text-foreground">{formatTzs(item.total_estimated_price_tzs)}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : null}
+
+                {dashboardSummaryQuery.isError ? (
+                  <EmptyState title="Dashboard unavailable" description="We could not load dashboard metrics. Please refresh or try again shortly." />
+                ) : null}
+              </section>
+            ) : null}
+
+            {activeSection === 'products' ? (
+              <section className="space-y-4">
+                <SectionHeader
+                  title="Products"
+                  description="Upload new products, edit visibility and featured status, and keep catalog quality high."
+                  action={
+                    <Button type="button" onClick={openCreateProductPanel}>
+                      Upload new product
+                    </Button>
+                  }
+                />
+
+                <Card>
+                  <CardContent className="p-4">
+                    <Input
+                      value={productSearch}
+                      onChange={(event) => setProductSearch(event.target.value)}
+                      placeholder="Search products by title or SKU"
+                    />
+                  </CardContent>
+                </Card>
+
+                {productsQuery.isLoading ? (
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <Skeleton key={index} className="h-48 rounded-xl" />
+                    ))}
+                  </div>
+                ) : null}
+
+                {!productsQuery.isLoading && filteredProducts.length === 0 ? (
+                  <EmptyState
+                    title="No products yet"
+                    description="Start by uploading your first product with details, stock status, and images."
+                    action={<Button type="button" onClick={openCreateProductPanel}>Upload product</Button>}
+                  />
+                ) : null}
+
+                {filteredProducts.length > 0 ? (
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {filteredProducts.map((product) => {
+                      const media = Array.isArray(product.media) ? product.media : [];
+                      const primary = media.find((entry) => entry.is_primary) || media[0];
+                      const imageUrl = primary?.thumb_url || primary?.full_url || primary?.original_url || null;
+
+                      return (
+                        <Card key={product.id} className="overflow-hidden border-border/80 bg-surface/90">
+                          <div className="h-36 w-full bg-background">
+                            {imageUrl ? (
+                              <img
+                                src={imageUrl}
+                                alt={product.title}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                                onError={(event) => {
+                                  event.currentTarget.src = '/placeholders/desktop.svg';
+                                }}
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-xs text-muted">No image</div>
+                            )}
+                          </div>
+                          <CardContent className="space-y-2 p-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="line-clamp-2 text-sm font-semibold text-foreground">{product.title}</p>
+                              {product.is_featured ? <Badge>Featured</Badge> : null}
+                            </div>
+                            <p className="text-sm text-foreground">{formatTzs(product.estimated_price_tzs)}</p>
+                            <div className="flex flex-wrap gap-2">
+                              <Badge variant="secondary">{product.stock_status.replace(/_/g, ' ')}</Badge>
+                              {!product.is_visible ? <Badge variant="outline">Hidden</Badge> : null}
+                            </div>
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              <Button type="button" variant="outline" size="sm" onClick={() => void handleEditProduct(product.id)}>
+                                Edit
+                              </Button>
+                              <Button type="button" variant="outline" size="sm" onClick={() => setProductToDelete(product.id)}>
+                                Delete
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
+
+            {activeSection === 'builds' ? (
+              <section className="space-y-4">
+                <SectionHeader
+                  title="Builds"
+                  description="Manage predefined PC builds with clear component selection and pricing."
+                  action={<Button type="button" onClick={openCreateBuildPanel}>Create build</Button>}
+                />
+
+                {buildsQuery.isLoading ? (
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <Skeleton key={index} className="h-40 rounded-xl" />
+                    ))}
+                  </div>
+                ) : null}
+
+                {!buildsQuery.isLoading && filteredBuilds.length === 0 ? (
+                  <EmptyState
+                    title="No builds yet"
+                    description="Create your first preset build to guide shoppers with curated configurations."
+                    action={<Button type="button" onClick={openCreateBuildPanel}>Create build</Button>}
+                  />
+                ) : null}
+
+                {filteredBuilds.length > 0 ? (
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {filteredBuilds.map((build) => (
+                      <Card key={build.id} className="border-border/80 bg-surface/90">
+                        <CardContent className="space-y-3 p-4">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">{build.name}</p>
+                              <p className="text-xs text-secondary">{build.cpu_family}</p>
+                            </div>
+                            <Badge variant={build.status === 'featured' ? 'default' : 'secondary'}>
+                              {build.status}
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-1 text-xs text-secondary">
+                            <p>Preset ID: {build.id}</p>
+                            <p>Components: {build.pc_build_preset_items?.length || 0}</p>
+                            <p>Total: {formatTzs(build.total_tzs)}</p>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            {!build.is_visible ? <Badge variant="outline">Hidden</Badge> : <Badge variant="secondary">Visible</Badge>}
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button type="button" variant="outline" size="sm" onClick={() => openEditBuildPanel(build)}>
+                              Edit
+                            </Button>
+                            <Button type="button" variant="outline" size="sm" onClick={() => setBuildToDelete(build.id)}>
+                              Delete
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
+
+            {activeSection === 'users' ? (
+              <section className="space-y-4">
+                <SectionHeader
+                  title="Users"
+                  description="Monitor real registered users and recent signups from your authentication backend."
+                />
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <StatCard
+                    label="Total Registered Users"
+                    value={String(usersQuery.data?.total_registered_users || dashboard?.stats.total_registered_users || 0)}
+                  />
+                  <StatCard
+                    label="New Users This Week"
+                    value={String(usersQuery.data?.new_users_this_week || dashboard?.stats.new_users_this_week || 0)}
+                  />
+                </div>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <Input
+                      value={usersSearch}
+                      onChange={(event) => setUsersSearch(event.target.value)}
+                      placeholder="Search by email or phone"
+                    />
+                  </CardContent>
+                </Card>
+
+                {usersQuery.isLoading ? <Skeleton className="h-48 rounded-xl" /> : null}
+
+                {!usersQuery.isLoading && (usersQuery.data?.recent_users || []).length === 0 ? (
+                  <EmptyState title="No registered users" description="User profiles will appear here as signups happen." />
+                ) : null}
+
+                {(usersQuery.data?.recent_users || []).length > 0 ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Recent users</CardTitle>
+                      <CardDescription>Showing latest registered accounts and last activity.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {(usersQuery.data?.recent_users || []).map((user) => (
+                        <div key={user.id} className="flex flex-col gap-1 rounded-lg border border-border/80 p-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{user.full_name || user.email || user.phone || 'Unknown user'}</p>
+                            <p className="text-xs text-secondary">{user.email || user.phone || 'No contact info'}</p>
+                          </div>
+                          <div className="text-xs text-muted">
+                            <p>Joined: {formatTimestamp(user.created_at)}</p>
+                            <p>Last active: {user.last_active_at ? formatTimestamp(user.last_active_at) : 'No sign-in yet'}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                ) : null}
+              </section>
+            ) : null}
+
+            {activeSection === 'activity' ? (
+              <section className="space-y-4">
+                <SectionHeader
+                  title="Activity"
+                  description="A focused activity feed for checkout intent, registrations, and build interactions."
+                />
+
+                {activityQuery.isLoading ? <Skeleton className="h-64 rounded-xl" /> : null}
+
+                {!activityQuery.isLoading && (activityQuery.data || []).length === 0 ? (
+                  <EmptyState title="No activity yet" description="When users interact with products and checkout intents, events will appear here." />
+                ) : null}
+
+                {(activityQuery.data || []).length > 0 ? (
+                  <Card>
+                    <CardContent className="p-0">
+                      <ScrollArea className="h-[500px]">
+                        <div className="space-y-2 p-4">
+                          {(activityQuery.data || []).map((event) => (
+                            <div key={event.id} className="rounded-lg border border-border/80 bg-background p-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">{event.title}</p>
+                                  {event.description ? <p className="text-xs text-secondary">{event.description}</p> : null}
+                                </div>
+                                <p className="text-xs text-muted">{formatRelativeTime(event.occurred_at)}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                ) : null}
+              </section>
+            ) : null}
+
+            {activeSection === 'settings' ? (
+              <section className="space-y-4">
+                <SectionHeader
+                  title="Settings"
+                  description="Manage featured products, storefront highlights, and your admin account preferences."
+                />
+
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Featured products</CardTitle>
+                      <CardDescription>Highlight selected products in storefront promotional areas.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {featuredProducts.length === 0 ? (
+                        <EmptyState
+                          title="No featured products"
+                          description="Mark products as featured from the products section to populate this list."
+                          action={<Button type="button" variant="outline" onClick={() => setActiveSection('products')}>Go to products</Button>}
+                        />
+                      ) : (
+                        featuredProducts.map((product) => (
+                          <div key={product.id} className="flex items-center justify-between rounded-lg border border-border/80 p-3">
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{product.title}</p>
+                              <p className="text-xs text-secondary">{formatTzs(product.estimated_price_tzs)}</p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => void handleEditProduct(product.id)}
+                            >
+                              Edit
+                            </Button>
+                          </div>
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Admin account</CardTitle>
+                      <CardDescription>Safe account-level details for the current admin session.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm">
+                      <div className="rounded-lg border border-border/80 p-3">
+                        <p className="text-xs uppercase tracking-[0.1em] text-secondary">Name</p>
+                        <p className="mt-1 text-foreground">{admin?.full_name || 'Unknown'}</p>
+                      </div>
+                      <div className="rounded-lg border border-border/80 p-3">
+                        <p className="text-xs uppercase tracking-[0.1em] text-secondary">Email</p>
+                        <p className="mt-1 text-foreground">{admin?.email || 'Unknown'}</p>
+                      </div>
+                      <div className="rounded-lg border border-border/80 p-3">
+                        <p className="text-xs uppercase tracking-[0.1em] text-secondary">Role</p>
+                        <p className="mt-1 text-foreground">{admin?.role || 'owner'}</p>
+                      </div>
+                      <div className="pt-1">
+                        <Button type="button" variant="outline" onClick={() => void logout()}>
+                          Sign out
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </section>
+            ) : null}
+          </main>
+        </div>
+      </div>
+
+      {isNarrowScreen ? (
+        <Drawer open={isProductPanelOpen} onOpenChange={setIsProductPanelOpen}>
+          <DrawerContent className="max-h-[95vh]">
+            <DrawerHeader>
+              <DrawerTitle>{editingProductId ? 'Edit product' : 'Upload product'}</DrawerTitle>
+              <DrawerDescription>Create polished product entries with images, stock, and visibility controls.</DrawerDescription>
+            </DrawerHeader>
+            <ScrollArea className="h-[78vh] px-4 pb-4">
+              {productFormBody}
+            </ScrollArea>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Sheet open={isProductPanelOpen} onOpenChange={setIsProductPanelOpen}>
+          <SheetContent side="right" className="w-full max-w-2xl overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>{editingProductId ? 'Edit product' : 'Upload product'}</SheetTitle>
+              <SheetDescription>Create polished product entries with images, stock, and visibility controls.</SheetDescription>
+            </SheetHeader>
+            <div className="mt-4">{productFormBody}</div>
+          </SheetContent>
+        </Sheet>
+      )}
+
+      {isNarrowScreen ? (
+        <Drawer open={isBuildPanelOpen} onOpenChange={setIsBuildPanelOpen}>
+          <DrawerContent className="max-h-[95vh]">
+            <DrawerHeader>
+              <DrawerTitle>{editingBuildId ? 'Edit build' : 'Create build'}</DrawerTitle>
+              <DrawerDescription>Compose preset builds with clear components and reliable pricing.</DrawerDescription>
+            </DrawerHeader>
+            <ScrollArea className="h-[78vh] px-4 pb-4">
+              {buildFormBody}
+            </ScrollArea>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Sheet open={isBuildPanelOpen} onOpenChange={setIsBuildPanelOpen}>
+          <SheetContent side="right" className="w-full max-w-3xl overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>{editingBuildId ? 'Edit build' : 'Create build'}</SheetTitle>
+              <SheetDescription>Compose preset builds with clear components and reliable pricing.</SheetDescription>
+            </SheetHeader>
+            <div className="mt-4">{buildFormBody}</div>
+          </SheetContent>
+        </Sheet>
+      )}
+
+      <Dialog open={Boolean(productToDelete)} onOpenChange={(open) => { if (!open) setProductToDelete(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete product</DialogTitle>
+            <DialogDescription>
+              This action hides the product from the storefront. You can publish it again later.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setProductToDelete(null)}>Cancel</Button>
+            <Button
+              type="button"
+              onClick={() => { if (productToDelete) void handleDeleteProduct(productToDelete); }}
+              disabled={archiveProductMutation.isPending}
+            >
+              Confirm delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(buildToDelete)} onOpenChange={(open) => { if (!open) setBuildToDelete(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete build</DialogTitle>
+            <DialogDescription>
+              This permanently removes the preset build from admin and storefront selection.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setBuildToDelete(null)}>Cancel</Button>
+            <Button
+              type="button"
+              onClick={() => { if (buildToDelete) void handleDeleteBuild(buildToDelete); }}
+              disabled={deleteBuildMutation.isPending}
+            >
+              Confirm delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

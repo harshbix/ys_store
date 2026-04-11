@@ -1,6 +1,11 @@
 import { apiFetch } from '../lib/apiClient';
 import type { ApiEnvelope } from '../types/api';
 import type {
+  AdminActivityItem,
+  AdminBuild,
+  AdminBuildComponent,
+  AdminBuildPayload,
+  AdminDashboardSummaryPayload,
   AdminFinalizeUploadPayload,
   AdminLoginPayload,
   AdminProduct,
@@ -9,7 +14,8 @@ import type {
   AdminQuote,
   AdminSignedUploadPayload,
   AdminSignedUploadResponse,
-  AdminUser
+  AdminUser,
+  AdminUsersSummaryPayload
 } from '../types/admin';
 
 function withAdminToken(token: string): HeadersInit {
@@ -57,6 +63,84 @@ export async function getAdminMe(token: string): Promise<{ admin: AdminUser }> {
   return {
     admin: meResponse.data.admin
   };
+}
+
+export async function getAdminDashboardSummary(token: string): Promise<AdminDashboardSummaryPayload> {
+  const response = await apiFetch<ApiEnvelope<AdminDashboardSummaryPayload>>('/admin/dashboard/summary', {
+    method: 'GET',
+    headers: withAdminToken(token)
+  });
+  return response.data;
+}
+
+export async function getAdminUsersSummary(
+  token: string,
+  params: { q?: string; limit?: number } = {}
+): Promise<AdminUsersSummaryPayload> {
+  const search = new URLSearchParams();
+  if (params.q) search.set('q', params.q);
+  if (params.limit) search.set('limit', String(params.limit));
+  const endpoint = search.size ? `/admin/users?${search.toString()}` : '/admin/users';
+
+  const response = await apiFetch<ApiEnvelope<AdminUsersSummaryPayload>>(endpoint, {
+    method: 'GET',
+    headers: withAdminToken(token)
+  });
+  return response.data;
+}
+
+export async function getAdminActivity(token: string, limit = 40): Promise<AdminActivityItem[]> {
+  const response = await apiFetch<ApiEnvelope<AdminActivityItem[]>>(`/admin/activity?limit=${encodeURIComponent(String(limit))}`, {
+    method: 'GET',
+    headers: withAdminToken(token)
+  });
+  return response.data;
+}
+
+export async function getAdminBuilds(token: string): Promise<AdminBuild[]> {
+  const response = await apiFetch<ApiEnvelope<AdminBuild[]>>('/admin/builds', {
+    method: 'GET',
+    headers: withAdminToken(token)
+  });
+  return response.data;
+}
+
+export async function getAdminBuildComponents(token: string): Promise<AdminBuildComponent[]> {
+  const response = await apiFetch<ApiEnvelope<AdminBuildComponent[]>>('/admin/build-components', {
+    method: 'GET',
+    headers: withAdminToken(token)
+  });
+  return response.data;
+}
+
+export async function createAdminBuild(payload: AdminBuildPayload, token: string): Promise<AdminBuild> {
+  const response = await apiFetch<ApiEnvelope<AdminBuild>>('/admin/builds', {
+    method: 'POST',
+    headers: withAdminToken(token),
+    body: JSON.stringify(payload)
+  });
+  return response.data;
+}
+
+export async function updateAdminBuild(
+  buildId: string,
+  payload: AdminBuildPayload,
+  token: string
+): Promise<AdminBuild> {
+  const response = await apiFetch<ApiEnvelope<AdminBuild>>(`/admin/builds/${buildId}`, {
+    method: 'PATCH',
+    headers: withAdminToken(token),
+    body: JSON.stringify(payload)
+  });
+  return response.data;
+}
+
+export async function deleteAdminBuild(buildId: string, token: string): Promise<{ deleted: boolean; id: string }> {
+  const response = await apiFetch<ApiEnvelope<{ deleted: boolean; id: string }>>(`/admin/builds/${buildId}`, {
+    method: 'DELETE',
+    headers: withAdminToken(token)
+  });
+  return response.data;
 }
 
 export async function getAdminProducts(token: string): Promise<AdminProduct[]> {

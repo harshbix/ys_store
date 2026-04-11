@@ -60,3 +60,38 @@ export const quoteStatusSchema = z.object({
   status: z.enum(['new', 'whatsapp_sent', 'negotiating', 'confirmed', 'closed_won', 'closed_lost']),
   closed_reason: z.string().max(500).optional()
 });
+
+export const adminUsersQuerySchema = z.object({
+  q: z.string().trim().max(120).optional(),
+  limit: z.coerce.number().int().positive().max(100).default(20)
+});
+
+export const adminActivityQuerySchema = z.object({
+  limit: z.coerce.number().int().positive().max(200).default(40)
+});
+
+export const buildPresetIdParamsSchema = z.object({
+  id: z.string().min(2).max(120)
+});
+
+export const adminBuildItemSchema = z.object({
+  slot_order: z.coerce.number().int().nonnegative(),
+  component_type: z.string().min(1).max(64),
+  component_id: z.string().min(1).max(128),
+  quantity: z.coerce.number().int().positive().default(1)
+});
+
+export const adminBuildSchema = z.object({
+  id: z.string().min(2).max(120).optional(),
+  name: z.string().min(2).max(140),
+  cpu_family: z.string().min(2).max(120),
+  build_number: z.coerce.number().int().nonnegative().optional().nullable(),
+  discount_percent: z.coerce.number().min(0).max(99.99).default(0),
+  status: z.string().min(1).max(50).default('draft'),
+  estimated_system_wattage: z.coerce.number().nonnegative().optional().nullable(),
+  required_psu_wattage: z.coerce.number().nonnegative().optional().nullable(),
+  compatibility_status: z.string().min(1).max(50).default('unknown'),
+  is_visible: z.boolean().default(true),
+  is_featured: z.boolean().default(false),
+  items: z.array(adminBuildItemSchema).min(1)
+});

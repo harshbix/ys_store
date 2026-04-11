@@ -4,7 +4,11 @@ import { validateRequest } from '../../middleware/validateRequest.js';
 import { adminLoginLimiter } from '../../middleware/rateLimiters.js';
 import {
   adminLoginSchema,
+  adminActivityQuerySchema,
+  adminBuildSchema,
+  adminUsersQuerySchema,
   adminProductSchema,
+  buildPresetIdParamsSchema,
   productIdParamsSchema,
   quickEditSchema,
   stockSchema,
@@ -12,6 +16,14 @@ import {
   quoteStatusSchema
 } from './validator.js';
 import {
+  dashboardSummaryController,
+  listUsersController,
+  listActivityController,
+  listBuildsController,
+  listBuildComponentsController,
+  createBuildController,
+  updateBuildController,
+  deleteBuildController,
   loginController,
   logoutController,
   meController,
@@ -32,6 +44,16 @@ const router = Router();
 router.post('/login', adminLoginLimiter, validateRequest(adminLoginSchema), loginController);
 router.post('/logout', requireAdmin, logoutController);
 router.get('/me', requireAdmin, meController);
+
+router.get('/dashboard/summary', requireAdmin, dashboardSummaryController);
+router.get('/users', requireAdmin, validateRequest(adminUsersQuerySchema, 'query'), listUsersController);
+router.get('/activity', requireAdmin, validateRequest(adminActivityQuerySchema, 'query'), listActivityController);
+
+router.get('/builds', requireAdmin, listBuildsController);
+router.get('/build-components', requireAdmin, listBuildComponentsController);
+router.post('/builds', requireAdmin, validateRequest(adminBuildSchema), createBuildController);
+router.patch('/builds/:id', requireAdmin, validateRequest(buildPresetIdParamsSchema, 'params'), validateRequest(adminBuildSchema), updateBuildController);
+router.delete('/builds/:id', requireAdmin, validateRequest(buildPresetIdParamsSchema, 'params'), deleteBuildController);
 
 router.get('/products', requireAdmin, listProductsController);
 router.get('/products/:id', requireAdmin, validateRequest(productIdParamsSchema, 'params'), getProductController);

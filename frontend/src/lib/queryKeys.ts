@@ -17,8 +17,13 @@ export const queryKeys = {
   },
   admin: {
     me: ['admin', 'me'] as const,
+    dashboard: ['admin', 'dashboard'] as const,
+    users: (query: string) => ['admin', 'users', query] as const,
+    activity: (limit: number) => ['admin', 'activity', limit] as const,
     products: ['admin', 'products'] as const,
     productDetail: (productId: string) => ['admin', 'product', productId] as const,
+    builds: ['admin', 'builds'] as const,
+    buildComponents: ['admin', 'build-components'] as const,
     quotes: ['admin', 'quotes'] as const
   },
   quotes: {

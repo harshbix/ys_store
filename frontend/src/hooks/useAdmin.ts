@@ -4,19 +4,28 @@ import {
   adminLogin,
   adminLogout,
   archiveProduct,
+  createAdminBuild,
   createAdminProduct,
+  deleteAdminBuild,
+  getAdminActivity,
+  getAdminBuildComponents,
+  getAdminBuilds,
+  getAdminDashboardSummary,
   getAdminUploadUrl,
+  getAdminUsersSummary,
   duplicateAdminProduct,
   finalizeAdminUpload,
   getAdminMe,
   getAdminProducts,
   getAdminQuotes,
   publishProduct,
+  updateAdminBuild,
   updateAdminProduct
 } from '../api/admin';
 import { queryKeys } from '../lib/queryKeys';
 import { useAdminAuthStore } from '../store/auth';
 import type {
+  AdminBuildPayload,
   AdminFinalizeUploadPayload,
   AdminProductPayload,
   AdminSignedUploadPayload
@@ -57,11 +66,51 @@ export function useAdmin() {
     retry: 0
   });
 
+  const dashboardSummaryQuery = useQuery({
+    queryKey: queryKeys.admin.dashboard,
+    queryFn: () => getAdminDashboardSummary(token || ''),
+    enabled: Boolean(token),
+    staleTime: 1000 * 30,
+    retry: 1
+  });
+
+  const usersSummaryQuery = useQuery({
+    queryKey: queryKeys.admin.users(''),
+    queryFn: () => getAdminUsersSummary(token || '', { limit: 20 }),
+    enabled: Boolean(token),
+    staleTime: 1000 * 30,
+    retry: 1
+  });
+
+  const activityQuery = useQuery({
+    queryKey: queryKeys.admin.activity(40),
+    queryFn: () => getAdminActivity(token || '', 40),
+    enabled: Boolean(token),
+    staleTime: 1000 * 30,
+    retry: 1
+  });
+
   const productsQuery = useQuery({
     queryKey: queryKeys.admin.products,
     queryFn: () => getAdminProducts(token || ''),
     enabled: Boolean(token),
     staleTime: 1000 * 30,
+    retry: 1
+  });
+
+  const buildsQuery = useQuery({
+    queryKey: queryKeys.admin.builds,
+    queryFn: () => getAdminBuilds(token || ''),
+    enabled: Boolean(token),
+    staleTime: 1000 * 30,
+    retry: 1
+  });
+
+  const buildComponentsQuery = useQuery({
+    queryKey: queryKeys.admin.buildComponents,
+    queryFn: () => getAdminBuildComponents(token || ''),
+    enabled: Boolean(token),
+    staleTime: 1000 * 60,
     retry: 1
   });
 
@@ -119,6 +168,55 @@ export function useAdmin() {
       showToast({
         title: 'Could not duplicate product',
         description: toUserMessage(error, 'Try again in a moment.'),
+        variant: 'error'
+      });
+    }
+  });
+
+  const createBuildMutation = useMutation({
+    mutationFn: (payload: AdminBuildPayload) => createAdminBuild(payload, token || ''),
+    onSuccess: async () => {
+      showToast({ title: 'Build created', description: 'Preset build saved successfully.', variant: 'success' });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.builds });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Could not create build',
+        description: toUserMessage(error, 'Please review build fields and try again.'),
+        variant: 'error'
+      });
+    }
+  });
+
+  const updateBuildMutation = useMutation({
+    mutationFn: ({ buildId, payload }: { buildId: string; payload: AdminBuildPayload }) =>
+      updateAdminBuild(buildId, payload, token || ''),
+    onSuccess: async () => {
+      showToast({ title: 'Build updated', description: 'Preset build updated successfully.', variant: 'success' });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.builds });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Could not update build',
+        description: toUserMessage(error, 'Please try again.'),
+        variant: 'error'
+      });
+    }
+  });
+
+  const deleteBuildMutation = useMutation({
+    mutationFn: (buildId: string) => deleteAdminBuild(buildId, token || ''),
+    onSuccess: async () => {
+      showToast({ title: 'Build deleted', description: 'Preset build removed.', variant: 'info' });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.builds });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Could not delete build',
+        description: toUserMessage(error, 'Please try again.'),
         variant: 'error'
       });
     }
@@ -189,8 +287,13 @@ export function useAdmin() {
 
     clearSession();
     queryClient.removeQueries({ queryKey: queryKeys.admin.me });
+    queryClient.removeQueries({ queryKey: queryKeys.admin.dashboard });
+    queryClient.removeQueries({ queryKey: queryKeys.admin.users('') });
+    queryClient.removeQueries({ queryKey: queryKeys.admin.activity(40) });
     queryClient.removeQueries({ queryKey: queryKeys.admin.products });
     queryClient.removeQueries({ queryKey: ['admin', 'product'] });
+    queryClient.removeQueries({ queryKey: queryKeys.admin.builds });
+    queryClient.removeQueries({ queryKey: queryKeys.admin.buildComponents });
     queryClient.removeQueries({ queryKey: queryKeys.admin.quotes });
     showToast({ title: 'Admin signed out', variant: 'info' });
   };
@@ -201,11 +304,19 @@ export function useAdmin() {
     isAuthenticated: Boolean(token) && !meQuery.isError,
     emailPasswordLoginMutation,
     meQuery,
+    dashboardSummaryQuery,
+    usersSummaryQuery,
+    activityQuery,
     productsQuery,
+    buildsQuery,
+    buildComponentsQuery,
     quotesQuery,
     createProductMutation,
     updateProductMutation,
     duplicateProductMutation,
+    createBuildMutation,
+    updateBuildMutation,
+    deleteBuildMutation,
     archiveProductMutation,
     publishProductMutation,
     createUploadUrlMutation,

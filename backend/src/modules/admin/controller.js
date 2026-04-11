@@ -1,6 +1,14 @@
 import { ok, created } from '../../utils/apiResponse.js';
 import {
   adminLogin,
+  getAdminDashboardSummary,
+  getAdminUsersSummary,
+  getAdminActivityFeed,
+  getAdminBuilds,
+  getAdminBuildComponents,
+  createAdminBuild,
+  updateAdminBuild,
+  deleteAdminBuild,
   getAdminProducts,
   getAdminProductDetail,
   createAdminProduct,
@@ -10,6 +18,78 @@ import {
   listAdminQuotes,
   setAdminQuoteStatus
 } from './service.js';
+
+export async function dashboardSummaryController(req, res, next) {
+  try {
+    const data = await getAdminDashboardSummary();
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function listUsersController(req, res, next) {
+  try {
+    const data = await getAdminUsersSummary({ query: req.query.q, limit: req.query.limit });
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function listActivityController(req, res, next) {
+  try {
+    const data = await getAdminActivityFeed({ limit: req.query.limit });
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function listBuildsController(req, res, next) {
+  try {
+    const data = await getAdminBuilds();
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function listBuildComponentsController(req, res, next) {
+  try {
+    const data = await getAdminBuildComponents();
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function createBuildController(req, res, next) {
+  try {
+    const data = await createAdminBuild(req.body);
+    return created(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function updateBuildController(req, res, next) {
+  try {
+    const data = await updateAdminBuild(req.params.id, req.body);
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function deleteBuildController(req, res, next) {
+  try {
+    const data = await deleteAdminBuild(req.params.id);
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
 
 export async function loginController(req, res, next) {
   try {

@@ -4,7 +4,15 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api",
+      "destination": "https://ys-store-h1ec.onrender.com/api"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://ys-store-h1ec.onrender.com/api/$1"
+    },
+    {
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
