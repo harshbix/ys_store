@@ -1,6 +1,8 @@
 import { ok, created } from '../../utils/apiResponse.js';
 import {
   adminLogin,
+  changeAdminPassword,
+  deleteAdminUser,
   getAdminDashboardSummary,
   getAdminUsersSummary,
   getAdminActivityFeed,
@@ -30,7 +32,7 @@ export async function dashboardSummaryController(req, res, next) {
 
 export async function listUsersController(req, res, next) {
   try {
-    const data = await getAdminUsersSummary({ query: req.query.q, limit: req.query.limit });
+    const data = await getAdminUsersSummary({ query: req.query.q, limit: req.query.limit, page: req.query.page });
     return ok(res, data);
   } catch (err) {
     return next(err);
@@ -39,7 +41,7 @@ export async function listUsersController(req, res, next) {
 
 export async function listActivityController(req, res, next) {
   try {
-    const data = await getAdminActivityFeed({ limit: req.query.limit });
+    const data = await getAdminActivityFeed({ limit: req.query.limit, page: req.query.page });
     return ok(res, data);
   } catch (err) {
     return next(err);
@@ -48,7 +50,7 @@ export async function listActivityController(req, res, next) {
 
 export async function listBuildsController(req, res, next) {
   try {
-    const data = await getAdminBuilds();
+    const data = await getAdminBuilds({ page: req.query.page, limit: req.query.limit });
     return ok(res, data);
   } catch (err) {
     return next(err);
@@ -57,7 +59,29 @@ export async function listBuildsController(req, res, next) {
 
 export async function listBuildComponentsController(req, res, next) {
   try {
-    const data = await getAdminBuildComponents();
+    const data = await getAdminBuildComponents({
+      page: req.query.page,
+      limit: req.query.limit,
+      type: req.query.type
+    });
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function deleteUserController(req, res, next) {
+  try {
+    const data = await deleteAdminUser(req.params.id, req.admin.email);
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function changePasswordController(req, res, next) {
+  try {
+    const data = await changeAdminPassword(req.admin.id, req.body.current_password, req.body.new_password);
     return ok(res, data);
   } catch (err) {
     return next(err);
@@ -110,7 +134,11 @@ export async function meController(req, res) {
 
 export async function listProductsController(req, res, next) {
   try {
-    const data = await getAdminProducts();
+    const data = await getAdminProducts({
+      page: req.query.page,
+      limit: req.query.limit,
+      query: req.query.q
+    });
     return ok(res, data);
   } catch (err) {
     return next(err);

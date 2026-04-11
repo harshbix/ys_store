@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { getAdminProductById, getAdminUsersSummary } from '../api/admin';
 import { SEO } from '../components/seo/SEO';
+import { AdminBuildTile } from '../components/builds/AdminBuildTile';
+import { AdminSectionHeader } from '../components/dashboard/AdminSectionHeader';
+import { AdminStatCard } from '../components/dashboard/AdminStatCard';
+import { AdminProductTile } from '../components/products/AdminProductTile';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -43,6 +48,7 @@ import { Switch } from '../components/ui/switch';
 import { useAdmin } from '../hooks/useAdmin';
 import { useShowToast } from '../hooks/useToast';
 import { formatTzs } from '../lib/currency';
+import { fadeInUp, gridStagger, tapScale, TRANSITIONS } from '../lib/motion';
 import { cn } from '../lib/utils';
 import { queryKeys } from '../lib/queryKeys';
 import type {
@@ -102,6 +108,12 @@ interface BuildFormState {
   items: BuildItemDraft[];
 }
 
+interface PasswordFormState {
+  currentPassword: string;
+  nextPassword: string;
+  confirmPassword: string;
+}
+
 interface UploadProgressState {
   current: number;
   total: number;
@@ -148,6 +160,12 @@ const defaultBuildForm: BuildFormState = {
   required_psu_wattage: '',
   compatibility_status: 'unknown',
   items: [{ id: cryptoRandomId(), slot_order: 0, component_type: 'cpu', component_id: '', quantity: 1 }]
+};
+
+const defaultPasswordForm: PasswordFormState = {
+  currentPassword: '',
+  nextPassword: '',
+  confirmPassword: ''
 };
 
 function cryptoRandomId() {
@@ -339,18 +357,6 @@ function useIsNarrowScreen(maxWidth = 900) {
   return isNarrow;
 }
 
-function SectionHeader({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight text-foreground">{title}</h2>
-        <p className="mt-1 text-sm text-secondary">{description}</p>
-      </div>
-      {action}
-    </div>
-  );
-}
-
 function EmptyState({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) {
   return (
     <Card className="border-dashed bg-surface/70">
@@ -363,22 +369,21 @@ function EmptyState({ title, description, action }: { title: string; description
   );
 }
 
-function StatCard({ label, value, helper }: { label: string; value: string; helper?: string }) {
-  return (
-    <Card className="border-border/80 bg-surface/90 shadow-sm">
-      <CardContent className="space-y-2 p-5">
-        <p className="text-xs font-medium uppercase tracking-[0.12em] text-secondary">{label}</p>
-        <p className="text-3xl font-semibold tracking-tight text-foreground">{value}</p>
-        {helper ? <p className="text-xs text-muted">{helper}</p> : null}
-      </CardContent>
-    </Card>
-  );
-}
-
 export default function AdminDashboardPage() {
   const queryClient = useQueryClient();
   const showToast = useShowToast();
   const isNarrowScreen = useIsNarrowScreen();
+
+  const [activeSection, setActiveSection] = useState<AdminSectionKey>('dashboard');
+  const [isProductPanelOpen, setIsProductPanelOpen] = useState(false);
+  const [isBuildPanelOpen, setIsBuildPanelOpen] = useState(false);
+  const [isNavDrawerOpen, setIsNavDrawerOpen] = useState(false);
+
+  const shouldLoadDashboard = activeSection === 'dashboard';
+  const shouldLoadProducts = activeSection === 'products' || activeSection === 'settings' || isProductPanelOpen;
+  const shouldLoadBuilds = activeSection === 'builds' || isBuildPanelOpen;
+  const shouldLoadUsers = activeSection === 'users';
+  const shouldLoadActivity = activeSection === 'activity' || activeSection === 'dashboard';
 
   const {
     admin,
@@ -396,17 +401,22 @@ export default function AdminDashboardPage() {
     createBuildMutation,
     updateBuildMutation,
     deleteBuildMutation,
+    deleteUserMutation,
+    changePasswordMutation,
     logout
-  } = useAdmin();
-
-  const [activeSection, setActiveSection] = useState<AdminSectionKey>('dashboard');
+  } = useAdmin({
+    loadDashboard: shouldLoadDashboard,
+    loadProducts: shouldLoadProducts,
+    loadBuilds: shouldLoadBuilds,
+    loadBuildComponents: shouldLoadBuilds,
+    loadUsers: shouldLoadUsers,
+    loadActivity: shouldLoadActivity,
+    loadQuotes: false
+  });
 
   const [productSearch, setProductSearch] = useState('');
   const [usersSearch, setUsersSearch] = useState('');
   const debouncedUsersSearch = useDebouncedValue(usersSearch, 250);
-
-  const [isProductPanelOpen, setIsProductPanelOpen] = useState(false);
-  const [isBuildPanelOpen, setIsBuildPanelOpen] = useState(false);
 
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editingBuildId, setEditingBuildId] = useState<string | null>(null);
@@ -420,11 +430,13 @@ export default function AdminDashboardPage() {
 
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [buildToDelete, setBuildToDelete] = useState<string | null>(null);
+  const [userToDelete, setUserToDelete] = useState<AdminUsersSummaryPayload['recent_users'][number] | null>(null);
+  const [passwordForm, setPasswordForm] = useState<PasswordFormState>(defaultPasswordForm);
 
   const usersQuery = useQuery<AdminUsersSummaryPayload>({
-    queryKey: queryKeys.admin.users(debouncedUsersSearch),
-    queryFn: () => getAdminUsersSummary(token || '', { q: debouncedUsersSearch || undefined, limit: 40 }),
-    enabled: Boolean(token),
+    queryKey: [...queryKeys.admin.users(debouncedUsersSearch), 'page-1'],
+    queryFn: () => getAdminUsersSummary(token || '', { q: debouncedUsersSearch || undefined, limit: 24, page: 1 }),
+    enabled: Boolean(token) && shouldLoadUsers,
     staleTime: 30_000,
     retry: 1
   });
@@ -905,6 +917,41 @@ export default function AdminDashboardPage() {
     }
   }
 
+  async function handleDeleteUser(userId: string) {
+    try {
+      await deleteUserMutation.mutateAsync(userId);
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+      setUserToDelete(null);
+    } catch {
+      // Toast shown by mutation handler.
+    }
+  }
+
+  async function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!passwordForm.currentPassword || !passwordForm.nextPassword) {
+      showToast({ title: 'Password fields are required', variant: 'error' });
+      return;
+    }
+
+    if (passwordForm.nextPassword !== passwordForm.confirmPassword) {
+      showToast({ title: 'New password confirmation does not match', variant: 'error' });
+      return;
+    }
+
+    try {
+      await changePasswordMutation.mutateAsync({
+        current_password: passwordForm.currentPassword,
+        new_password: passwordForm.nextPassword
+      });
+      setPasswordForm(defaultPasswordForm);
+    } catch {
+      // Toast shown by mutation handler.
+    }
+  }
+
   const productFormBody = (
     <form className="space-y-5" onSubmit={(event) => void handleSubmitProduct(event)}>
       <div className="space-y-2">
@@ -1290,16 +1337,9 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="mt-4 grid gap-3 lg:hidden">
-            <Select value={activeSection} onValueChange={(value) => setActiveSection(value as AdminSectionKey)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select section" />
-              </SelectTrigger>
-              <SelectContent>
-                {sections.map((section) => (
-                  <SelectItem key={section.key} value={section.key}>{section.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Button type="button" variant="outline" onClick={() => setIsNavDrawerOpen(true)}>
+              Open sections
+            </Button>
           </div>
         </header>
 
@@ -1331,11 +1371,19 @@ export default function AdminDashboardPage() {
           </aside>
 
           <main className="space-y-6 overflow-x-hidden">
+            <AnimatePresence mode="wait" initial={false}>
             {activeSection === 'dashboard' ? (
-              <section className="space-y-4">
-                <SectionHeader
+              <motion.section
+                key="dashboard"
+                className="space-y-4 xl:h-[calc(100vh-220px)] xl:overflow-hidden"
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, y: 6, transition: TRANSITIONS.FAST_EASE }}
+                variants={fadeInUp}
+              >
+                <AdminSectionHeader
                   title="Dashboard"
-                  description="Track business health, customer momentum, and catalog risk at a glance."
+                  description="Core business health in a focused, no-clutter command view."
                   action={
                     <div className="flex flex-wrap gap-2">
                       <Button type="button" variant="outline" onClick={() => { setActiveSection('products'); openCreateProductPanel(); }}>
@@ -1349,8 +1397,8 @@ export default function AdminDashboardPage() {
                 />
 
                 {dashboardSummaryQuery.isLoading ? (
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {Array.from({ length: 6 }).map((_, index) => (
+                  <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                    {Array.from({ length: 4 }).map((_, index) => (
                       <Skeleton key={index} className="h-28 rounded-xl" />
                     ))}
                   </div>
@@ -1358,20 +1406,23 @@ export default function AdminDashboardPage() {
 
                 {!dashboardSummaryQuery.isLoading && dashboard ? (
                   <>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                      <StatCard label="Total Registered Users" value={dashboard.stats.total_registered_users.toLocaleString()} helper="Real auth-backed count" />
-                      <StatCard label="New Users This Week" value={dashboard.stats.new_users_this_week.toLocaleString()} helper="Last 7 days" />
-                      <StatCard label="Total Products" value={dashboard.stats.total_products.toLocaleString()} />
-                      <StatCard label="Total Builds" value={dashboard.stats.total_builds.toLocaleString()} />
-                      <StatCard label="WhatsApp Checkout Clicks" value={dashboard.stats.whatsapp_checkout_clicks.toLocaleString()} />
-                      <StatCard label="Low Stock Items" value={dashboard.stats.low_stock_items.toLocaleString()} helper="Needs replenishment" />
-                    </div>
+                    <motion.div className="grid grid-cols-2 gap-3 xl:grid-cols-4" variants={gridStagger}>
+                      <AdminStatCard label="Total Users" value={dashboard.stats.total_registered_users.toLocaleString()} helper="Registered accounts" />
+                      <AdminStatCard label="Total Products" value={dashboard.stats.total_products.toLocaleString()} />
+                      <AdminStatCard label="Total Builds" value={dashboard.stats.total_builds.toLocaleString()} />
+                      <AdminStatCard label="WhatsApp Checkout Clicks" value={dashboard.stats.whatsapp_checkout_clicks.toLocaleString()} />
+                    </motion.div>
 
-                    <div className="grid gap-4 xl:grid-cols-3">
-                      <Card className="xl:col-span-2">
+                    <div className="grid gap-4 xl:grid-cols-5 xl:grid-rows-[1fr,auto]">
+                      <Card className="xl:col-span-3 overflow-hidden">
                         <CardHeader>
-                          <CardTitle className="text-base">Recent activity</CardTitle>
-                          <CardDescription>Latest intent from users, quotes, and catalog changes.</CardDescription>
+                          <div className="flex items-center justify-between gap-2">
+                            <CardTitle className="text-base">Recent activity</CardTitle>
+                            <Button type="button" variant="ghost" size="sm" onClick={() => setActiveSection('activity')}>
+                              View all
+                            </Button>
+                          </div>
+                          <CardDescription>Only the latest three high-signal updates are shown here.</CardDescription>
                         </CardHeader>
                         <CardContent>
                           {dashboard.recent_activity.length === 0 ? (
@@ -1381,10 +1432,10 @@ export default function AdminDashboardPage() {
                             />
                           ) : (
                             <div className="space-y-2">
-                              {dashboard.recent_activity.slice(0, 8).map((item) => (
+                              {dashboard.recent_activity.slice(0, 3).map((item) => (
                                 <div key={item.id} className="flex items-start justify-between gap-3 rounded-lg border border-border/80 bg-background p-3">
                                   <div>
-                                    <p className="text-sm font-medium text-foreground">{item.title}</p>
+                                    <p className="line-clamp-1 text-sm font-medium text-foreground">{item.title}</p>
                                     {item.description ? <p className="text-xs text-secondary">{item.description}</p> : null}
                                   </div>
                                   <p className="whitespace-nowrap text-xs text-muted">{formatRelativeTime(item.occurred_at)}</p>
@@ -1395,16 +1446,17 @@ export default function AdminDashboardPage() {
                         </CardContent>
                       </Card>
 
-                      <Card>
+                      <Card className="xl:col-span-2 overflow-hidden">
                         <CardHeader>
-                          <CardTitle className="text-base">Top viewed products</CardTitle>
-                          <CardDescription>Most browsed products from recent analytics events.</CardDescription>
+                          <CardTitle className="text-base">Top products and builds</CardTitle>
+                          <CardDescription>Most selected assets, compressed for fast scanning.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-2">
-                          {dashboard.top_viewed_products.length === 0 ? (
-                            <p className="text-sm text-secondary">No product views tracked yet.</p>
-                          ) : (
-                            dashboard.top_viewed_products.map((item) => (
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2">
+                            <p className="text-xs uppercase tracking-[0.1em] text-secondary">Top products</p>
+                            {dashboard.top_viewed_products.length === 0 ? (
+                              <p className="text-sm text-secondary">No product views tracked yet.</p>
+                            ) : dashboard.top_viewed_products.slice(0, 3).map((item) => (
                               <div key={item.product_id} className="flex items-center justify-between rounded-lg border border-border/80 p-3">
                                 <div>
                                   <p className="text-sm font-medium text-foreground">{item.title}</p>
@@ -1412,48 +1464,72 @@ export default function AdminDashboardPage() {
                                 </div>
                                 <Badge variant="secondary">{item.views} views</Badge>
                               </div>
-                            ))
-                          )}
-                        </CardContent>
-                      </Card>
-                    </div>
+                            ))}
+                          </div>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">Most selected builds</CardTitle>
-                        <CardDescription>Custom builds with the highest selection activity.</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        {dashboard.top_selected_builds.length === 0 ? (
-                          <p className="text-sm text-secondary">No build selection activity yet.</p>
-                        ) : (
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            {dashboard.top_selected_builds.map((item) => (
-                              <div key={item.build_id} className="rounded-lg border border-border/80 bg-background p-3">
-                                <div className="flex items-center justify-between gap-2">
+                          <div className="space-y-2">
+                            <p className="text-xs uppercase tracking-[0.1em] text-secondary">Top builds</p>
+                            {dashboard.top_selected_builds.length === 0 ? (
+                              <p className="text-sm text-secondary">No build selection activity yet.</p>
+                            ) : dashboard.top_selected_builds.slice(0, 3).map((item) => (
+                              <div key={item.build_id} className="flex items-center justify-between rounded-lg border border-border/80 p-3">
+                                <div>
                                   <p className="text-sm font-medium text-foreground">{item.name}</p>
-                                  <Badge variant="outline">{item.selections} picks</Badge>
+                                  <p className="text-xs text-secondary">{formatTzs(item.total_estimated_price_tzs)}</p>
                                 </div>
-                                <p className="mt-1 text-xs text-secondary">{item.build_code || item.build_id}</p>
-                                <p className="mt-2 text-sm text-foreground">{formatTzs(item.total_estimated_price_tzs)}</p>
+                                <Badge variant="outline">{item.selections} picks</Badge>
                               </div>
                             ))}
                           </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="xl:col-span-5">
+                        <CardHeader>
+                          <CardTitle className="text-base">Quick actions</CardTitle>
+                          <CardDescription>Most frequent admin actions without context switching.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                            <motion.div whileTap={tapScale} transition={TRANSITIONS.FAST_EASE}>
+                              <Button className="w-full" type="button" onClick={() => { setActiveSection('products'); openCreateProductPanel(); }}>
+                                Add product
+                              </Button>
+                            </motion.div>
+                            <motion.div whileTap={tapScale} transition={TRANSITIONS.FAST_EASE}>
+                              <Button className="w-full" type="button" variant="outline" onClick={() => { setActiveSection('builds'); openCreateBuildPanel(); }}>
+                                Add build
+                              </Button>
+                            </motion.div>
+                            <Button className="w-full" type="button" variant="outline" onClick={() => setActiveSection('users')}>
+                              Review users
+                            </Button>
+                            <Button className="w-full" type="button" variant="outline" onClick={() => setActiveSection('activity')}>
+                              Open activity feed
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </>
                 ) : null}
 
                 {dashboardSummaryQuery.isError ? (
                   <EmptyState title="Dashboard unavailable" description="We could not load dashboard metrics. Please refresh or try again shortly." />
                 ) : null}
-              </section>
+              </motion.section>
             ) : null}
 
             {activeSection === 'products' ? (
-              <section className="space-y-4">
-                <SectionHeader
+              <motion.section
+                key="products"
+                className="space-y-4"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={TRANSITIONS.FAST_EASE}
+              >
+                <AdminSectionHeader
                   title="Products"
                   description="Upload new products, edit visibility and featured status, and keep catalog quality high."
                   action={
@@ -1474,7 +1550,7 @@ export default function AdminDashboardPage() {
                 </Card>
 
                 {productsQuery.isLoading ? (
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-4">
                     {Array.from({ length: 6 }).map((_, index) => (
                       <Skeleton key={index} className="h-48 rounded-xl" />
                     ))}
@@ -1490,66 +1566,37 @@ export default function AdminDashboardPage() {
                 ) : null}
 
                 {filteredProducts.length > 0 ? (
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {filteredProducts.map((product) => {
-                      const media = Array.isArray(product.media) ? product.media : [];
-                      const primary = media.find((entry) => entry.is_primary) || media[0];
-                      const imageUrl = primary?.thumb_url || primary?.full_url || primary?.original_url || null;
-
-                      return (
-                        <Card key={product.id} className="overflow-hidden border-border/80 bg-surface/90">
-                          <div className="h-36 w-full bg-background">
-                            {imageUrl ? (
-                              <img
-                                src={imageUrl}
-                                alt={product.title}
-                                className="h-full w-full object-cover"
-                                loading="lazy"
-                                onError={(event) => {
-                                  event.currentTarget.src = '/placeholders/desktop.svg';
-                                }}
-                              />
-                            ) : (
-                              <div className="flex h-full items-center justify-center text-xs text-muted">No image</div>
-                            )}
-                          </div>
-                          <CardContent className="space-y-2 p-4">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="line-clamp-2 text-sm font-semibold text-foreground">{product.title}</p>
-                              {product.is_featured ? <Badge>Featured</Badge> : null}
-                            </div>
-                            <p className="text-sm text-foreground">{formatTzs(product.estimated_price_tzs)}</p>
-                            <div className="flex flex-wrap gap-2">
-                              <Badge variant="secondary">{product.stock_status.replace(/_/g, ' ')}</Badge>
-                              {!product.is_visible ? <Badge variant="outline">Hidden</Badge> : null}
-                            </div>
-                            <div className="flex flex-wrap gap-2 pt-1">
-                              <Button type="button" variant="outline" size="sm" onClick={() => void handleEditProduct(product.id)}>
-                                Edit
-                              </Button>
-                              <Button type="button" variant="outline" size="sm" onClick={() => setProductToDelete(product.id)}>
-                                Delete
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
+                  <motion.div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-4" variants={gridStagger}>
+                    {filteredProducts.map((product) => (
+                      <AdminProductTile
+                        key={product.id}
+                        product={product}
+                        onEdit={(productId) => void handleEditProduct(productId)}
+                        onDelete={(productId) => setProductToDelete(productId)}
+                      />
+                    ))}
+                  </motion.div>
                 ) : null}
-              </section>
+              </motion.section>
             ) : null}
 
             {activeSection === 'builds' ? (
-              <section className="space-y-4">
-                <SectionHeader
+              <motion.section
+                key="builds"
+                className="space-y-4"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={TRANSITIONS.FAST_EASE}
+              >
+                <AdminSectionHeader
                   title="Builds"
                   description="Manage predefined PC builds with clear component selection and pricing."
                   action={<Button type="button" onClick={openCreateBuildPanel}>Create build</Button>}
                 />
 
                 {buildsQuery.isLoading ? (
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-4">
                     {Array.from({ length: 4 }).map((_, index) => (
                       <Skeleton key={index} className="h-40 rounded-xl" />
                     ))}
@@ -1565,59 +1612,40 @@ export default function AdminDashboardPage() {
                 ) : null}
 
                 {filteredBuilds.length > 0 ? (
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <motion.div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-4" variants={gridStagger}>
                     {filteredBuilds.map((build) => (
-                      <Card key={build.id} className="border-border/80 bg-surface/90">
-                        <CardContent className="space-y-3 p-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-sm font-semibold text-foreground">{build.name}</p>
-                              <p className="text-xs text-secondary">{build.cpu_family}</p>
-                            </div>
-                            <Badge variant={build.status === 'featured' ? 'default' : 'secondary'}>
-                              {build.status}
-                            </Badge>
-                          </div>
-
-                          <div className="space-y-1 text-xs text-secondary">
-                            <p>Preset ID: {build.id}</p>
-                            <p>Components: {build.pc_build_preset_items?.length || 0}</p>
-                            <p>Total: {formatTzs(build.total_tzs)}</p>
-                          </div>
-
-                          <div className="flex flex-wrap gap-2">
-                            {!build.is_visible ? <Badge variant="outline">Hidden</Badge> : <Badge variant="secondary">Visible</Badge>}
-                          </div>
-
-                          <div className="flex flex-wrap gap-2">
-                            <Button type="button" variant="outline" size="sm" onClick={() => openEditBuildPanel(build)}>
-                              Edit
-                            </Button>
-                            <Button type="button" variant="outline" size="sm" onClick={() => setBuildToDelete(build.id)}>
-                              Delete
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <AdminBuildTile
+                        key={build.id}
+                        build={build}
+                        onEdit={openEditBuildPanel}
+                        onDelete={(buildId) => setBuildToDelete(buildId)}
+                      />
                     ))}
-                  </div>
+                  </motion.div>
                 ) : null}
-              </section>
+              </motion.section>
             ) : null}
 
             {activeSection === 'users' ? (
-              <section className="space-y-4">
-                <SectionHeader
+              <motion.section
+                key="users"
+                className="space-y-4"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={TRANSITIONS.FAST_EASE}
+              >
+                <AdminSectionHeader
                   title="Users"
                   description="Monitor real registered users and recent signups from your authentication backend."
                 />
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <StatCard
+                  <AdminStatCard
                     label="Total Registered Users"
                     value={String(usersQuery.data?.total_registered_users || dashboard?.stats.total_registered_users || 0)}
                   />
-                  <StatCard
+                  <AdminStatCard
                     label="New Users This Week"
                     value={String(usersQuery.data?.new_users_this_week || dashboard?.stats.new_users_this_week || 0)}
                   />
@@ -1651,22 +1679,44 @@ export default function AdminDashboardPage() {
                           <div>
                             <p className="text-sm font-medium text-foreground">{user.full_name || user.email || user.phone || 'Unknown user'}</p>
                             <p className="text-xs text-secondary">{user.email || user.phone || 'No contact info'}</p>
+                            <div className="mt-1 flex flex-wrap gap-2">
+                              {user.is_admin_account ? <Badge variant="outline">Protected admin</Badge> : null}
+                              {user.is_email_confirmed ? <Badge variant="secondary">Email verified</Badge> : <Badge variant="outline">Unverified</Badge>}
+                            </div>
                           </div>
-                          <div className="text-xs text-muted">
-                            <p>Joined: {formatTimestamp(user.created_at)}</p>
-                            <p>Last active: {user.last_active_at ? formatTimestamp(user.last_active_at) : 'No sign-in yet'}</p>
+                          <div className="flex flex-col items-start gap-2 sm:items-end">
+                            <div className="text-xs text-muted">
+                              <p>Joined: {formatTimestamp(user.created_at)}</p>
+                              <p>Last active: {user.last_active_at ? formatTimestamp(user.last_active_at) : 'No sign-in yet'}</p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={user.is_admin_account}
+                              onClick={() => setUserToDelete(user)}
+                            >
+                              Delete user
+                            </Button>
                           </div>
                         </div>
                       ))}
                     </CardContent>
                   </Card>
                 ) : null}
-              </section>
+              </motion.section>
             ) : null}
 
             {activeSection === 'activity' ? (
-              <section className="space-y-4">
-                <SectionHeader
+              <motion.section
+                key="activity"
+                className="space-y-4"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={TRANSITIONS.FAST_EASE}
+              >
+                <AdminSectionHeader
                   title="Activity"
                   description="A focused activity feed for checkout intent, registrations, and build interactions."
                 />
@@ -1698,12 +1748,19 @@ export default function AdminDashboardPage() {
                     </CardContent>
                   </Card>
                 ) : null}
-              </section>
+              </motion.section>
             ) : null}
 
             {activeSection === 'settings' ? (
-              <section className="space-y-4">
-                <SectionHeader
+              <motion.section
+                key="settings"
+                className="space-y-4"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={TRANSITIONS.FAST_EASE}
+              >
+                <AdminSectionHeader
                   title="Settings"
                   description="Manage featured products, storefront highlights, and your admin account preferences."
                 />
@@ -1745,7 +1802,7 @@ export default function AdminDashboardPage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-base">Admin account</CardTitle>
-                      <CardDescription>Safe account-level details for the current admin session.</CardDescription>
+                      <CardDescription>Safe account-level details and password controls for the current session.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm">
                       <div className="rounded-lg border border-border/80 p-3">
@@ -1765,14 +1822,74 @@ export default function AdminDashboardPage() {
                           Sign out
                         </Button>
                       </div>
+
+                      <div className="pt-3">
+                        <p className="text-xs uppercase tracking-[0.1em] text-secondary">Change password</p>
+                        <form className="mt-2 space-y-2" onSubmit={(event) => void handlePasswordSubmit(event)}>
+                          <Input
+                            type="password"
+                            value={passwordForm.currentPassword}
+                            onChange={(event) => setPasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))}
+                            placeholder="Current password"
+                            autoComplete="current-password"
+                          />
+                          <Input
+                            type="password"
+                            value={passwordForm.nextPassword}
+                            onChange={(event) => setPasswordForm((prev) => ({ ...prev, nextPassword: event.target.value }))}
+                            placeholder="New password"
+                            autoComplete="new-password"
+                          />
+                          <Input
+                            type="password"
+                            value={passwordForm.confirmPassword}
+                            onChange={(event) => setPasswordForm((prev) => ({ ...prev, confirmPassword: event.target.value }))}
+                            placeholder="Confirm new password"
+                            autoComplete="new-password"
+                          />
+                          <p className="text-xs text-muted">Use at least 8 characters with letters and numbers.</p>
+                          <Button type="submit" disabled={changePasswordMutation.isPending}>
+                            Update password
+                          </Button>
+                        </form>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
-              </section>
+              </motion.section>
             ) : null}
+            </AnimatePresence>
           </main>
         </div>
       </div>
+
+      <Drawer open={isNavDrawerOpen} onOpenChange={setIsNavDrawerOpen}>
+        <DrawerContent className="max-h-[90vh]">
+          <DrawerHeader>
+            <DrawerTitle>Admin sections</DrawerTitle>
+            <DrawerDescription>Switch quickly between dashboard, catalog, builds, users, and settings.</DrawerDescription>
+          </DrawerHeader>
+          <div className="space-y-2 px-4 pb-4">
+            {sections.map((section) => (
+              <button
+                key={section.key}
+                type="button"
+                onClick={() => {
+                  setActiveSection(section.key);
+                  setIsNavDrawerOpen(false);
+                }}
+                className={cn(
+                  'w-full rounded-lg border px-4 py-3 text-left',
+                  activeSection === section.key ? 'border-primary/40 bg-primary/10' : 'border-border bg-background'
+                )}
+              >
+                <p className="text-sm font-medium text-foreground">{section.label}</p>
+                <p className="text-xs text-secondary">{section.description}</p>
+              </button>
+            ))}
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {isNarrowScreen ? (
         <Drawer open={isProductPanelOpen} onOpenChange={setIsProductPanelOpen}>
@@ -1824,6 +1941,7 @@ export default function AdminDashboardPage() {
 
       <Dialog open={Boolean(productToDelete)} onOpenChange={(open) => { if (!open) setProductToDelete(null); }}>
         <DialogContent>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={TRANSITIONS.FAST_EASE}>
           <DialogHeader>
             <DialogTitle>Delete product</DialogTitle>
             <DialogDescription>
@@ -1840,11 +1958,13 @@ export default function AdminDashboardPage() {
               Confirm delete
             </Button>
           </DialogFooter>
+          </motion.div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={Boolean(buildToDelete)} onOpenChange={(open) => { if (!open) setBuildToDelete(null); }}>
         <DialogContent>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={TRANSITIONS.FAST_EASE}>
           <DialogHeader>
             <DialogTitle>Delete build</DialogTitle>
             <DialogDescription>
@@ -1861,6 +1981,30 @@ export default function AdminDashboardPage() {
               Confirm delete
             </Button>
           </DialogFooter>
+          </motion.div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(userToDelete)} onOpenChange={(open) => { if (!open) setUserToDelete(null); }}>
+        <DialogContent>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={TRANSITIONS.FAST_EASE}>
+          <DialogHeader>
+            <DialogTitle>Delete user</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this user? This removes their account access permanently.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setUserToDelete(null)}>Cancel</Button>
+            <Button
+              type="button"
+              disabled={deleteUserMutation.isPending || Boolean(userToDelete?.is_admin_account)}
+              onClick={() => { if (userToDelete) void handleDeleteUser(userToDelete.id); }}
+            >
+              Confirm delete
+            </Button>
+          </DialogFooter>
+          </motion.div>
         </DialogContent>
       </Dialog>
     </>

@@ -355,7 +355,7 @@ async function verifyApi() {
   const productPayload = {
     sku: `YS-${Math.floor(Math.random() * 900000 + 100000)}`,
     slug: productSlug,
-    title: `Runtime Verify Product ${Date.now()}`,
+    title: `Admin Verify Product ${Date.now()}`,
     product_type: 'desktop',
     brand: 'YS',
     model_name: 'Runtime Verify Model',
@@ -641,9 +641,9 @@ async function verifyRuntimeUi() {
   const uploadPath = path.join(artifactDir, `admin-upload-${Date.now()}.png`);
   fs.writeFileSync(uploadPath, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=', 'base64'));
 
-  const runtimeProductTitle = `Runtime UI Product ${Date.now()}`;
+  const runtimeProductTitle = `Admin Verify Product ${Date.now()}`;
   let updatedProductTitle = `${runtimeProductTitle} Updated`;
-  const runtimeBuildTitle = `Runtime UI Build ${Date.now()}`;
+  const runtimeBuildTitle = `Admin Verify Build ${Date.now()}`;
   const updatedBuildTitle = `${runtimeBuildTitle} Updated`;
 
   try {

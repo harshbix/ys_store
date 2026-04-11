@@ -1,18 +1,22 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env.js';
-import { verifyPassword } from '../../utils/password.js';
+import { hashPassword, verifyPassword } from '../../utils/password.js';
 import {
   countBuildPresets,
   countLowStockProducts,
   countProducts,
   countWhatsappClicks,
   createBuildPreset,
+  deleteAuthUserById,
   findAdminByEmail,
+  findAdminById,
   findBuildComponentsByIds,
   findBuildPresetById,
   findCustomBuildsByIds,
   findProductsByIds,
+  getAuthUserById,
   listProductsAdmin,
+  listActiveAdminEmails,
   listAllAuthUsers,
   listBuildComponentsAdmin,
   listBuildPresetsAdmin,
@@ -25,6 +29,7 @@ import {
   findSpecDefinitionKeys,
   createProduct,
   deleteBuildPreset,
+  updateAdminPasswordHash,
   updateProduct,
   findProductById,
   listProductSpecs,
@@ -109,6 +114,43 @@ function clampNumber(value, min, max, fallback = 0) {
   return Math.min(max, Math.max(min, parsed));
 }
 
+function normalizePagination({ page, limit }, { defaultLimit = 20, maxLimit = 100 } = {}) {
+  const safePage = Math.max(1, Number.parseInt(String(page || '1'), 10) || 1);
+  const parsedLimit = Number.parseInt(String(limit || defaultLimit), 10);
+  const safeLimit = Number.isFinite(parsedLimit) && parsedLimit > 0
+    ? Math.min(maxLimit, parsedLimit)
+    : defaultLimit;
+  return { page: safePage, limit: safeLimit };
+}
+
+function assertNonRuntimeTitleInProduction(title) {
+  if (env.nodeEnv !== 'production') return;
+
+  const normalized = String(title || '').trim().toLowerCase();
+  if (normalized.startsWith('runtime')) {
+    throw {
+      status: 400,
+      code: 'runtime_title_forbidden',
+      message: 'Product titles starting with Runtime are not allowed in production'
+    };
+  }
+}
+
+function assertStrongNewPassword(newPassword) {
+  const value = String(newPassword || '');
+  if (value.length < 8) {
+    throw { status: 400, code: 'password_too_short', message: 'New password must be at least 8 characters' };
+  }
+
+  if (!/[a-zA-Z]/.test(value) || !/\d/.test(value)) {
+    throw {
+      status: 400,
+      code: 'password_not_complex_enough',
+      message: 'New password must include both letters and numbers'
+    };
+  }
+}
+
 function normalizePresetId(inputId, nameFallback) {
   const raw = String(inputId || nameFallback || '').trim().toLowerCase();
   const slug = raw
@@ -129,7 +171,8 @@ async function fetchAuthUsersOrThrow() {
   return usersRes.data || [];
 }
 
-function mapAuthUser(user) {
+function mapAuthUser(user, adminEmails = new Set()) {
+  const normalizedEmail = String(user.email || '').toLowerCase();
   return {
     id: user.id,
     email: user.email || null,
@@ -137,7 +180,8 @@ function mapAuthUser(user) {
     full_name: user.user_metadata?.full_name || null,
     created_at: user.created_at,
     last_active_at: user.last_sign_in_at || null,
-    is_email_confirmed: Boolean(user.email_confirmed_at)
+    is_email_confirmed: Boolean(user.email_confirmed_at),
+    is_admin_account: Boolean(normalizedEmail && adminEmails.has(normalizedEmail))
   };
 }
 
@@ -393,9 +437,24 @@ export async function getAdminDashboardSummary() {
   };
 }
 
-export async function getAdminUsersSummary({ query, limit = 20 } = {}) {
-  const authUsers = await fetchAuthUsersOrThrow();
-  const mappedUsers = authUsers.map(mapAuthUser).sort((a, b) => toMillis(b.created_at) - toMillis(a.created_at));
+export async function getAdminUsersSummary({ query, limit = 20, page = 1 } = {}) {
+  const [authUsers, adminEmailsRes] = await Promise.all([
+    fetchAuthUsersOrThrow(),
+    listActiveAdminEmails()
+  ]);
+
+  if (adminEmailsRes.error) {
+    throw { status: 500, code: 'admin_email_lookup_failed', message: adminEmailsRes.error.message };
+  }
+
+  const adminEmails = new Set((adminEmailsRes.data || []).map((row) => String(row.email || '').toLowerCase()));
+  const mappedUsers = authUsers
+    .map((user) => mapAuthUser(user, adminEmails))
+    .sort((a, b) => toMillis(b.created_at) - toMillis(a.created_at));
+
+  const pagination = normalizePagination({ page, limit }, { defaultLimit: 20, maxLimit: 100 });
+  const from = (pagination.page - 1) * pagination.limit;
+  const to = from + pagination.limit;
 
   const normalizedQuery = String(query || '').trim().toLowerCase();
   const filteredUsers = normalizedQuery
@@ -409,25 +468,104 @@ export async function getAdminUsersSummary({ query, limit = 20 } = {}) {
   return {
     total_registered_users: mappedUsers.length,
     new_users_this_week: mappedUsers.filter((user) => withinLastDays(user.created_at, 7)).length,
-    recent_users: filteredUsers.slice(0, Number(limit) || 20)
+    page: pagination.page,
+    limit: pagination.limit,
+    total_matching_users: filteredUsers.length,
+    recent_users: filteredUsers.slice(from, to)
   };
 }
 
-export async function getAdminActivityFeed({ limit = 40 } = {}) {
+export async function getAdminActivityFeed({ limit = 40, page = 1 } = {}) {
+  const pagination = normalizePagination({ page, limit }, { defaultLimit: 40, maxLimit: 120 });
+  const toFetch = pagination.page * pagination.limit;
   const authUsers = await fetchAuthUsersOrThrow();
-  return collectRecentActivity(Number(limit) || 40, authUsers);
+  const recent = await collectRecentActivity(toFetch, authUsers);
+  const from = (pagination.page - 1) * pagination.limit;
+  const to = from + pagination.limit;
+  return recent.slice(from, to);
 }
 
-export async function getAdminBuilds() {
-  const res = await listBuildPresetsAdmin();
+export async function getAdminBuilds({ page = 1, limit = 20 } = {}) {
+  const pagination = normalizePagination({ page, limit }, { defaultLimit: 20, maxLimit: 80 });
+  const res = await listBuildPresetsAdmin(pagination);
   if (res.error) throw { status: 500, code: 'builds_list_failed', message: res.error.message };
   return res.data || [];
 }
 
-export async function getAdminBuildComponents() {
-  const res = await listBuildComponentsAdmin();
+export async function getAdminBuildComponents({ page = 1, limit = 40, type } = {}) {
+  const pagination = normalizePagination({ page, limit }, { defaultLimit: 40, maxLimit: 160 });
+  const res = await listBuildComponentsAdmin({ ...pagination, type });
   if (res.error) throw { status: 500, code: 'build_components_list_failed', message: res.error.message };
   return res.data || [];
+}
+
+export async function deleteAdminUser(userId, actorEmail) {
+  const lookup = await getAuthUserById(userId);
+  if (lookup.error) {
+    throw { status: 500, code: 'user_lookup_failed', message: lookup.error.message };
+  }
+
+  const target = lookup.data?.user;
+  if (!target) {
+    throw { status: 404, code: 'user_not_found', message: 'User not found' };
+  }
+
+  const normalizedTargetEmail = String(target.email || '').trim().toLowerCase();
+  const normalizedActorEmail = String(actorEmail || '').trim().toLowerCase();
+
+  if (normalizedTargetEmail && normalizedTargetEmail === normalizedActorEmail) {
+    throw { status: 400, code: 'cannot_delete_self', message: 'You cannot delete your own admin account' };
+  }
+
+  const adminsRes = await listActiveAdminEmails();
+  if (adminsRes.error) {
+    throw { status: 500, code: 'admin_lookup_failed', message: adminsRes.error.message };
+  }
+
+  const activeAdminEmails = new Set((adminsRes.data || []).map((row) => String(row.email || '').toLowerCase()));
+  if (normalizedTargetEmail && activeAdminEmails.has(normalizedTargetEmail)) {
+    throw { status: 403, code: 'cannot_delete_admin', message: 'Admin accounts cannot be deleted' };
+  }
+
+  const deleted = await deleteAuthUserById(userId);
+  if (deleted.error) {
+    throw { status: 500, code: 'user_delete_failed', message: deleted.error.message };
+  }
+
+  return { deleted: true, id: userId };
+}
+
+export async function changeAdminPassword(adminId, currentPassword, newPassword) {
+  if (!currentPassword || !newPassword) {
+    throw { status: 400, code: 'password_fields_required', message: 'Current and new password are required' };
+  }
+
+  if (currentPassword === newPassword) {
+    throw { status: 400, code: 'password_same_as_current', message: 'New password must be different from current password' };
+  }
+
+  assertStrongNewPassword(newPassword);
+
+  const adminRes = await findAdminById(adminId);
+  if (adminRes.error) {
+    throw { status: 500, code: 'admin_lookup_failed', message: adminRes.error.message };
+  }
+
+  if (!adminRes.data) {
+    throw { status: 404, code: 'admin_not_found', message: 'Admin account not found' };
+  }
+
+  if (!verifyPassword(currentPassword, adminRes.data.password_hash || '')) {
+    throw { status: 401, code: 'invalid_current_password', message: 'Current password is incorrect' };
+  }
+
+  const nextHash = hashPassword(newPassword);
+  const updated = await updateAdminPasswordHash(adminId, nextHash);
+  if (updated.error) {
+    throw { status: 500, code: 'password_update_failed', message: updated.error.message };
+  }
+
+  return { updated: true, id: adminId };
 }
 
 export async function createAdminBuild(payload) {
@@ -477,8 +615,9 @@ export async function deleteAdminBuild(presetId) {
   return { deleted: true, id: presetId };
 }
 
-export async function getAdminProducts() {
-  const result = await listProductsAdmin();
+export async function getAdminProducts({ page = 1, limit = 20, query } = {}) {
+  const pagination = normalizePagination({ page, limit }, { defaultLimit: 20, maxLimit: 80 });
+  const result = await listProductsAdmin({ ...pagination, query });
   if (result.error) throw { status: 500, code: 'admin_products_failed', message: result.error.message };
   return result.data || [];
 }
@@ -504,6 +643,8 @@ export async function getAdminProductDetail(productId) {
 }
 
 export async function createAdminProduct(payload, adminId) {
+  assertNonRuntimeTitleInProduction(payload.title);
+
   const keysRes = await findSpecDefinitionKeys();
   if (keysRes.error) throw { status: 500, code: 'spec_keys_failed', message: keysRes.error.message };
   const allowed = new Set((keysRes.data || []).map((k) => k.spec_key));
@@ -538,6 +679,8 @@ export async function createAdminProduct(payload, adminId) {
 }
 
 export async function updateAdminProduct(productId, payload) {
+  assertNonRuntimeTitleInProduction(payload.title);
+
   const keysRes = await findSpecDefinitionKeys();
   if (keysRes.error) throw { status: 500, code: 'spec_keys_failed', message: keysRes.error.message };
   const allowed = new Set((keysRes.data || []).map((k) => k.spec_key));

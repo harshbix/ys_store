@@ -5,7 +5,10 @@ import type {
   AdminBuild,
   AdminBuildComponent,
   AdminBuildPayload,
+  AdminChangePasswordPayload,
+  AdminChangePasswordResult,
   AdminDashboardSummaryPayload,
+  AdminDeleteUserResult,
   AdminFinalizeUploadPayload,
   AdminLoginPayload,
   AdminProduct,
@@ -75,11 +78,12 @@ export async function getAdminDashboardSummary(token: string): Promise<AdminDash
 
 export async function getAdminUsersSummary(
   token: string,
-  params: { q?: string; limit?: number } = {}
+  params: { q?: string; limit?: number; page?: number } = {}
 ): Promise<AdminUsersSummaryPayload> {
   const search = new URLSearchParams();
   if (params.q) search.set('q', params.q);
   if (params.limit) search.set('limit', String(params.limit));
+  if (params.page) search.set('page', String(params.page));
   const endpoint = search.size ? `/admin/users?${search.toString()}` : '/admin/users';
 
   const response = await apiFetch<ApiEnvelope<AdminUsersSummaryPayload>>(endpoint, {
@@ -90,25 +94,74 @@ export async function getAdminUsersSummary(
 }
 
 export async function getAdminActivity(token: string, limit = 40): Promise<AdminActivityItem[]> {
-  const response = await apiFetch<ApiEnvelope<AdminActivityItem[]>>(`/admin/activity?limit=${encodeURIComponent(String(limit))}`, {
+  return getAdminActivityPaged(token, { limit, page: 1 });
+}
+
+export async function getAdminActivityPaged(
+  token: string,
+  params: { limit?: number; page?: number } = {}
+): Promise<AdminActivityItem[]> {
+  const search = new URLSearchParams();
+  if (params.limit) search.set('limit', String(params.limit));
+  if (params.page) search.set('page', String(params.page));
+  const endpoint = search.size ? `/admin/activity?${search.toString()}` : '/admin/activity';
+
+  const response = await apiFetch<ApiEnvelope<AdminActivityItem[]>>(endpoint, {
     method: 'GET',
     headers: withAdminToken(token)
   });
   return response.data;
 }
 
-export async function getAdminBuilds(token: string): Promise<AdminBuild[]> {
-  const response = await apiFetch<ApiEnvelope<AdminBuild[]>>('/admin/builds', {
+export async function getAdminBuilds(
+  token: string,
+  params: { page?: number; limit?: number } = {}
+): Promise<AdminBuild[]> {
+  const search = new URLSearchParams();
+  if (params.page) search.set('page', String(params.page));
+  if (params.limit) search.set('limit', String(params.limit));
+  const endpoint = search.size ? `/admin/builds?${search.toString()}` : '/admin/builds';
+
+  const response = await apiFetch<ApiEnvelope<AdminBuild[]>>(endpoint, {
     method: 'GET',
     headers: withAdminToken(token)
   });
   return response.data;
 }
 
-export async function getAdminBuildComponents(token: string): Promise<AdminBuildComponent[]> {
-  const response = await apiFetch<ApiEnvelope<AdminBuildComponent[]>>('/admin/build-components', {
+export async function getAdminBuildComponents(
+  token: string,
+  params: { page?: number; limit?: number; type?: string } = {}
+): Promise<AdminBuildComponent[]> {
+  const search = new URLSearchParams();
+  if (params.page) search.set('page', String(params.page));
+  if (params.limit) search.set('limit', String(params.limit));
+  if (params.type) search.set('type', params.type);
+  const endpoint = search.size ? `/admin/build-components?${search.toString()}` : '/admin/build-components';
+
+  const response = await apiFetch<ApiEnvelope<AdminBuildComponent[]>>(endpoint, {
     method: 'GET',
     headers: withAdminToken(token)
+  });
+  return response.data;
+}
+
+export async function deleteAdminUser(userId: string, token: string): Promise<AdminDeleteUserResult> {
+  const response = await apiFetch<ApiEnvelope<AdminDeleteUserResult>>(`/admin/users/${userId}`, {
+    method: 'DELETE',
+    headers: withAdminToken(token)
+  });
+  return response.data;
+}
+
+export async function changeAdminPassword(
+  payload: AdminChangePasswordPayload,
+  token: string
+): Promise<AdminChangePasswordResult> {
+  const response = await apiFetch<ApiEnvelope<AdminChangePasswordResult>>('/admin/password', {
+    method: 'PATCH',
+    headers: withAdminToken(token),
+    body: JSON.stringify(payload)
   });
   return response.data;
 }
@@ -143,8 +196,17 @@ export async function deleteAdminBuild(buildId: string, token: string): Promise<
   return response.data;
 }
 
-export async function getAdminProducts(token: string): Promise<AdminProduct[]> {
-  const response = await apiFetch<ApiEnvelope<AdminProduct[]>>('/admin/products', {
+export async function getAdminProducts(
+  token: string,
+  params: { q?: string; page?: number; limit?: number } = {}
+): Promise<AdminProduct[]> {
+  const search = new URLSearchParams();
+  if (params.q) search.set('q', params.q);
+  if (params.page) search.set('page', String(params.page));
+  if (params.limit) search.set('limit', String(params.limit));
+  const endpoint = search.size ? `/admin/products?${search.toString()}` : '/admin/products';
+
+  const response = await apiFetch<ApiEnvelope<AdminProduct[]>>(endpoint, {
     method: 'GET',
     headers: withAdminToken(token)
   });

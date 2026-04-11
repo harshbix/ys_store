@@ -32,7 +32,7 @@ function RequireAdmin({ children }: { children: ReactNode }) {
   const isAdmin = useIsAdmin();
   const authBootstrapReady = useAuthStore((state) => state.authBootstrapReady);
 
-  const { isAuthenticated, meQuery } = useAdmin();
+  const { isAuthenticated, meQuery } = useAdmin({ minimal: true });
 
   // Wait until general auth hydration succeeds before enforcing admin blocks.
   // If the admin session is fetching/pending, we wait.

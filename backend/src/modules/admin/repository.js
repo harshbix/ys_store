@@ -131,12 +131,75 @@ const BUILD_PRESET_SELECT = [
   `pc_build_preset_items(${BUILD_PRESET_ITEM_SELECT})`
 ].join(',');
 
+function normalizePage(value, fallback = 1) {
+  const parsed = Number.parseInt(String(value || ''), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function normalizeLimit(value, fallback = 20, max = 100) {
+  const parsed = Number.parseInt(String(value || ''), 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.min(max, parsed);
+}
+
+function resolveRange(page, limit, fallbackLimit = 20, maxLimit = 100) {
+  const safePage = normalizePage(page, 1);
+  const safeLimit = normalizeLimit(limit, fallbackLimit, maxLimit);
+  const from = (safePage - 1) * safeLimit;
+  const to = from + safeLimit - 1;
+  return { safePage, safeLimit, from, to };
+}
+
 export async function findAdminByEmail(email) {
   return supabase.from('admin_users').select('id, email, full_name, role, is_active, password_hash, auth_method').eq('email', email).single();
 }
 
-export async function listProductsAdmin() {
-  return supabase.from('products').select(PRODUCT_SELECT).order('updated_at', { ascending: false });
+export async function findAdminById(adminId) {
+  return supabase
+    .from('admin_users')
+    .select('id, email, full_name, role, is_active, password_hash, auth_method')
+    .eq('id', adminId)
+    .maybeSingle();
+}
+
+export async function listActiveAdminEmails() {
+  return supabase
+    .from('admin_users')
+    .select('email,is_active')
+    .eq('is_active', true);
+}
+
+export async function updateAdminPasswordHash(adminId, passwordHash) {
+  return supabase
+    .from('admin_users')
+    .update({ password_hash: passwordHash, updated_at: new Date().toISOString() })
+    .eq('id', adminId)
+    .select('id,email,updated_at')
+    .single();
+}
+
+export async function getAuthUserById(userId) {
+  return supabase.auth.admin.getUserById(userId);
+}
+
+export async function deleteAuthUserById(userId) {
+  return supabase.auth.admin.deleteUser(userId);
+}
+
+export async function listProductsAdmin({ page = 1, limit = 20, query } = {}) {
+  const { from, to } = resolveRange(page, limit, 20, 80);
+  let request = supabase
+    .from('products')
+    .select(PRODUCT_SELECT)
+    .order('updated_at', { ascending: false })
+    .range(from, to);
+
+  const normalizedQuery = String(query || '').trim();
+  if (normalizedQuery) {
+    request = request.or(`title.ilike.%${normalizedQuery}%,sku.ilike.%${normalizedQuery}%`);
+  }
+
+  return request;
 }
 
 export async function countProducts() {
@@ -307,11 +370,13 @@ export async function listAllAuthUsers({ maxPages = 40, perPage = 200 } = {}) {
   return { data: users, error: null };
 }
 
-export async function listBuildPresetsAdmin() {
+export async function listBuildPresetsAdmin({ page = 1, limit = 20 } = {}) {
+  const { from, to } = resolveRange(page, limit, 20, 80);
   return supabase
     .from('pc_build_presets')
     .select(BUILD_PRESET_SELECT)
-    .order('updated_at', { ascending: false });
+    .order('updated_at', { ascending: false })
+    .range(from, to);
 }
 
 export async function findBuildPresetById(presetId) {
@@ -346,12 +411,21 @@ export async function deleteBuildPreset(presetId) {
     .eq('id', presetId);
 }
 
-export async function listBuildComponentsAdmin() {
-  return supabase
+export async function listBuildComponentsAdmin({ page = 1, limit = 40, type } = {}) {
+  const { from, to } = resolveRange(page, limit, 40, 160);
+  let request = supabase
     .from('pc_components')
     .select(BUILD_COMPONENT_SELECT)
     .order('type', { ascending: true })
-    .order('name', { ascending: true });
+    .order('name', { ascending: true })
+    .range(from, to);
+
+  const normalizedType = String(type || '').trim().toLowerCase();
+  if (normalizedType) {
+    request = request.eq('type', normalizedType);
+  }
+
+  return request;
 }
 
 export async function findBuildComponentsByIds(componentIds) {

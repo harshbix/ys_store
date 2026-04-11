@@ -9,7 +9,7 @@ import { toUserMessage } from '../utils/errors';
 export default function AdminLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, emailPasswordLoginMutation } = useAdmin();
+  const { isAuthenticated, emailPasswordLoginMutation } = useAdmin({ minimal: true });
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

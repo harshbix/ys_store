@@ -4,10 +4,12 @@ import {
   adminLogin,
   adminLogout,
   archiveProduct,
+  changeAdminPassword,
   createAdminBuild,
   createAdminProduct,
+  deleteAdminUser,
   deleteAdminBuild,
-  getAdminActivity,
+  getAdminActivityPaged,
   getAdminBuildComponents,
   getAdminBuilds,
   getAdminDashboardSummary,
@@ -25,6 +27,7 @@ import {
 import { queryKeys } from '../lib/queryKeys';
 import { useAdminAuthStore } from '../store/auth';
 import type {
+  AdminChangePasswordPayload,
   AdminBuildPayload,
   AdminFinalizeUploadPayload,
   AdminProductPayload,
@@ -33,14 +36,38 @@ import type {
 import { toUserMessage } from '../utils/errors';
 import { useShowToast } from './useToast';
 
-export function useAdmin() {
+interface UseAdminOptions {
+  minimal?: boolean;
+  loadDashboard?: boolean;
+  loadUsers?: boolean;
+  loadActivity?: boolean;
+  loadProducts?: boolean;
+  loadBuilds?: boolean;
+  loadBuildComponents?: boolean;
+  loadQuotes?: boolean;
+}
+
+export function useAdmin(options: UseAdminOptions = {}) {
   const queryClient = useQueryClient();
   const showToast = useShowToast();
+
+  const {
+    minimal = false,
+    loadDashboard = true,
+    loadUsers = true,
+    loadActivity = true,
+    loadProducts = true,
+    loadBuilds = true,
+    loadBuildComponents = true,
+    loadQuotes = true
+  } = options;
 
   const token = useAdminAuthStore((state) => state.token);
   const admin = useAdminAuthStore((state) => state.admin);
   const setSession = useAdminAuthStore((state) => state.setSession);
   const clearSession = useAdminAuthStore((state) => state.clearSession);
+
+  const canLoad = (enabled: boolean) => Boolean(token) && !minimal && enabled;
 
   /** Email/password login mutation */
   const emailPasswordLoginMutation = useMutation({
@@ -69,47 +96,47 @@ export function useAdmin() {
   const dashboardSummaryQuery = useQuery({
     queryKey: queryKeys.admin.dashboard,
     queryFn: () => getAdminDashboardSummary(token || ''),
-    enabled: Boolean(token),
+    enabled: canLoad(loadDashboard),
     staleTime: 1000 * 30,
     retry: 1
   });
 
   const usersSummaryQuery = useQuery({
     queryKey: queryKeys.admin.users(''),
-    queryFn: () => getAdminUsersSummary(token || '', { limit: 20 }),
-    enabled: Boolean(token),
+    queryFn: () => getAdminUsersSummary(token || '', { limit: 20, page: 1 }),
+    enabled: canLoad(loadUsers),
     staleTime: 1000 * 30,
     retry: 1
   });
 
   const activityQuery = useQuery({
     queryKey: queryKeys.admin.activity(40),
-    queryFn: () => getAdminActivity(token || '', 40),
-    enabled: Boolean(token),
+    queryFn: () => getAdminActivityPaged(token || '', { limit: 40, page: 1 }),
+    enabled: canLoad(loadActivity),
     staleTime: 1000 * 30,
     retry: 1
   });
 
   const productsQuery = useQuery({
     queryKey: queryKeys.admin.products,
-    queryFn: () => getAdminProducts(token || ''),
-    enabled: Boolean(token),
+    queryFn: () => getAdminProducts(token || '', { page: 1, limit: 24 }),
+    enabled: canLoad(loadProducts),
     staleTime: 1000 * 30,
     retry: 1
   });
 
   const buildsQuery = useQuery({
     queryKey: queryKeys.admin.builds,
-    queryFn: () => getAdminBuilds(token || ''),
-    enabled: Boolean(token),
+    queryFn: () => getAdminBuilds(token || '', { page: 1, limit: 24 }),
+    enabled: canLoad(loadBuilds),
     staleTime: 1000 * 30,
     retry: 1
   });
 
   const buildComponentsQuery = useQuery({
     queryKey: queryKeys.admin.buildComponents,
-    queryFn: () => getAdminBuildComponents(token || ''),
-    enabled: Boolean(token),
+    queryFn: () => getAdminBuildComponents(token || '', { page: 1, limit: 120 }),
+    enabled: canLoad(loadBuildComponents),
     staleTime: 1000 * 60,
     retry: 1
   });
@@ -117,7 +144,7 @@ export function useAdmin() {
   const quotesQuery = useQuery({
     queryKey: queryKeys.admin.quotes,
     queryFn: () => getAdminQuotes(token || ''),
-    enabled: Boolean(token),
+    enabled: canLoad(loadQuotes),
     staleTime: 1000 * 30,
     retry: 1
   });
@@ -222,6 +249,36 @@ export function useAdmin() {
     }
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: string) => deleteAdminUser(userId, token || ''),
+    onSuccess: async () => {
+      showToast({ title: 'User deleted', description: 'The user account has been removed.', variant: 'info' });
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Could not delete user',
+        description: toUserMessage(error, 'This account may be protected.'),
+        variant: 'error'
+      });
+    }
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: (payload: AdminChangePasswordPayload) => changeAdminPassword(payload, token || ''),
+    onSuccess: () => {
+      showToast({ title: 'Password updated', description: 'Your admin password has been changed.', variant: 'success' });
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Could not change password',
+        description: toUserMessage(error, 'Please verify your current password and try again.'),
+        variant: 'error'
+      });
+    }
+  });
+
   const archiveProductMutation = useMutation({
     mutationFn: (productId: string) => archiveProduct(productId, token || ''),
     onSuccess: async (response, productId) => {
@@ -288,12 +345,12 @@ export function useAdmin() {
     clearSession();
     queryClient.removeQueries({ queryKey: queryKeys.admin.me });
     queryClient.removeQueries({ queryKey: queryKeys.admin.dashboard });
-    queryClient.removeQueries({ queryKey: queryKeys.admin.users('') });
-    queryClient.removeQueries({ queryKey: queryKeys.admin.activity(40) });
-    queryClient.removeQueries({ queryKey: queryKeys.admin.products });
+    queryClient.removeQueries({ queryKey: ['admin', 'users'] });
+    queryClient.removeQueries({ queryKey: ['admin', 'activity'] });
+    queryClient.removeQueries({ queryKey: ['admin', 'products'] });
     queryClient.removeQueries({ queryKey: ['admin', 'product'] });
-    queryClient.removeQueries({ queryKey: queryKeys.admin.builds });
-    queryClient.removeQueries({ queryKey: queryKeys.admin.buildComponents });
+    queryClient.removeQueries({ queryKey: ['admin', 'builds'] });
+    queryClient.removeQueries({ queryKey: ['admin', 'build-components'] });
     queryClient.removeQueries({ queryKey: queryKeys.admin.quotes });
     showToast({ title: 'Admin signed out', variant: 'info' });
   };
@@ -317,6 +374,8 @@ export function useAdmin() {
     createBuildMutation,
     updateBuildMutation,
     deleteBuildMutation,
+    deleteUserMutation,
+    changePasswordMutation,
     archiveProductMutation,
     publishProductMutation,
     createUploadUrlMutation,

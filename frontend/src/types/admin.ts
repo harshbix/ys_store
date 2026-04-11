@@ -65,12 +65,31 @@ export interface AdminRegisteredUser {
   created_at: string;
   last_active_at: string | null;
   is_email_confirmed: boolean;
+  is_admin_account: boolean;
 }
 
 export interface AdminUsersSummaryPayload {
   total_registered_users: number;
   new_users_this_week: number;
+  page: number;
+  limit: number;
+  total_matching_users: number;
   recent_users: AdminRegisteredUser[];
+}
+
+export interface AdminDeleteUserResult {
+  deleted: boolean;
+  id: string;
+}
+
+export interface AdminChangePasswordPayload {
+  current_password: string;
+  new_password: string;
+}
+
+export interface AdminChangePasswordResult {
+  updated: boolean;
+  id: string;
 }
 
 export interface AdminSessionState {

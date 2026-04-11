@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "lint": "eslint .",
     "test": "node --test tests/**/*.test.js",
+    "admin:cleanup-runtime-products": "node scripts/admin/cleanupRuntimeProducts.mjs",
     "storage:ensure-bucket": "node scripts/storage/ensureBucket.mjs",
     "storage:audit-media": "node scripts/storage/auditMedia.mjs",
     "storage:normalize-media": "node scripts/storage/normalizeMediaUrls.mjs"

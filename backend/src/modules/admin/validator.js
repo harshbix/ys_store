@@ -63,11 +63,42 @@ export const quoteStatusSchema = z.object({
 
 export const adminUsersQuerySchema = z.object({
   q: z.string().trim().max(120).optional(),
+  page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20)
 });
 
 export const adminActivityQuerySchema = z.object({
-  limit: z.coerce.number().int().positive().max(200).default(40)
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(120).default(40)
+});
+
+export const adminProductsQuerySchema = z.object({
+  q: z.string().trim().max(120).optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(80).default(20)
+});
+
+export const adminBuildsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(80).default(20)
+});
+
+export const adminBuildComponentsQuerySchema = z.object({
+  type: z.string().trim().min(1).max(64).optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(160).default(40)
+});
+
+export const adminUserIdParamsSchema = z.object({
+  id: z.string().uuid()
+});
+
+export const adminChangePasswordSchema = z.object({
+  current_password: z.string().min(8).max(128),
+  new_password: z.string().min(8).max(128)
+}).refine((value) => value.current_password !== value.new_password, {
+  message: 'New password must be different from current password',
+  path: ['new_password']
 });
 
 export const buildPresetIdParamsSchema = z.object({
