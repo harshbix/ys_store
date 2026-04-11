@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SEO } from '../components/seo/SEO';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { BuildPartPicker } from '../components/builder/BuildPartPicker';
 import { BuildSlot } from '../components/builder/BuildSlot';
 import { BuildStickyBar } from '../components/builder/BuildStickyBar';
@@ -10,6 +10,8 @@ import { CompatibilityBanner } from '../components/builder/CompatibilityBanner';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { Button } from '../components/ui/Button';
 import { useBuilds } from '../hooks/useBuilds';
+import { usePresetQuery } from '../hooks/usePCBuilder';
+import { formatTzs } from '../lib/currency';
 import type { BuildItem, ComponentType, PCComponent, BuildPreset } from '../types/api';
 
 const slotDefinitions: Array<{ key: ComponentType; label: string; helper: string }> = [
@@ -25,6 +27,7 @@ const slotDefinitions: Array<{ key: ComponentType; label: string; helper: string
 
 export default function BuilderPage() {
   const navigate = useNavigate();
+  const { presetId } = useParams();
   const {
     activeBuildId,
     buildQuery,
@@ -34,10 +37,12 @@ export default function BuilderPage() {
     validateMutation,
     addToCartMutation
   } = useBuilds();
+  const presetQuery = usePresetQuery(presetId || '');
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerComponent, setPickerComponent] = useState<ComponentType | null>(null);
   const ensuredRef = useRef(false);
+  const loadedPresetRef = useRef<string>('');
 
   useEffect(() => {
     if (ensuredRef.current) return;
@@ -46,6 +51,21 @@ export default function BuilderPage() {
   }, [ensureBuild]);
 
   const build = buildQuery.data?.data;
+
+  const presetHighlights = useMemo(() => {
+    const items = presetQuery.data?.pc_build_preset_items || [];
+    return items
+      .map((item) => item.pc_components?.name || item.component_type)
+      .filter(Boolean)
+      .slice(0, 3);
+  }, [presetQuery.data?.pc_build_preset_items]);
+
+  const seoTitle = presetQuery.data ? `${presetQuery.data.name} Build` : 'Custom PC Builder';
+  const seoDescription = presetQuery.data
+    ? `${presetQuery.data.name} preset build priced at ${formatTzs(presetQuery.data.total_tzs)}. CPU family: ${presetQuery.data.cpu_family || 'N/A'}. Key components: ${presetHighlights.join(', ') || 'configured PC parts'}.`
+    : build
+      ? `Custom PC build in progress at ${formatTzs(build.total_estimated_price_tzs || 0)} with ${build.items.length} selected components.`
+      : 'Design your custom PC build from compatible parts for gaming, workstation, and productivity needs.';
 
   const itemsByType = useMemo(() => {
     const lookup: Partial<Record<ComponentType, BuildItem>> = {};
@@ -120,11 +140,18 @@ export default function BuilderPage() {
     }
   };
 
+  useEffect(() => {
+    if (!presetId || !presetQuery.data) return;
+    if (loadedPresetRef.current === presetId) return;
+    loadedPresetRef.current = presetId;
+    void handleLoadPreset(presetQuery.data);
+  }, [presetId, presetQuery.data]);
+
   return (
     <>
       <SEO 
-        title="Custom PC Builder" 
-        description="Design your custom PC build from a variety of compatible parts suitable for gaming, productivity, and workstation needs."
+        title={seoTitle}
+        description={seoDescription}
       />
       <div className="space-y-8 pb-24 lg:pb-8">
         {/* Header */}
@@ -139,6 +166,7 @@ export default function BuilderPage() {
         </div>
 
         {buildQuery.isError ? <ErrorState onRetry={() => buildQuery.refetch()} /> : null}
+        {presetId && presetQuery.isError ? <ErrorState title="Preset unavailable" description="The selected preset could not be loaded." onRetry={() => presetQuery.refetch()} /> : null}
 
         <CompatibilityBanner payload={validateMutation.data?.data} />
 

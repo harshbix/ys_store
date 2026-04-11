@@ -131,8 +131,11 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <PageBoundary><HomePage /></PageBoundary> },
       { path: 'shop', element: <PageBoundary><ShopPage /></PageBoundary> },
+      { path: 'products', element: <PageBoundary><ShopPage /></PageBoundary> },
       { path: 'products/:slug', element: <PageBoundary><ProductDetailPage /></PageBoundary> },
       { path: 'builder', element: <PageBoundary><BuilderPage /></PageBoundary> },
+      { path: 'builds', element: <PageBoundary><BuilderPage /></PageBoundary> },
+      { path: 'builds/:presetId', element: <PageBoundary><BuilderPage /></PageBoundary> },
       {
         path: 'cart',
         element: (

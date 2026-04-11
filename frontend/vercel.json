@@ -4,6 +4,18 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "https://ys-store-h1ec.onrender.com/api/seo/sitemap.xml"
+    },
+    {
+      "source": "/markdown/products/(.*)",
+      "destination": "https://ys-store-h1ec.onrender.com/api/seo/markdown/products/$1"
+    },
+    {
+      "source": "/markdown/builds/(.*)",
+      "destination": "https://ys-store-h1ec.onrender.com/api/seo/markdown/builds/$1"
+    },
+    {
       "source": "/api",
       "destination": "https://ys-store-h1ec.onrender.com/api"
     },

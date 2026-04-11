@@ -85,6 +85,17 @@ export default function ProductDetailPage() {
   const cpuPreview = findSpecValue(product.specs, ['cpu']);
   const gpuPreview = findSpecValue(product.specs, ['gpu']);
   const ramPreview = findSpecValue(product.specs, ['ram', 'memory']);
+  const seoHighlights = [cpuPreview, gpuPreview, ramPreview].filter((value) => value && value !== '-');
+  const primaryMedia = (product.media || []).find((item) => item.is_primary) || (product.media || [])[0];
+  const seoImage = primaryMedia?.full_url || primaryMedia?.thumb_url || primaryMedia?.original_url || undefined;
+  const seoDescription = [
+    `${product.title}`,
+    `Price ${formatTzs(product.estimated_price_tzs)}`,
+    seoHighlights.length ? `Specs ${seoHighlights.join(', ')}` : null,
+    product.short_description || null
+  ]
+    .filter(Boolean)
+    .join(' • ');
 
   const accordionRows: Array<{ key: AccordionKey; title: string; content: ReactNode }> = [
     {
@@ -123,8 +134,8 @@ export default function ProductDetailPage() {
     <div className="space-y-8 pb-24 md:space-y-10">
       <SEO 
         title={product.title} 
-        description={product.short_description || `Buy ${product.title} in Dar es Salaam, Tanzania.`}
-        image={(product as any).images && (product as any).images.length > 0 ? (product as any).images[0] : undefined}
+        description={seoDescription || `Buy ${product.title} in Dar es Salaam, Tanzania.`}
+        image={seoImage}
         type="product"
       />
       <Button size="sm" variant="secondary" onClick={() => navigate(-1)}>
