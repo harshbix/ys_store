@@ -3,4 +3,4 @@ Allow: /
 
 Disallow: /admin
 
-Sitemap: https://frontend-tau-bay-36.vercel.app/sitemap.xml
+Sitemap: https://ysstoree.com/sitemap.xml

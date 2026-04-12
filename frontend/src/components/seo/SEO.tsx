@@ -14,7 +14,7 @@ interface SEOProps {
 export function SEO({ 
   title, 
   description = 'YS Store - The best destination for premium gaming PCs, laptops, and components in Dar es Salaam.',
-  image = 'https://ysstore.co.tz/og-image.jpg', 
+  image = '/og-image.jpg', 
   type = 'website',
   author = 'YS Store',
   canoncalUrl,
@@ -23,8 +23,11 @@ export function SEO({
   const location = useLocation();
   
   // Assume a base URL. Use env ideally.
-  const baseUrl = import.meta.env.VITE_APP_URL || 'https://ysstore.co.tz';
+  const baseUrl = (import.meta.env.VITE_APP_URL || 'https://ysstoree.com').replace(/\/+$/, '');
   const url = canoncalUrl || `${baseUrl}${location.pathname}`;
+  const resolvedImage = /^https?:\/\//i.test(image)
+    ? image
+    : `${baseUrl}${image.startsWith('/') ? image : `/${image}`}`;
 
   return (
     <Helmet>
@@ -39,7 +42,7 @@ export function SEO({
       <meta property="og:url" content={url} />
       <meta property="og:title" content={`${title} | YS Store`} />
       <meta property="og:description" content={description} />
-      <meta property="og:image" content={image} />
+      <meta property="og:image" content={resolvedImage} />
       <meta property="og:site_name" content="YS Store" />
 
       {/* Twitter */}
@@ -47,7 +50,7 @@ export function SEO({
       <meta name="twitter:url" content={url} />
       <meta name="twitter:title" content={`${title} | YS Store`} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={image} />
+      <meta name="twitter:image" content={resolvedImage} />
 
       {/* Canonical */}
       <link rel="canonical" href={url} />

@@ -108,7 +108,7 @@ Security note: do not store credentials in this repository. Use environment vari
 Production first:
 
 - `VITE_API_URL=https://<your-backend-domain>/api`
-- `FRONTEND_URL=https://ysstore.vercel.app`
+- `FRONTEND_URL=https://ysstoree.com`
 - `SUPABASE_URL=https://<your-project-ref>.supabase.co`
 
 If your backend is exposed without an `/api` prefix, use:
@@ -126,7 +126,7 @@ After changing environment variables, trigger a redeploy so the new value is app
 
 Set `FRONTEND_URL` in backend env as a comma-separated allowlist. Production should be listed first:
 
-- `FRONTEND_URL=https://ysstore.vercel.app,https://<preview-domain>,http://localhost:5173,http://localhost:5174`
+- `FRONTEND_URL=https://ysstoree.com,https://www.ysstoree.com,https://ysstore.vercel.app,https://<preview-domain>,http://localhost:5173,http://localhost:5174`
 
 In production, guest-session cookies are configured for cross-domain usage (`SameSite=None` and `Secure=true`), so frontend and backend must both be served over HTTPS.
 

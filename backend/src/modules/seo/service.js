@@ -63,7 +63,7 @@ function resolvePublicSiteOrigin() {
     normalizeOriginCandidate(env.appBaseUrl)
   ].filter(Boolean);
 
-  if (!candidates.length) return 'https://ysstore.co.tz';
+  if (!candidates.length) return 'https://ysstoree.com';
 
   if (env.nodeEnv === 'production') {
     const publicCandidate = candidates.find((candidate) => !isLoopbackOrigin(candidate));

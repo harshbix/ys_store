@@ -16,6 +16,9 @@ const defaultAllowedOrigins = [
   'http://127.0.0.1:5174',
   'http://localhost:4173',
   'http://127.0.0.1:4173',
+  'https://ysstoree.com',
+  'https://www.ysstoree.com',
+  'https://ysstore.vercel.app',
   'https://frontend-tau-bay-36.vercel.app',
   'https://frontend-junior-jeconias-projects.vercel.app',
   'https://frontend-harshbix-junior-jeconias-projects.vercel.app'
