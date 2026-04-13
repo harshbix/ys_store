@@ -100,7 +100,6 @@ interface BuildFormState {
   name: string;
   cpu_family: string;
   build_number: string;
-  discount_percent: string;
   status: string;
   visible: boolean;
   estimated_system_wattage: string;
@@ -177,7 +176,6 @@ const defaultBuildForm: BuildFormState = {
   name: '',
   cpu_family: '',
   build_number: '',
-  discount_percent: '0',
   status: 'draft',
   visible: true,
   estimated_system_wattage: '',
@@ -526,16 +524,6 @@ export default function AdminDashboardPage() {
       return sum + (component?.price_tzs || 0) * Math.max(1, Number(item.quantity || 1));
     }, 0);
   }, [buildForm.items, componentById]);
-
-  const buildDraftDiscount = useMemo(() => {
-    const raw = Number(buildForm.discount_percent || 0);
-    if (!Number.isFinite(raw)) return 0;
-    return Math.min(99.99, Math.max(0, raw));
-  }, [buildForm.discount_percent]);
-
-  const buildDraftTotal = useMemo(() => {
-    return Math.max(0, Math.round(buildDraftSubtotal - (buildDraftSubtotal * buildDraftDiscount) / 100));
-  }, [buildDraftDiscount, buildDraftSubtotal]);
 
   useEffect(() => {
     return () => {
@@ -983,7 +971,6 @@ export default function AdminDashboardPage() {
       name: build.name,
       cpu_family: build.cpu_family,
       build_number: build.build_number != null ? String(build.build_number) : '',
-      discount_percent: build.discount_percent != null ? String(build.discount_percent) : '0',
       status: build.status || 'draft',
       visible: build.is_visible,
       estimated_system_wattage: build.estimated_system_wattage != null ? String(build.estimated_system_wattage) : '',
@@ -1020,7 +1007,7 @@ export default function AdminDashboardPage() {
       name: buildForm.name.trim(),
       cpu_family: buildForm.cpu_family.trim(),
       build_number: buildForm.build_number ? Number(buildForm.build_number) : null,
-      discount_percent: Number(buildForm.discount_percent || 0),
+      discount_percent: 0,
       status: buildForm.status || 'draft',
       estimated_system_wattage: buildForm.estimated_system_wattage ? Number(buildForm.estimated_system_wattage) : null,
       required_psu_wattage: buildForm.required_psu_wattage ? Number(buildForm.required_psu_wattage) : null,
@@ -1387,16 +1374,6 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Discount %</label>
-          <Input
-            inputMode="decimal"
-            value={buildForm.discount_percent}
-            onChange={(event) => updateBuildField('discount_percent', event.target.value.replace(/[^\d.]/g, ''))}
-            placeholder="0"
-          />
-        </div>
-
-        <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Status</label>
           <NativeMenuSelect value={buildForm.status} onValueChange={(value) => updateBuildField('status', value)}>
             <option value="draft">Draft</option>
@@ -1508,13 +1485,9 @@ export default function AdminDashboardPage() {
             <span className="text-secondary">Subtotal</span>
             <span className="font-medium text-foreground">{formatTzs(buildDraftSubtotal)}</span>
           </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-secondary">Discount</span>
-            <span className="font-medium text-foreground">{buildDraftDiscount}%</span>
-          </div>
           <div className="flex items-center justify-between border-t border-border pt-2 text-sm">
             <span className="font-semibold text-foreground">Total build price</span>
-            <span className="text-base font-semibold text-foreground">{formatTzs(buildDraftTotal)}</span>
+            <span className="text-base font-semibold text-foreground">{formatTzs(buildDraftSubtotal)}</span>
           </div>
         </CardContent>
       </Card>
