@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, m as motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -13,21 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/Input';
 import { Textarea } from '../components/ui/Textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '../components/ui/Select';
 import { Skeleton } from '../components/ui/Skeleton';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle
-} from '../components/ui/sheet';
 import {
   Drawer,
   DrawerContent,
@@ -55,6 +41,7 @@ import type {
   AdminBuild,
   AdminBuildPayload,
   AdminFinalizeUploadPayload,
+  AdminProductSpecInput,
   AdminProductPayload,
   AdminSignedUploadPayload,
   AdminUsersSummaryPayload
@@ -84,6 +71,20 @@ interface ProductFormState {
   visible: boolean;
   keyInfo: string;
   description: string;
+}
+
+interface ProductSpecDraft {
+  id: string;
+  spec_key: string;
+  valueType: 'text' | 'number';
+  value: string;
+  unit: string;
+}
+
+interface ProductSpecOption {
+  key: string;
+  label: string;
+  valueType: 'text' | 'number';
 }
 
 interface BuildItemDraft {
@@ -136,6 +137,27 @@ const sections: Array<{ key: AdminSectionKey; label: string; description: string
 ];
 
 const sectionTransition = { duration: 0.2, ease: [0.22, 1, 0.36, 1] } as const;
+
+const PRODUCT_SPEC_OPTIONS: ProductSpecOption[] = [
+  { key: 'cpu_model', label: 'CPU', valueType: 'text' },
+  { key: 'cpu_socket', label: 'CPU Socket', valueType: 'text' },
+  { key: 'gpu_model', label: 'GPU', valueType: 'text' },
+  { key: 'ram_gb', label: 'RAM (GB)', valueType: 'number' },
+  { key: 'ram_type', label: 'RAM Type', valueType: 'text' },
+  { key: 'storage_gb', label: 'Storage (GB)', valueType: 'number' },
+  { key: 'storage_type', label: 'Storage Type', valueType: 'text' },
+  { key: 'screen_size_in', label: 'Screen Size (in)', valueType: 'number' },
+  { key: 'refresh_rate_hz', label: 'Refresh Rate (Hz)', valueType: 'number' },
+  { key: 'motherboard_socket', label: 'Motherboard Socket', valueType: 'text' },
+  { key: 'motherboard_ram_type', label: 'Motherboard RAM Type', valueType: 'text' },
+  { key: 'motherboard_max_ram_gb', label: 'Motherboard Max RAM (GB)', valueType: 'number' },
+  { key: 'gpu_length_mm', label: 'GPU Length (mm)', valueType: 'number' },
+  { key: 'case_max_gpu_length_mm', label: 'Case Max GPU Length (mm)', valueType: 'number' },
+  { key: 'psu_wattage', label: 'PSU Wattage', valueType: 'number' },
+  { key: 'estimated_system_wattage', label: 'Estimated System Wattage', valueType: 'number' }
+];
+
+const PRODUCT_SPEC_OPTIONS_BY_KEY = new Map(PRODUCT_SPEC_OPTIONS.map((option) => [option.key, option] as const));
 
 const defaultProductForm: ProductFormState = {
   title: '',
@@ -218,6 +240,32 @@ function slugify(value: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+interface NativeMenuSelectProps {
+  value: string;
+  onValueChange: (value: string) => void;
+  children: ReactNode;
+  className?: string;
+}
+
+function NativeMenuSelect({ value, onValueChange, children, className }: NativeMenuSelectProps) {
+  return (
+    <div className={cn('relative', className)}>
+      <select
+        value={value}
+        onChange={(event) => onValueChange(event.target.value)}
+        className="h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+      >
+        {children}
+      </select>
+      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">v</span>
+    </div>
+  );
+}
+
+function isNumericSpecKey(specKey: string): boolean {
+  return PRODUCT_SPEC_OPTIONS_BY_KEY.get(specKey)?.valueType === 'number';
 }
 
 function resolveImageContentType(file: File): string {
@@ -424,6 +472,7 @@ export default function AdminDashboardPage() {
   const [editingBuildId, setEditingBuildId] = useState<string | null>(null);
 
   const [productForm, setProductForm] = useState<ProductFormState>(defaultProductForm);
+  const [productSpecs, setProductSpecs] = useState<ProductSpecDraft[]>([]);
   const [buildForm, setBuildForm] = useState<BuildFormState>(defaultBuildForm);
 
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
@@ -500,6 +549,7 @@ export default function AdminDashboardPage() {
     setUploadProgress(null);
     setEditingProductId(null);
     setProductForm(defaultProductForm);
+    setProductSpecs([]);
   }
 
   function resetBuildForm() {
@@ -519,6 +569,33 @@ export default function AdminDashboardPage() {
 
   function updateProductField<K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) {
     setProductForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function addProductSpecRow() {
+    setProductSpecs((prev) => [...prev, { id: cryptoRandomId(), spec_key: '', valueType: 'text', value: '', unit: '' }]);
+  }
+
+  function updateProductSpecRow(rowId: string, patch: Partial<Omit<ProductSpecDraft, 'id'>>) {
+    setProductSpecs((prev) => prev.map((row) => (row.id === rowId ? { ...row, ...patch } : row)));
+  }
+
+  function removeProductSpecRow(rowId: string) {
+    setProductSpecs((prev) => prev.filter((row) => row.id !== rowId));
+  }
+
+  function moveProductSpecRow(rowId: string, direction: 'up' | 'down') {
+    setProductSpecs((prev) => {
+      const index = prev.findIndex((row) => row.id === rowId);
+      if (index < 0) return prev;
+
+      const nextIndex = direction === 'up' ? index - 1 : index + 1;
+      if (nextIndex < 0 || nextIndex >= prev.length) return prev;
+
+      const updated = [...prev];
+      const [moved] = updated.splice(index, 1);
+      updated.splice(nextIndex, 0, moved);
+      return updated;
+    });
   }
 
   function addPhotos(files: File[]) {
@@ -674,6 +751,29 @@ export default function AdminDashboardPage() {
         description: detail.long_description || ''
       });
 
+      const mappedSpecs = [...(detail.specs || [])]
+        .sort((a, b) => {
+          const byOrder = (a.sort_order || 0) - (b.sort_order || 0);
+          if (byOrder !== 0) return byOrder;
+          return a.id - b.id;
+        })
+        .map((spec): ProductSpecDraft => {
+          const valueType: ProductSpecDraft['valueType'] = typeof spec.value_number === 'number' ? 'number' : 'text';
+          return {
+            id: cryptoRandomId(),
+            spec_key: spec.spec_key,
+            valueType,
+            value:
+              spec.value_text
+              ?? (typeof spec.value_number === 'number'
+                ? String(spec.value_number)
+                : (typeof spec.value_bool === 'boolean' ? (spec.value_bool ? 'Yes' : 'No') : '')),
+            unit: spec.unit || ''
+          };
+        });
+
+      setProductSpecs(mappedSpecs);
+
       photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
       setPhotos([]);
       setUploadProgress(null);
@@ -705,6 +805,52 @@ export default function AdminDashboardPage() {
       return;
     }
 
+    const normalizedSpecs: AdminProductSpecInput[] = [];
+
+    for (const [index, row] of productSpecs.entries()) {
+      const specKey = row.spec_key.trim();
+      const rawValue = row.value.trim();
+      const unit = row.unit.trim();
+
+      if (!specKey && !rawValue && !unit) {
+        continue;
+      }
+
+      if (!specKey) {
+        showToast({ title: `Specification row ${index + 1} needs a key`, variant: 'error' });
+        return;
+      }
+
+      if (!rawValue) {
+        showToast({ title: `Specification row ${index + 1} needs a value`, variant: 'error' });
+        return;
+      }
+
+      const specPayload: AdminProductSpecInput = {
+        spec_key: specKey,
+        sort_order: normalizedSpecs.length
+      };
+
+      const expectsNumber = row.valueType === 'number' || isNumericSpecKey(specKey);
+
+      if (expectsNumber) {
+        const parsedNumber = Number(rawValue);
+        if (!Number.isFinite(parsedNumber)) {
+          showToast({ title: `Specification row ${index + 1} must be numeric`, variant: 'error' });
+          return;
+        }
+        specPayload.value_number = parsedNumber;
+      } else {
+        specPayload.value_text = rawValue;
+      }
+
+      if (unit) {
+        specPayload.unit = unit;
+      }
+
+      normalizedSpecs.push(specPayload);
+    }
+
     const effectivePrice = salePrice > 0 && salePrice < listPrice ? salePrice : listPrice;
     const shortParts = [productForm.keyInfo.trim()];
     if (salePrice > 0 && salePrice < listPrice) {
@@ -727,7 +873,7 @@ export default function AdminDashboardPage() {
       is_visible: productForm.visible,
       is_featured: productForm.featured,
       featured_tag: productForm.featured ? (salePrice > 0 && salePrice < listPrice ? 'hot_deal' : 'recommended') : null,
-      specs: []
+      specs: normalizedSpecs
     };
 
     try {
@@ -1003,31 +1149,21 @@ export default function AdminDashboardPage() {
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Category</label>
-          <Select value={productForm.category} onValueChange={(value) => updateProductField('category', value as SimpleCategory)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="gaming_pc">Gaming PC</SelectItem>
-              <SelectItem value="desktop">Desktop</SelectItem>
-              <SelectItem value="laptop">Laptop</SelectItem>
-              <SelectItem value="accessories">Accessories</SelectItem>
-            </SelectContent>
-          </Select>
+          <NativeMenuSelect value={productForm.category} onValueChange={(value) => updateProductField('category', value as SimpleCategory)}>
+            <option value="gaming_pc">Gaming PC</option>
+            <option value="desktop">Desktop</option>
+            <option value="laptop">Laptop</option>
+            <option value="accessories">Accessories</option>
+          </NativeMenuSelect>
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Condition</label>
-          <Select value={productForm.condition} onValueChange={(value) => updateProductField('condition', value as SimpleCondition)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Condition" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="new">New</SelectItem>
-              <SelectItem value="used">Used</SelectItem>
-              <SelectItem value="refurbished">Refurbished</SelectItem>
-            </SelectContent>
-          </Select>
+          <NativeMenuSelect value={productForm.condition} onValueChange={(value) => updateProductField('condition', value as SimpleCondition)}>
+            <option value="new">New</option>
+            <option value="used">Used</option>
+            <option value="refurbished">Refurbished</option>
+          </NativeMenuSelect>
         </div>
 
         <div className="space-y-2">
@@ -1054,18 +1190,13 @@ export default function AdminDashboardPage() {
 
         <div className="space-y-2 sm:col-span-2">
           <label className="text-sm font-medium text-foreground">Stock / availability</label>
-          <Select value={productForm.stockStatus} onValueChange={(value) => updateProductField('stockStatus', value as StockStatus)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Stock status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="in_stock">In stock</SelectItem>
-              <SelectItem value="low_stock">Low stock</SelectItem>
-              <SelectItem value="build_on_request">Build on request</SelectItem>
-              <SelectItem value="incoming_stock">Incoming stock</SelectItem>
-              <SelectItem value="sold_out">Sold out</SelectItem>
-            </SelectContent>
-          </Select>
+          <NativeMenuSelect value={productForm.stockStatus} onValueChange={(value) => updateProductField('stockStatus', value as StockStatus)}>
+            <option value="in_stock">In stock</option>
+            <option value="low_stock">Low stock</option>
+            <option value="build_on_request">Build on request</option>
+            <option value="incoming_stock">Incoming stock</option>
+            <option value="sold_out">Sold out</option>
+          </NativeMenuSelect>
         </div>
 
         <div className="space-y-2 sm:col-span-2">
@@ -1075,6 +1206,101 @@ export default function AdminDashboardPage() {
             onChange={(event) => updateProductField('keyInfo', event.target.value)}
             placeholder="Core i7, 16GB RAM, 1TB SSD"
           />
+        </div>
+
+        <div className="space-y-3 sm:col-span-2">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <label className="text-sm font-medium text-foreground">Specifications</label>
+              <p className="text-xs text-secondary">Add clean customer-facing spec rows with clear labels and values.</p>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={addProductSpecRow}>Add spec row</Button>
+          </div>
+
+          {productSpecs.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-secondary">
+              No specification rows yet. Add rows so specifications appear clearly for customers.
+            </p>
+          ) : null}
+
+          {productSpecs.map((row, index) => {
+            const expectsNumber = row.valueType === 'number' || isNumericSpecKey(row.spec_key);
+            return (
+              <Card key={row.id} className="overflow-hidden bg-surface/60">
+                <CardContent className="space-y-3 p-3">
+                  <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                    <div className="min-w-0 space-y-1">
+                    <label className="text-xs font-medium text-secondary">Specification</label>
+                    <NativeMenuSelect
+                      value={row.spec_key}
+                      onValueChange={(nextKey) => {
+                        updateProductSpecRow(row.id, {
+                          spec_key: nextKey,
+                          valueType: isNumericSpecKey(nextKey) ? 'number' : 'text'
+                        });
+                      }}
+                    >
+                        <option value="">Select specification</option>
+                        {row.spec_key && !PRODUCT_SPEC_OPTIONS_BY_KEY.has(row.spec_key) ? (
+                          <option value={row.spec_key}>{row.spec_key}</option>
+                        ) : null}
+                        {PRODUCT_SPEC_OPTIONS.map((option) => (
+                          <option key={option.key} value={option.key}>
+                            {option.label}
+                          </option>
+                        ))}
+                    </NativeMenuSelect>
+                  </div>
+
+                    <div className="flex flex-wrap items-center gap-1 sm:justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => moveProductSpecRow(row.id, 'up')}
+                      disabled={index === 0}
+                    >
+                      Up
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => moveProductSpecRow(row.id, 'down')}
+                      disabled={index === productSpecs.length - 1}
+                    >
+                      Down
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => removeProductSpecRow(row.id)}>
+                      Delete
+                    </Button>
+                  </div>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                    <div className="space-y-1 min-w-0">
+                      <label className="text-xs font-medium text-secondary">Value</label>
+                      <Input
+                        inputMode={expectsNumber ? 'decimal' : 'text'}
+                        value={row.value}
+                        onChange={(event) => updateProductSpecRow(row.id, { value: event.target.value })}
+                        placeholder={expectsNumber ? '16' : 'Intel Core i7'}
+                      />
+                    </div>
+
+                    <div className="space-y-1 min-w-0">
+                      <label className="text-xs font-medium text-secondary">Unit</label>
+                      <Input
+                        value={row.unit}
+                        onChange={(event) => updateProductSpecRow(row.id, { unit: event.target.value })}
+                        placeholder={expectsNumber ? 'GB, Hz, mm' : 'Optional'}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         <div className="space-y-2 sm:col-span-2">
@@ -1172,17 +1398,12 @@ export default function AdminDashboardPage() {
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Status</label>
-          <Select value={buildForm.status} onValueChange={(value) => updateBuildField('status', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Build status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="featured">Featured</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
+          <NativeMenuSelect value={buildForm.status} onValueChange={(value) => updateBuildField('status', value)}>
+            <option value="draft">Draft</option>
+            <option value="active">Active</option>
+            <option value="featured">Featured</option>
+            <option value="archived">Archived</option>
+          </NativeMenuSelect>
         </div>
 
         <div className="space-y-2">
@@ -1245,19 +1466,17 @@ export default function AdminDashboardPage() {
 
                 <div className="space-y-1 sm:col-span-5">
                   <label className="text-xs font-medium text-secondary">Component</label>
-                  <Select value={item.component_id || '__empty'} onValueChange={(value) => updateBuildItem(item.id, { component_id: value === '__empty' ? '' : value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose component" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__empty">Select component</SelectItem>
-                      {optionsForType.map((component) => (
-                        <SelectItem key={component.id} value={component.id}>
-                          {component.name} - {formatTzs(component.price_tzs)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <NativeMenuSelect
+                    value={item.component_id || '__empty'}
+                    onValueChange={(value) => updateBuildItem(item.id, { component_id: value === '__empty' ? '' : value })}
+                  >
+                    <option value="__empty">Select component</option>
+                    {optionsForType.map((component) => (
+                      <option key={component.id} value={component.id}>
+                        {component.name} - {formatTzs(component.price_tzs)}
+                      </option>
+                    ))}
+                  </NativeMenuSelect>
                 </div>
 
                 <div className="space-y-1 sm:col-span-2">
@@ -1906,15 +2125,17 @@ export default function AdminDashboardPage() {
           </DrawerContent>
         </Drawer>
       ) : (
-        <Sheet open={isProductPanelOpen} onOpenChange={setIsProductPanelOpen}>
-          <SheetContent side="right" className="w-full max-w-2xl overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>{editingProductId ? 'Edit product' : 'Upload product'}</SheetTitle>
-              <SheetDescription>Create polished product entries with images, stock, and visibility controls.</SheetDescription>
-            </SheetHeader>
-            <div className="mt-4">{productFormBody}</div>
-          </SheetContent>
-        </Sheet>
+        <Dialog open={isProductPanelOpen} onOpenChange={setIsProductPanelOpen}>
+          <DialogContent className="h-[94vh] w-[96vw] max-w-[96vw] overflow-hidden p-0">
+            <DialogHeader className="border-b border-border px-5 py-4 text-left">
+              <DialogTitle>{editingProductId ? 'Edit product' : 'Upload product'}</DialogTitle>
+              <DialogDescription>Create polished product entries with images, stock, and visibility controls.</DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="h-[calc(94vh-88px)] px-5 pb-5">
+              <div className="pt-4">{productFormBody}</div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       )}
 
       {isNarrowScreen ? (
@@ -1930,15 +2151,17 @@ export default function AdminDashboardPage() {
           </DrawerContent>
         </Drawer>
       ) : (
-        <Sheet open={isBuildPanelOpen} onOpenChange={setIsBuildPanelOpen}>
-          <SheetContent side="right" className="w-full max-w-3xl overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>{editingBuildId ? 'Edit build' : 'Create build'}</SheetTitle>
-              <SheetDescription>Compose preset builds with clear components and reliable pricing.</SheetDescription>
-            </SheetHeader>
-            <div className="mt-4">{buildFormBody}</div>
-          </SheetContent>
-        </Sheet>
+        <Dialog open={isBuildPanelOpen} onOpenChange={setIsBuildPanelOpen}>
+          <DialogContent className="h-[94vh] w-[96vw] max-w-[96vw] overflow-hidden p-0">
+            <DialogHeader className="border-b border-border px-5 py-4 text-left">
+              <DialogTitle>{editingBuildId ? 'Edit build' : 'Create build'}</DialogTitle>
+              <DialogDescription>Compose preset builds with clear components and reliable pricing.</DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="h-[calc(94vh-88px)] px-5 pb-5">
+              <div className="pt-4">{buildFormBody}</div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       )}
 
       <Dialog open={Boolean(productToDelete)} onOpenChange={(open) => { if (!open) setProductToDelete(null); }}>
