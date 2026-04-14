@@ -1,4 +1,7 @@
 import { Router } from 'express';
+import multer from 'multer';
+import { compressUploadMiddleware } from './compress-middleware.js';
+import { uploadImageController } from './upload-image-controller.js';
 import { requireAdmin } from '../../middleware/adminAuth.js';
 import { validateRequest } from '../../middleware/validateRequest.js';
 import { createUploadUrlSchema, finalizeUploadSchema, mediaIdParamsSchema } from './validator.js';
@@ -11,6 +14,18 @@ import {
 } from './controller.js';
 
 const router = Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // Accept up to 5MB, compress to <=1.5MB
+});
+// Production-level endpoint: compress, enforce size, upload to storage, return metadata only
+router.post(
+  '/admin/upload/image',
+  requireAdmin,
+  upload.single('file'),
+  compressUploadMiddleware,
+  uploadImageController
+);
 
 router.get('/shop-media', listShopMediaController);
 router.post('/admin/upload-url', requireAdmin, validateRequest(createUploadUrlSchema), createUploadUrlController);
