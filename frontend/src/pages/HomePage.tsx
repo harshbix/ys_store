@@ -82,7 +82,8 @@ export default function HomePage() {
                 src="/hero/desktop3.webp"
                 alt="Gaming desktop"
                 disableLazy={true}
-                className="relative z-20 h-full w-full object-contain object-center p-4 sm:p-5 bg-transparent"
+                className="relative z-20 h-full w-full bg-transparent"
+                imageClassName="object-contain object-center p-4 sm:p-5"
               />
             </div>
 

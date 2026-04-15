@@ -25,3 +25,15 @@ export const finalizeUploadSchema = z.object({
 });
 
 export const mediaIdParamsSchema = z.object({ id: z.string().uuid() });
+
+export const updateProductMediaSchema = z.object({
+  is_primary: z.boolean().optional(),
+  sort_order: z.number().int().nonnegative().optional(),
+  alt_text: z.string().optional().nullable()
+}).refine((value) => (
+  value.is_primary !== undefined
+  || value.sort_order !== undefined
+  || value.alt_text !== undefined
+), {
+  message: 'At least one product media field is required'
+});

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type Fo
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, m as motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { getAdminProductById, getAdminUsersSummary } from '../api/admin';
+import { deleteAdminProductMedia, getAdminProductById, getAdminUsersSummary, updateAdminProductMedia } from '../api/admin';
 import { SEO } from '../components/seo/SEO';
 import { AdminBuildTile } from '../components/builds/AdminBuildTile';
 import { AdminSectionHeader } from '../components/dashboard/AdminSectionHeader';
@@ -47,6 +47,7 @@ import type {
   AdminUsersSummaryPayload
 } from '../types/admin';
 import type { ProductCondition, ProductType, StockStatus } from '../types/api';
+import type { ProductMedia } from '../types/api';
 import { toUserMessage } from '../utils/errors';
 
 type AdminSectionKey = 'dashboard' | 'products' | 'builds' | 'users' | 'activity' | 'settings';
@@ -471,6 +472,8 @@ export default function AdminDashboardPage() {
 
   const [productForm, setProductForm] = useState<ProductFormState>(defaultProductForm);
   const [productSpecs, setProductSpecs] = useState<ProductSpecDraft[]>([]);
+  const [existingMedia, setExistingMedia] = useState<ProductMedia[]>([]);
+  const [editingProductSnapshot, setEditingProductSnapshot] = useState<AdminProductDetail | null>(null);
   const [buildForm, setBuildForm] = useState<BuildFormState>(defaultBuildForm);
 
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
@@ -536,6 +539,8 @@ export default function AdminDashboardPage() {
     setPhotos([]);
     setUploadProgress(null);
     setEditingProductId(null);
+    setEditingProductSnapshot(null);
+    setExistingMedia([]);
     setProductForm(defaultProductForm);
     setProductSpecs([]);
   }
@@ -707,13 +712,89 @@ export default function AdminDashboardPage() {
         height: dimensions?.height,
         size_bytes: file.size,
         alt_text: title,
-        is_primary: index === 0,
-        sort_order: index
+        is_primary: existingMedia.length === 0 && index === 0,
+        sort_order: existingMedia.length + index
       };
 
       await finalizeUploadMutation.mutateAsync(finalizePayload);
       completedCount += 1;
       setUploadProgress({ current: completedCount, total: photos.length, percent: 100, fileName: file.name });
+    }
+  }
+
+  async function refreshEditingMedia(productId: string) {
+    if (!token) return;
+    const detail = await getAdminProductById(productId, token);
+    setEditingProductSnapshot(detail);
+    setExistingMedia([...(detail.media || [])].sort((a, b) => {
+      const byOrder = (a.sort_order || 0) - (b.sort_order || 0);
+      if (byOrder !== 0) return byOrder;
+      return Number(b.is_primary) - Number(a.is_primary);
+    }));
+    await queryClient.invalidateQueries({ queryKey: queryKeys.admin.products });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.admin.productDetail(productId) });
+  }
+
+  async function makeExistingMediaPrimary(mediaId: string) {
+    if (!token || !editingProductId) return;
+
+    try {
+      await updateAdminProductMedia(mediaId, { is_primary: true, sort_order: 0 }, token);
+      const remaining = existingMedia.filter((media) => media.id !== mediaId);
+      await Promise.all(remaining.map((media, index) => (
+        updateAdminProductMedia(media.id, { sort_order: index + 1 }, token)
+      )));
+      await refreshEditingMedia(editingProductId);
+      showToast({ title: 'Primary image updated', variant: 'success' });
+    } catch (error) {
+      showToast({
+        title: 'Could not update primary image',
+        description: toUserMessage(error, 'Please try again.'),
+        variant: 'error'
+      });
+    }
+  }
+
+  async function moveExistingMedia(mediaId: string, direction: 'left' | 'right') {
+    if (!token || !editingProductId) return;
+
+    const currentIndex = existingMedia.findIndex((media) => media.id === mediaId);
+    const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= existingMedia.length) return;
+
+    const nextMedia = [...existingMedia];
+    const [moved] = nextMedia.splice(currentIndex, 1);
+    nextMedia.splice(nextIndex, 0, moved);
+
+    try {
+      await Promise.all(nextMedia.map((media, index) => (
+        updateAdminProductMedia(media.id, { sort_order: index }, token)
+      )));
+      setExistingMedia(nextMedia.map((media, index) => ({ ...media, sort_order: index })));
+      await refreshEditingMedia(editingProductId);
+      showToast({ title: 'Image order updated', variant: 'success' });
+    } catch (error) {
+      showToast({
+        title: 'Could not reorder images',
+        description: toUserMessage(error, 'Please try again.'),
+        variant: 'error'
+      });
+    }
+  }
+
+  async function removeExistingMedia(mediaId: string) {
+    if (!token || !editingProductId) return;
+
+    try {
+      await deleteAdminProductMedia(mediaId, token);
+      await refreshEditingMedia(editingProductId);
+      showToast({ title: 'Image removed', variant: 'info' });
+    } catch (error) {
+      showToast({
+        title: 'Could not remove image',
+        description: toUserMessage(error, 'Please try again.'),
+        variant: 'error'
+      });
     }
   }
 
@@ -761,6 +842,12 @@ export default function AdminDashboardPage() {
         });
 
       setProductSpecs(mappedSpecs);
+      setEditingProductSnapshot(detail);
+      setExistingMedia([...(detail.media || [])].sort((a, b) => {
+        const byOrder = (a.sort_order || 0) - (b.sort_order || 0);
+        if (byOrder !== 0) return byOrder;
+        return Number(b.is_primary) - Number(a.is_primary);
+      }));
 
       photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
       setPhotos([]);
@@ -846,12 +933,12 @@ export default function AdminDashboardPage() {
     }
 
     const payload: AdminProductPayload = {
-      sku: `YS-${Date.now().toString().slice(-6)}`,
-      slug: slugify(title) || `product-${Date.now()}`,
+      sku: editingProductSnapshot?.sku || `YS-${Date.now().toString().slice(-6)}`,
+      slug: editingProductSnapshot?.slug || slugify(title) || `product-${Date.now()}`,
       title,
       product_type: mapCategoryToProductType(productForm.category),
-      brand: 'Unknown',
-      model_name: title,
+      brand: editingProductSnapshot?.brand || 'Unknown',
+      model_name: editingProductSnapshot?.model_name || title,
       condition: mapConditionToApi(productForm.condition),
       stock_status: productForm.stockStatus,
       estimated_price_tzs: effectivePrice,
@@ -1108,11 +1195,77 @@ export default function AdminDashboardPage() {
           <input type="file" accept="image/*" multiple onChange={handlePhotoInput} className="sr-only" />
         </label>
 
+        {editingProductId && existingMedia.length > 0 ? (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-medium text-secondary">Current product images</p>
+              <p className="text-xs text-muted">Primary image appears first on the storefront.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {existingMedia.map((media, index) => (
+                <div key={media.id} className="overflow-hidden rounded-lg border border-border bg-background">
+                  <div className="relative h-28 bg-surface">
+                    <img
+                      src={media.thumb_url || media.full_url || media.original_url}
+                      alt={media.alt_text || `Product image ${index + 1}`}
+                      className="h-full w-full object-contain p-2"
+                    />
+                    {media.is_primary ? (
+                      <Badge className="absolute left-2 top-2 bg-primary text-primaryForeground">Primary</Badge>
+                    ) : null}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 p-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void moveExistingMedia(media.id, 'left')}
+                      disabled={index === 0}
+                    >
+                      Left
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void moveExistingMedia(media.id, 'right')}
+                      disabled={index === existingMedia.length - 1}
+                    >
+                      Right
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void makeExistingMediaPrimary(media.id)}
+                      disabled={media.is_primary}
+                      className="col-span-2"
+                    >
+                      Make primary
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void removeExistingMedia(media.id)}
+                      className="col-span-2"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         {photos.length > 0 ? (
+          <div className="space-y-2">
+          <p className="text-xs font-medium text-secondary">New images to upload</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {photos.map((photo, index) => (
               <div key={photo.id} className="overflow-hidden rounded-lg border border-border bg-background">
-                <img src={photo.previewUrl} alt={`Upload ${index + 1}`} className="h-24 w-full object-cover" />
+                <img src={photo.previewUrl} alt={`Upload ${index + 1}`} className="h-24 w-full object-contain p-2" />
                 <div className="grid grid-cols-3 gap-1 p-2">
                   <Button type="button" variant="outline" size="sm" onClick={() => movePhoto(photo.id, 'left')}>Left</Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => movePhoto(photo.id, 'right')}>Right</Button>
@@ -1120,6 +1273,7 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
             ))}
+          </div>
           </div>
         ) : null}
       </div>

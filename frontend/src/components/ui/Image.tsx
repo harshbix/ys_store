@@ -5,6 +5,7 @@ interface ImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   fallbackSrc?: string;
   disableLazy?: boolean;
   aspectRatio?: string;
+  imageClassName?: string;
 }
 
 export const Image = forwardRef<HTMLImageElement, ImageProps>(
@@ -16,6 +17,7 @@ export const Image = forwardRef<HTMLImageElement, ImageProps>(
       fallbackSrc = 'https://picsum.photos/seed/fallback/800/600',
       disableLazy = false,
       aspectRatio,
+      imageClassName,
       ...props
     },
     ref
@@ -40,6 +42,7 @@ export const Image = forwardRef<HTMLImageElement, ImageProps>(
           onError={() => setHasError(true)}
           className={cn(
             'h-full w-full object-cover transition-opacity duration-300 ease-in-out',
+            imageClassName,
             isLoaded ? 'opacity-100' : 'opacity-0'
           )}
           {...props}

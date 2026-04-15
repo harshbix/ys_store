@@ -38,7 +38,8 @@ export function ProductCard({ product, inWishlist, onToggleWishlist, onQuickAdd,
             alt={product.title}
             fallbackSrc={fallbackImage}
             disableLazy={false}
-            className="h-full w-full object-contain px-6 py-4 transition-transform duration-300 group-hover:scale-[1.03] bg-transparent"
+            className="h-full w-full bg-transparent"
+            imageClassName="object-contain p-6 transition-transform duration-300 group-hover:scale-[1.03]"
           />
           <div className="absolute left-2 top-2">
             <ConditionBadge condition={product.condition} />

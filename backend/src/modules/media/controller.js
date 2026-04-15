@@ -2,6 +2,8 @@ import { ok, created } from '../../utils/apiResponse.js';
 import {
   createUploadUrl,
   finalizeUpload,
+  updateProductMediaItem,
+  removeProductMediaItem,
   getShopMedia,
   updateShopMediaItem,
   removeShopMediaItem
@@ -20,6 +22,24 @@ export async function finalizeUploadController(req, res, next) {
   try {
     const data = await finalizeUpload(req.body);
     return created(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function updateProductMediaController(req, res, next) {
+  try {
+    const data = await updateProductMediaItem(req.params.id, req.body);
+    return ok(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function deleteProductMediaController(req, res, next) {
+  try {
+    const data = await removeProductMediaItem(req.params.id);
+    return ok(res, data);
   } catch (err) {
     return next(err);
   }

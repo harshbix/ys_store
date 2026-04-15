@@ -20,6 +20,7 @@ import type {
   AdminUser,
   AdminUsersSummaryPayload
 } from '../types/admin';
+import type { ProductMedia } from '../types/api';
 
 function withAdminToken(token: string): HeadersInit {
   return {
@@ -295,6 +296,30 @@ export async function finalizeAdminUpload(
     method: 'POST',
     headers: withAdminToken(token),
     body: JSON.stringify(payload)
+  });
+  return response.data;
+}
+
+export async function updateAdminProductMedia(
+  mediaId: string,
+  payload: { is_primary?: boolean; sort_order?: number; alt_text?: string | null },
+  token: string
+): Promise<ProductMedia> {
+  const response = await apiFetch<ApiEnvelope<ProductMedia>>(`/media/admin/product-media/${mediaId}`, {
+    method: 'PATCH',
+    headers: withAdminToken(token),
+    body: JSON.stringify(payload)
+  });
+  return response.data;
+}
+
+export async function deleteAdminProductMedia(
+  mediaId: string,
+  token: string
+): Promise<{ deleted: boolean; id: string }> {
+  const response = await apiFetch<ApiEnvelope<{ deleted: boolean; id: string }>>(`/media/admin/product-media/${mediaId}`, {
+    method: 'DELETE',
+    headers: withAdminToken(token)
   });
   return response.data;
 }
